@@ -418,6 +418,12 @@ ct_exec(ctContext* ctx) {
 			r2 = instrs[ctx->ip++];
 			ct_ctx_loadAtom(ctx, r2, &a1, &t1);
 			a2.as_container = ct_containers_newContainer(ctx->containers, a1.as_uint);
+
+			if (ctx->containers->error.code != ctErrorCode_None) {
+				ct_ctx_throwError(ctx, ctx->containers->error);
+				return;
+			}
+
 			ct_ctx_storeAtom(ctx, r1, a2, ctAtomType_Container);
 			break;
 			
@@ -435,10 +441,10 @@ ct_exec(ctContext* ctx) {
 			ct_ctx_loadAtom(ctx, r2, &a1, &t1);
 			ct_ctx_loadAtom(ctx, r3, &a2, &t2);
 
-			typed_atom = ct_containers_conGet(ctx->containers, a1.as_container, a2.as_uint, &ctx->error);
+			typed_atom = ct_containers_conGet(ctx->containers, a1.as_container, a2.as_uint);
 
-			if (ctx->error.code != ctErrorCode_None) {
-				ct_ctx_throwError(ctx, ctx->error);
+			if (ctx->containers->error.code != ctErrorCode_None) {
+				ct_ctx_throwError(ctx, ctx->containers->error);
 				return;
 			}
 
@@ -454,10 +460,10 @@ ct_exec(ctContext* ctx) {
 			ct_ctx_loadAtom(ctx, r2, &a2, &t2);
 			ct_ctx_loadAtom(ctx, r3, &a3, &t3);
 			
-			ct_containers_conSet(ctx->containers, a1.as_container, a2.as_uint, (ctTypedAtom){t3, a3}, &ctx->error);
+			ct_containers_conSet(ctx->containers, a1.as_container, a2.as_uint, (ctTypedAtom){t3, a3});
 
-			if (ctx->error.code != ctErrorCode_None) {
-				ct_ctx_throwError(ctx, ctx->error);
+			if (ctx->containers->error.code != ctErrorCode_None) {
+				ct_ctx_throwError(ctx, ctx->containers->error);
 				return;
 			}
 			break;
@@ -474,16 +480,27 @@ ct_exec(ctContext* ctx) {
 			r2 = instrs[ctx->ip++];
 			ct_ctx_loadAtom(ctx, r1, &a1, &t1);
 			ct_ctx_loadAtom(ctx, r2, &a2, &t2);
-			ct_containers_conResize(ctx->containers, a1.as_container, a2.as_uint, &ctx->error);
+			ct_containers_conResize(ctx->containers, a1.as_container, a2.as_uint);
+			if (ctx->containers->error.code != ctErrorCode_None) {
+				ct_ctx_throwError(ctx, ctx->containers->error);
+				return;
+			}
 			break;
 
 		case instrConCopy:
 			r1 = instrs[ctx->ip++];
 			r2 = instrs[ctx->ip++];
 			ct_ctx_loadAtom(ctx, r2, &a2, &t2);
+
 			a1.as_container = ct_containers_conCopy(
-				ctx->containers, a2.as_container, &ctx->error
+				ctx->containers, a2.as_container
 			);
+
+			if (ctx->containers->error.code != ctErrorCode_None) {
+				ct_ctx_throwError(ctx, ctx->containers->error);
+				return;
+			}
+
 			ct_ctx_storeAtom(ctx, r1, a1, ctAtomType_Container);
 			break;
 
@@ -492,8 +509,14 @@ ct_exec(ctContext* ctx) {
 			r2 = instrs[ctx->ip++];
 			ct_ctx_loadAtom(ctx, r2, &a2, &t2);
 			a1.as_container = ct_containers_conClone(
-				ctx->containers, a2.as_container, &ctx->error
+				ctx->containers, a2.as_container
 			);
+
+			if (ctx->containers->error.code != ctErrorCode_None) {
+				ct_ctx_throwError(ctx, ctx->containers->error);
+				return;
+			}
+			
 			ct_ctx_storeAtom(ctx, r1, a1, ctAtomType_Container);
 			break;
 	}

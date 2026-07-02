@@ -19,13 +19,13 @@ typedef struct {
 
 
 typedef struct {
-	uint32_t            internal_id;
 	ctContainerBucket** buckets;
 	uint32_t            bucket_count;
 	uint32_t            bucket_capacity;
 	ctContainerBucket** empty_buckets;
 	uint32_t            empty_bucket_count;
 	uint32_t            empty_bucket_capacity;
+	ctError             error;
 } ctContainerManager;
 
 
@@ -55,7 +55,7 @@ ct_containers_newContainer(ctContainerManager* manager, uint32_t size);
 
 // Delete a container, keeping in mind sub containers
 void
-ct_containers_delContainer(ctContainerManager* manager, ctContainer* container);
+ct_containers_delContainer(ctContainerManager* manager, ctContainer* con);
 
 
 static inline void
@@ -76,23 +76,23 @@ ct_containers_decRef(ctContainerManager* manager, ctContainer* con) {
 
 // Get an atom in the container. Will return ctConManagerCode_OutOfBounds if index is out of bounds
 ctTypedAtom
-ct_containers_conGet(ctContainerManager* manager, ctContainer* container, uint32_t index, ctError* error);
+ct_containers_conGet(ctContainerManager* manager, ctContainer* container, uint32_t index);
 
 // Set an atom in the container. Will return ctConManagerCode_OutOfBounds if index is out of bounds.
 void
-ct_containers_conSet(ctContainerManager* manager, ctContainer* container, uint32_t index, ctTypedAtom atom, ctError* error);
+ct_containers_conSet(ctContainerManager* manager, ctContainer* container, uint32_t index, ctTypedAtom atom);
 
 // Create a shallow copy of a container
 ctContainer*
-ct_containers_conCopy(ctContainerManager* manager, ctContainer* src, ctError* error);
+ct_containers_conCopy(ctContainerManager* manager, ctContainer* src);
 
 // Makes a clone of the container with the same atoms and types but different id
 ctContainer*
-ct_containers_conClone(ctContainerManager* manager, ctContainer* src, ctError* error);
+ct_containers_conClone(ctContainerManager* manager, ctContainer* src);
 
 
 // Resize the container
 void
-ct_containers_conResize(ctContainerManager* manager, ctContainer* con, uint32_t new_size, ctError* error);
+ct_containers_conResize(ctContainerManager* manager, ctContainer* con, uint32_t new_size);
 
 #endif // CONTAINERS_CONTAINER_H

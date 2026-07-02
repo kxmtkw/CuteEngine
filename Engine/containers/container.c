@@ -7,6 +7,7 @@
 #include "CuteAtom.h"
 #include "CuteConfig.h"
 #include "CuteInstr.h"
+#include "engine/error.h"
 #include "utils/utils.h"
 
 #include "container.h"
@@ -15,7 +16,6 @@
 
 void
 ct_containers_init(ctContainerManager* manager) {
-	manager->internal_id = 0;
 
 	manager->buckets = NULL;
 	manager->bucket_count = 0;
@@ -119,7 +119,6 @@ ct_containers_newContainer(ctContainerManager* manager, uint32_t size) {
 	}
 	
 
-
 	// Looking for a valid index to assign the container to in the bucket
 	for (uint32_t j = 0; j < sizeof(assigned_bucket->containers)/sizeof(assigned_bucket->containers[0]); j++) {
 
@@ -145,6 +144,7 @@ ct_containers_newContainer(ctContainerManager* manager, uint32_t size) {
 
 	if (!assigned_con) {
 		CUTE_LOG("containers", "Failed to allocate new container. No available slots in bucket (%u)\n", assigned_bucket->id);
+		manager->error = ct_error_make(ctErrorCode_EngineFailure, "Engine failed to find a free slot for a container. This should never happen.");
 		return NULL;
 	}
 
@@ -158,6 +158,7 @@ ct_containers_newContainer(ctContainerManager* manager, uint32_t size) {
 	if (ptr == NULL) {
 		ct_utils_clearBit(&assigned_bucket->bitmask, assigned_con->bucket_index);
 		CUTE_LOG("containers", "Failed to allocate memory for container (%u:%u) [%p] of size %u\n", assigned_con->bucket_id, assigned_con->bucket_index, assigned_con, size);
+		manager->error = ct_error_make(ctErrorCode_EngineFailure, "Engine failed to allocate memory for new container. Out of memory.");
 		return NULL;
 	}
 
@@ -170,7 +171,6 @@ ct_containers_newContainer(ctContainerManager* manager, uint32_t size) {
 	assigned_con->sub_containers = 0;
 	memset(assigned_con->types, ctAtomType_NoneType, size);
 	
-	CUTE_LOG("containers", "Empty Bucket Stack Size: %u\n", manager->empty_bucket_count);
 
 	CUTE_LOG("containers", "New container (%u:%u) [%p] allocated to bucket (%u)\n", assigned_con->bucket_id, assigned_con->bucket_index, assigned_con, assigned_bucket->id);
 	return assigned_con;
@@ -204,12 +204,10 @@ ct_containers_delContainer(ctContainerManager* manager, ctContainer* con) {
 
 
 ctTypedAtom
-ct_containers_conGet(ctContainerManager* manager, ctContainer* con, uint32_t index, ctError* error) {
+ct_containers_conGet(ctContainerManager* manager, ctContainer* con, uint32_t index) {
 
 	if (index >= con->size) {
-		if (error) {
-			*error = ct_error_make(ctErrorCode_OutOfBounds, "Can not get atom at invalid container index.");
-		}
+		manager->error = ct_error_make(ctErrorCode_OutOfBounds, "Can not get atom at invalid container index.");
 		return (ctTypedAtom){ctAtomType_NoneType, (ctAtom){0}};
 	}
 
@@ -218,11 +216,9 @@ ct_containers_conGet(ctContainerManager* manager, ctContainer* con, uint32_t ind
 
 
 void
-ct_containers_conSet(ctContainerManager* manager, ctContainer* con, uint32_t index, ctTypedAtom atom, ctError* error) {
+ct_containers_conSet(ctContainerManager* manager, ctContainer* con, uint32_t index, ctTypedAtom atom) {
 	if (index >= con->size) {
-		if (error) {
-			*error = ct_error_make(ctErrorCode_OutOfBounds, "Can not set atom at invalid container index.");
-		}
+		manager->error = ct_error_make(ctErrorCode_OutOfBounds, "Can not set atom at invalid container index.");
 		return;
 	}
 
@@ -243,7 +239,7 @@ ct_containers_conSet(ctContainerManager* manager, ctContainer* con, uint32_t ind
 
 // Resize the container
 void
-ct_containers_conResize(ctContainerManager* manager, ctContainer* con, uint32_t new_size, ctError* error) {
+ct_containers_conResize(ctContainerManager* manager, ctContainer* con, uint32_t new_size) {
 
 	if (con->size == new_size) {
 		return;
@@ -277,9 +273,13 @@ ct_containers_conResize(ctContainerManager* manager, ctContainer* con, uint32_t 
 
 
 ctContainer*
-ct_containers_conCopy(ctContainerManager* manager, ctContainer* src, ctError* error) {
+ct_containers_conCopy(ctContainerManager* manager, ctContainer* src) {
 	
 	ctContainer* copy = ct_containers_newContainer(manager, src->size);
+
+	if (!copy) {
+		return NULL;
+	}
 
 	memcpy(copy->atoms, src->atoms, src->size * sizeof(ctAtom));
 	memcpy(copy->types, src->types, src->size * sizeof(ctAtomTypeSize));
@@ -301,9 +301,13 @@ ct_containers_conCopy(ctContainerManager* manager, ctContainer* src, ctError* er
 
 
 ctContainer*
-ct_containers_conClone(ctContainerManager* manager, ctContainer* src, ctError* error) {
+ct_containers_conClone(ctContainerManager* manager, ctContainer* src) {
 
 	ctContainer* clone = ct_containers_newContainer(manager, src->size);
+
+	if (!clone) {
+		return NULL;
+	}
 
 	memcpy(clone->atoms, src->atoms, src->size * sizeof(ctAtom));
 	memcpy(clone->types, src->types, src->size * sizeof(ctAtomTypeSize));
@@ -313,7 +317,7 @@ ct_containers_conClone(ctContainerManager* manager, ctContainer* src, ctError* e
 	
 	for (uint32_t i = 0; i < src->size && j < src->sub_containers; i++) {
 		if (src->types[i] == ctAtomType_Container) {
-			clone->atoms[i].as_container = ct_containers_conClone(manager, src->atoms[i].as_container, error);
+			clone->atoms[i].as_container = ct_containers_conClone(manager, src->atoms[i].as_container);
 			ct_containers_incRef(manager, clone->atoms[i].as_container);
 			j++;
 		}
