@@ -54,12 +54,17 @@ static const std::map<std::string, ctInstrSpec> ctInstrMap = {
     {"modi",    {instrModI,    {ctOperandType::Register, ctOperandType::Register, ctOperandType::Register}}},
     {"negi",    {instrNegI,    {ctOperandType::Register, ctOperandType::Register}}},
     {"absi",    {instrAbsI,    {ctOperandType::Register, ctOperandType::Register}}},
-    
+	{"inci",    {instrIncI,    {ctOperandType::Register}}},
+    {"deci",    {instrDecI,    {ctOperandType::Register}}},
+
     {"addu",    {instrAddU,    {ctOperandType::Register, ctOperandType::Register, ctOperandType::Register}}},
     {"subu",    {instrSubU,    {ctOperandType::Register, ctOperandType::Register, ctOperandType::Register}}},
     {"mulu",    {instrMulU,    {ctOperandType::Register, ctOperandType::Register, ctOperandType::Register}}},
     {"divu",    {instrDivU,    {ctOperandType::Register, ctOperandType::Register, ctOperandType::Register}}},
     {"modu",    {instrModU,    {ctOperandType::Register, ctOperandType::Register, ctOperandType::Register}}},
+	{"incu",    {instrIncU,    {ctOperandType::Register}}},
+    {"decu",    {instrDecU,    {ctOperandType::Register}}},
+	
 
     {"addf",    {instrAddF,    {ctOperandType::Register, ctOperandType::Register, ctOperandType::Register}}},
     {"subf",    {instrSubF,    {ctOperandType::Register, ctOperandType::Register, ctOperandType::Register}}},
