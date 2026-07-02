@@ -66,17 +66,45 @@ ct_ctx_callProcedure(ctContext* ctx, uint32_t procedure_id, uint8_t arg_count, u
 void
 ct_ctx_returnProcedure(ctContext* ctx, ctAtom returned_atom, ctAtomType returned_atom_type);
 
-// Store an atom in the current call frame
-void
-ct_ctx_storeAtom(ctContext* ctx, uint8_t slot, ctAtom atom, ctAtomType type);
 
-// Load an atom from the current call frame
-void
-ct_ctx_loadAtom(ctContext* ctx, uint8_t slot, ctAtom* atom, ctAtomType* type);
+static inline void
+ct_ctx_storeAtom(ctContext* ctx, uint8_t slot, ctAtom atom, ctAtomType type) {
 
-// Move an atom within the callframe
-void
-ct_ctx_moveAtom(ctContext* ctx, uint8_t src_slot, uint8_t dest_slot);
+	if (ctx->current_frame->file.types[slot] == ctAtomType_Container) {
+		ct_containers_decRef(ctx->containers, ctx->current_frame->file.atoms[slot].as_container);
+	};
+
+	ctx->current_frame->file.atoms[slot] = atom;
+	ctx->current_frame->file.types[slot] = type;
+
+	if (type == ctAtomType_Container) {
+		ct_containers_incRef(ctx->containers, atom.as_container);
+	};
+};
+
+
+static inline void
+ct_ctx_loadAtom(ctContext* ctx, uint8_t slot, ctAtom* atom, ctAtomType* type) {
+	*atom = ctx->current_frame->file.atoms[slot];
+	*type = ctx->current_frame->file.types[slot];
+};
+
+
+static inline void
+ct_ctx_moveAtom(ctContext* ctx, uint8_t src_slot, uint8_t dest_slot) {
+
+	if (ctx->current_frame->file.types[dest_slot] == ctAtomType_Container) {
+		ct_containers_decRef(ctx->containers, ctx->current_frame->file.atoms[dest_slot].as_container);
+	};
+
+	ctx->current_frame->file.atoms[dest_slot] = ctx->current_frame->file.atoms[src_slot];
+	ctx->current_frame->file.types[dest_slot] = ctx->current_frame->file.types[src_slot];
+
+	if (ctx->current_frame->file.types[src_slot] == ctAtomType_Container) {
+		ct_containers_incRef(ctx->containers, ctx->current_frame->file.atoms[src_slot].as_container);
+	};
+};
+
 
 // Throw an internal error
 void

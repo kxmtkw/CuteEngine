@@ -89,436 +89,494 @@ out(ctAtom atom, ctAtomTypeSize type) {
 	}
 }
 
-
-void
-ct_exec(ctContext* ctx) {
-
-	ctInstructionSize* instrs = ctx->image->instruction_pool;
-
-	uint8_t r1;
-	uint8_t r2;
-	uint8_t r3;
-	uint8_t r4;
-
-	int32_t  i32;
-	uint32_t u32;
-	float    f32;
-
-	ctAtom a1;
-	ctAtom a2;
-	ctAtom a3;
-	ctAtomType t1;
-	ctAtomType t2;
-	ctAtomType t3;
-
-	ctTypedAtom typed_atom;
-
-	while (ctx->running) {
-		ctInstruction instr = instrs[ctx->ip++];
-		CUTE_LOG("trace", "ip: %08lu | instr: 0x%02X | ctx: %p\n", ctx->ip-1, instr, ctx);
-
-	switch (instr) {
-
-		case instrNull:
-			continue;
-
-        case instrHalt:
-			r1 = instrs[ctx->ip++];
-			ct_ctx_loadAtom(ctx, r1, &a1, &t1);
-			ctx->exit_code = a1.as_uint;
-			return;
-
-        case instrAssert:
-			r1 = instrs[ctx->ip++];
-			ct_ctx_loadAtom(ctx, r1, &a1, &t1);
-			if (!a1.as_bool) {
-				ct_ctx_throwError(
-					ctx,
-					ct_error_make(ctErrorCode_AssertionFailed, "Assertion Failed.")
-				);
-			};
-			return;
-
-        case instrOut:
-			r1 = instrs[ctx->ip++];
-			ct_ctx_loadAtom(ctx, r1, &a1, &t1);
-			out(a1, t1);
-			break;
-
-        case instrOutBits:
-			r1 = instrs[ctx->ip++];
-			ct_ctx_loadAtom(ctx, r1, &a1, &t1);
-			for (int i = 63; i >= 0; i--) {
-				printf("%d", (int)((a1.raw >> i) & 1));
-				if (i % 8 == 0 && i != 0) printf(" ");
-			}
-			printf(" [ 0x%016lX ]\n", (uint64_t)a1.raw);
-			break;
-
-        case instrMov:
-			r1 = instrs[ctx->ip++];
-			r2 = instrs[ctx->ip++];
-			ct_ctx_moveAtom(ctx, r2, r1);
-			break;
-
-        case instrSetI:
-			r1 = instrs[ctx->ip++];
-			ct_loadBytes(instrs, &ctx->ip, 4, &i32);
-			ct_ctx_storeAtom(ctx, r1, (ctAtom){.as_int=i32}, ctAtomType_Int);
-			break;
-
-        case instrSetU:
-			r1 = instrs[ctx->ip++];
-			ct_loadBytes(instrs, &ctx->ip, 4, &u32);
-			ct_ctx_storeAtom(ctx, r1, (ctAtom){.as_uint=u32}, ctAtomType_UInt);
-			break;
-
-        case instrSetF:
-			r1 = instrs[ctx->ip++];
-			ct_loadBytes(instrs, &ctx->ip, 4, &f32);
-			ct_ctx_storeAtom(ctx, r1, (ctAtom){.as_float=i32}, ctAtomType_Float);
-			break;
-
-        case instrSetB:
-			r1 = instrs[ctx->ip++];
-			ct_loadBytes(instrs, &ctx->ip, 4, &u32);
-			ct_ctx_storeAtom(ctx, r1, (ctAtom){.as_bool=u32}, ctAtomType_Bool);
-			break;
-
-        case instrSetN:
-			r1 = instrs[ctx->ip++];
-			ct_ctx_storeAtom(ctx, r1, (ctAtom){.as_uint=0}, ctAtomType_NoneType);
-			break;
-
-		case instrAddI:
-            INSTR_BINARYOP(ctAtomType_Int, as_int, +);
-            break;
-
-        case instrSubI:
-            INSTR_BINARYOP(ctAtomType_Int, as_int, -);
-            break;
-
-        case instrMulI:
-            INSTR_BINARYOP(ctAtomType_Int, as_int, *);
-            break;
-
-        case instrDivI:
-            INSTR_BINARYOP(ctAtomType_Int, as_int, /);
-            break;
-
-        case instrModI:
-            INSTR_BINARYOP(ctAtomType_Int, as_int, %);
-            break;
-
-        case instrNegI:
-            INSTR_UNARYOP(ctAtomType_Int, as_int, -);
-            break;
-
-        case instrAbsI:
-            INSTR_UNARYOP(ctAtomType_Int, as_int, labs);
-            break;
-
-        case instrAddU:
-            INSTR_BINARYOP(ctAtomType_UInt, as_uint, +);
-            break;
-
-        case instrSubU:
-            INSTR_BINARYOP(ctAtomType_UInt, as_uint, -);
-            break;
-
-        case instrMulU:
-            INSTR_BINARYOP(ctAtomType_UInt, as_uint, *);
-            break;
-
-        case instrDivU:
-            INSTR_BINARYOP(ctAtomType_UInt, as_uint, /);
-            break;
-
-        case instrModU:
-            INSTR_BINARYOP(ctAtomType_UInt, as_uint, %);
-            break;
-
-        case instrAddF:
-            INSTR_BINARYOP(ctAtomType_Float, as_float, +);
-            break;
-
-        case instrSubF:
-            INSTR_BINARYOP(ctAtomType_Float, as_float, -);
-            break;
-
-        case instrMulF:
-            INSTR_BINARYOP(ctAtomType_Float, as_float, *);
-            break;
-
-        case instrDivF:
-            INSTR_BINARYOP(ctAtomType_Float, as_float, /);
-            break;
-
-        case instrNegF:
-            INSTR_UNARYOP(ctAtomType_Float, as_float, -);
-            break;
-
-        case instrAbsF:
-            INSTR_UNARYOP(ctAtomType_Float, as_float, fabs);
-            break;
-
-        case instrLogicAnd:
-            INSTR_BINARYOP(ctAtomType_Bool, as_bool, &&);
-            break;
-
-        case instrLogicOr:
-            INSTR_BINARYOP(ctAtomType_Bool, as_bool, ||);
-            break;
-
-        case instrLogicNot:
-            INSTR_UNARYOP(ctAtomType_Bool, as_bool, !);
-            break;
-
-        case instrLogicXor:
-            INSTR_BINARYOP(ctAtomType_Bool, as_bool, ^);
-            break;
-
-        case instrBitAnd:
-            INSTR_BINARYOP(ctAtomType_UInt, as_uint, &);
-            break;
-
-        case instrBitOr:
-            INSTR_BINARYOP(ctAtomType_UInt, as_uint, |);
-            break;
-
-        case instrBitNot:
-            INSTR_UNARYOP(ctAtomType_UInt, as_uint, ~);
-            break;
-
-        case instrBitXor:
-            INSTR_BINARYOP(ctAtomType_UInt, as_uint, ^);
-            break;
-
-        case instrBitShl:
-            INSTR_BINARYOP(ctAtomType_UInt, as_uint, <<);
-            break;
-
-        case instrBitShr:
-            INSTR_BINARYOP(ctAtomType_UInt, as_uint, >>);
-            break;
-
-        case instrCmpI:
-			INSTR_CMP(ctAtomType_Int, as_int);
-			break;
-
-        case instrCmpU:
-			INSTR_CMP(ctAtomType_UInt, as_uint);
-			break;
-
-        case instrCmpF:
-			INSTR_CMP(ctAtomType_Float, as_float);
-			break;
-	
-		case instrEq:
-			INSTR_CMP_RESOLVER(==);
-			break;
-
-		case instrNotEq:
-			INSTR_CMP_RESOLVER(!=);
-			break;
-
-		case instrLess:
-			INSTR_CMP_RESOLVER(<);
-			break;
-
-		case instrLessEq:
-			INSTR_CMP_RESOLVER(<=);
-			break;
-
-		case instrGreater:
-			INSTR_CMP_RESOLVER(>);
-			break;
-
-		case instrGreaterEq:
-			INSTR_CMP_RESOLVER(>=);
-			break;
-
-		case instrJmp:
-			INSTR_JMP();
-			break;
-
-		case instrJmpIf:
-			r1 = instrs[ctx->ip++];
-			ct_ctx_loadAtom(ctx, r1, &a1, &t1);
-			if (a1.as_bool) {
-				INSTR_JMP();
-				continue;
-			}
-			ctx->ip += 4;
-			break;
-			
-		case instrJmpIfNot:
-			r1 = instrs[ctx->ip++];
-			ct_ctx_loadAtom(ctx, r1, &a1, &t1);
-			if (!a1.as_bool) {
-				INSTR_JMP();
-				continue;
-			}
-			ctx->ip += 4;
-			break;
-
-		case instrJmpAbs:
-			INSTR_JMPABS();
-			break;
-
-		case instrJmpAbsIf:
-			r1 = instrs[ctx->ip++];
-			ct_ctx_loadAtom(ctx, r1, &a1, &t1);
-			if (a1.as_bool) {
-				INSTR_JMPABS();
-				continue;
-			}
-			ctx->ip += 4;
-			break;
-			
-		case instrJmpAbsIfNot:
-			r1 = instrs[ctx->ip++];
-			ct_ctx_loadAtom(ctx, r1, &a1, &t1);
-			if (!a1.as_bool) {
-				INSTR_JMPABS();
-				continue;
-			}
-			ctx->ip += 4;
-			break;
-
-        case instrCall:
-			r1 = instrs[ctx->ip++];
-			r2 = instrs[ctx->ip++];
-			r3 = instrs[ctx->ip++];
-			r4 = instrs[ctx->ip++];
-			ct_ctx_loadAtom(ctx, r1, &a1, &t1);
-			ct_ctx_callProcedure(ctx, a1.as_uint, r2, r3, r4);
-			break;
-
-		case instrCallStatic:
-			ct_loadBytes(instrs, &ctx->ip, sizeof(u32), &u32);
-			r2 = instrs[ctx->ip++];
-			r3 = instrs[ctx->ip++];
-			r4 = instrs[ctx->ip++];
-			ct_ctx_callProcedure(ctx, u32, r2, r3, r4);
-			break;
-
-        case instrReturn:
-			ct_ctx_returnProcedure(ctx, (ctAtom){.as_uint=0}, ctAtomType_NoneType);
-			break;
-
-		case instrReturnVal:
-			r1 = instrs[ctx->ip++];
-			ct_ctx_loadAtom(ctx, r1, &a1, &t1);
-			ct_ctx_returnProcedure(ctx, a1, t1);
-			break;
-
-		case instrConNew:
-			r1 = instrs[ctx->ip++];
-			r2 = instrs[ctx->ip++];
-			ct_ctx_loadAtom(ctx, r2, &a1, &t1);
-			a2.as_container = ct_containers_newContainer(ctx->containers, a1.as_uint);
-
-			if (ctx->containers->error.code != ctErrorCode_None) {
-				ct_ctx_throwError(ctx, ctx->containers->error);
-				return;
-			}
-
-			ct_ctx_storeAtom(ctx, r1, a2, ctAtomType_Container);
-			break;
-			
-		case instrConDel:
-			r1 = instrs[ctx->ip++];
-			ct_ctx_loadAtom(ctx, r1, &a1, &t1);
-			ct_ctx_storeAtom(ctx, r1, (ctAtom){.as_uint=0}, ctAtomType_NoneType);
-			break;
-
-		case instrConGet:
-			r1 = instrs[ctx->ip++];
-			r2 = instrs[ctx->ip++];
-			r3 = instrs[ctx->ip++];
-
-			ct_ctx_loadAtom(ctx, r2, &a1, &t1);
-			ct_ctx_loadAtom(ctx, r3, &a2, &t2);
-
-			typed_atom = ct_containers_conGet(ctx->containers, a1.as_container, a2.as_uint);
-
-			if (ctx->containers->error.code != ctErrorCode_None) {
-				ct_ctx_throwError(ctx, ctx->containers->error);
-				return;
-			}
-
-			ct_ctx_storeAtom(ctx, r1, typed_atom.atom, typed_atom.type);
-			break;
-
-		case instrConSet:
-			r1 = instrs[ctx->ip++];
-			r2 = instrs[ctx->ip++];
-			r3 = instrs[ctx->ip++];
-
-			ct_ctx_loadAtom(ctx, r1, &a1, &t1);
-			ct_ctx_loadAtom(ctx, r2, &a2, &t2);
-			ct_ctx_loadAtom(ctx, r3, &a3, &t3);
-			
-			ct_containers_conSet(ctx->containers, a1.as_container, a2.as_uint, (ctTypedAtom){t3, a3});
-
-			if (ctx->containers->error.code != ctErrorCode_None) {
-				ct_ctx_throwError(ctx, ctx->containers->error);
-				return;
-			}
-			break;
-
-		case instrConLen:
-			r1 = instrs[ctx->ip++];
-			r2 = instrs[ctx->ip++];
-			ct_ctx_loadAtom(ctx, r2, &a1, &t1);
-			ct_ctx_storeAtom(ctx, r1, (ctAtom){.as_uint = a1.as_container->size}, ctAtomType_UInt);
-			break;
-
-		case instrConResize:
-			r1 = instrs[ctx->ip++];
-			r2 = instrs[ctx->ip++];
-			ct_ctx_loadAtom(ctx, r1, &a1, &t1);
-			ct_ctx_loadAtom(ctx, r2, &a2, &t2);
-			ct_containers_conResize(ctx->containers, a1.as_container, a2.as_uint);
-			if (ctx->containers->error.code != ctErrorCode_None) {
-				ct_ctx_throwError(ctx, ctx->containers->error);
-				return;
-			}
-			break;
-
-		case instrConCopy:
-			r1 = instrs[ctx->ip++];
-			r2 = instrs[ctx->ip++];
-			ct_ctx_loadAtom(ctx, r2, &a2, &t2);
-
-			a1.as_container = ct_containers_conCopy(
-				ctx->containers, a2.as_container
-			);
-
-			if (ctx->containers->error.code != ctErrorCode_None) {
-				ct_ctx_throwError(ctx, ctx->containers->error);
-				return;
-			}
-
-			ct_ctx_storeAtom(ctx, r1, a1, ctAtomType_Container);
-			break;
-
-		case instrConClone:
-			r1 = instrs[ctx->ip++];
-			r2 = instrs[ctx->ip++];
-			ct_ctx_loadAtom(ctx, r2, &a2, &t2);
-			a1.as_container = ct_containers_conClone(
-				ctx->containers, a2.as_container
-			);
-
-			if (ctx->containers->error.code != ctErrorCode_None) {
-				ct_ctx_throwError(ctx, ctx->containers->error);
-				return;
-			}
-			
-			ct_ctx_storeAtom(ctx, r1, a1, ctAtomType_Container);
-			break;
-	}
-	};
-};
+void ct_exec(ctContext* ctx) {
+    ctInstructionSize* instrs = ctx->image->instruction_pool;
+
+    static void* dispatch_table[] = {
+        [instrNull] = &&opNull,
+        [instrHalt] = &&opHalt,
+        [instrAssert] = &&opAssert,
+        [instrOut] = &&opOut,
+        [instrOutBits] = &&opOutBits,
+        [instrMov] = &&opMov,
+        [instrSetI] = &&opSetI,
+        [instrSetU] = &&opSetU,
+        [instrSetF] = &&opSetF,
+        [instrSetB] = &&opSetB,
+        [instrSetN] = &&opSetN,
+        [instrAddI] = &&opAddI,
+        [instrSubI] = &&opSubI,
+        [instrMulI] = &&opMulI,
+        [instrDivI] = &&opDivI,
+        [instrModI] = &&opModI,
+        [instrNegI] = &&opNegI,
+        [instrAbsI] = &&opAbsI,
+		[instrIncI] = &&opIncI,
+        [instrDecI] = &&opDecI,
+        [instrAddU] = &&opAddU,
+        [instrSubU] = &&opSubU,
+        [instrMulU] = &&opMulU,
+        [instrDivU] = &&opDivU,
+        [instrModU] = &&opModU,
+		[instrIncU] = &&opIncU,
+        [instrDecU] = &&opDecU,
+        [instrAddF] = &&opAddF,
+        [instrSubF] = &&opSubF,
+        [instrMulF] = &&opMulF,
+        [instrDivF] = &&opDivF,
+        [instrNegF] = &&opNegF,
+        [instrAbsF] = &&opAbsF,
+        [instrLogicAnd] = &&opLogicAnd,
+        [instrLogicOr] = &&opLogicOr,
+        [instrLogicNot] = &&opLogicNot,
+        [instrLogicXor] = &&opLogicXor,
+        [instrBitAnd] = &&opBitAnd,
+        [instrBitOr] = &&opBitOr,
+        [instrBitNot] = &&opBitNot,
+        [instrBitXor] = &&opBitXor,
+        [instrBitShl] = &&opBitShl,
+        [instrBitShr] = &&opBitShr,
+        [instrCmpI] = &&opCmpI,
+        [instrCmpU] = &&opCmpU,
+        [instrCmpF] = &&opCmpF,
+        [instrEq] = &&opEq,
+        [instrNotEq] = &&opNotEq,
+        [instrLess] = &&opLess,
+        [instrLessEq] = &&opLessEq,
+        [instrGreater] = &&opGreater,
+        [instrGreaterEq] = &&opGreaterEq,
+        [instrJmp] = &&opJmp,
+        [instrJmpIf] = &&opJmpIf,
+        [instrJmpIfNot] = &&opJmpIfNot,
+        [instrJmpAbs] = &&opJmpAbs,
+        [instrJmpAbsIf] = &&opJmpAbsIf,
+        [instrJmpAbsIfNot] = &&opJmpAbsIfNot,
+        [instrCall] = &&opCall,
+        [instrCallStatic] = &&opCallStatic,
+        [instrReturn] = &&opReturn,
+        [instrReturnVal] = &&opReturnVal,
+        [instrConNew] = &&opConNew,
+        [instrConDel] = &&opConDel,
+        [instrConGet] = &&opConGet,
+        [instrConSet] = &&opConSet,
+        [instrConLen] = &&opConLen,
+        [instrConResize] = &&opConResize,
+        [instrConCopy] = &&opConCopy,
+        [instrConClone] = &&opConClone
+    };
+
+    uint8_t r1, r2, r3, r4;
+    int32_t i32;
+    uint32_t u32;
+    float f32;
+    ctAtom a1, a2, a3;
+    ctAtomType t1, t2, t3;
+    ctTypedAtom typed_atom;
+
+    goto next;
+
+opNull:
+    goto next;
+
+opHalt:
+    r1 = instrs[ctx->ip++];
+    ct_ctx_loadAtom(ctx, r1, &a1, &t1);
+    ctx->exit_code = a1.as_uint;
+    return;
+
+opAssert:
+    r1 = instrs[ctx->ip++];
+    ct_ctx_loadAtom(ctx, r1, &a1, &t1);
+    if (!a1.as_bool) {
+        ct_ctx_throwError(ctx, ct_error_make(ctErrorCode_AssertionFailed, "Assertion Failed."));
+        return;
+    }
+    goto next;
+
+opOut:
+    r1 = instrs[ctx->ip++];
+    ct_ctx_loadAtom(ctx, r1, &a1, &t1);
+    out(a1, t1);
+    goto next;
+
+opOutBits:
+    r1 = instrs[ctx->ip++];
+    ct_ctx_loadAtom(ctx, r1, &a1, &t1);
+    for (int i = 63; i >= 0; i--) {
+        printf("%d", (int)((a1.raw >> i) & 1));
+        if (i % 8 == 0 && i != 0) printf(" ");
+    }
+    printf(" [ 0x%016lX ]\n", (uint64_t)a1.raw);
+    goto next;
+
+opMov:
+    r1 = instrs[ctx->ip++];
+    r2 = instrs[ctx->ip++];
+    ct_ctx_moveAtom(ctx, r2, r1);
+    goto next;
+
+opSetI:
+    r1 = instrs[ctx->ip++];
+    ct_loadBytes(instrs, &ctx->ip, 4, &i32);
+    ct_ctx_storeAtom(ctx, r1, (ctAtom){.as_int=i32}, ctAtomType_Int);
+    goto next;
+
+opSetU:
+    r1 = instrs[ctx->ip++];
+    ct_loadBytes(instrs, &ctx->ip, 4, &u32);
+    ct_ctx_storeAtom(ctx, r1, (ctAtom){.as_uint=u32}, ctAtomType_UInt);
+    goto next;
+
+opSetF:
+    r1 = instrs[ctx->ip++];
+    ct_loadBytes(instrs, &ctx->ip, 4, &f32);
+    ct_ctx_storeAtom(ctx, r1, (ctAtom){.as_float=i32}, ctAtomType_Float);
+    goto next;
+
+opSetB:
+    r1 = instrs[ctx->ip++];
+    ct_loadBytes(instrs, &ctx->ip, 4, &u32);
+    ct_ctx_storeAtom(ctx, r1, (ctAtom){.as_bool=u32}, ctAtomType_Bool);
+    goto next;
+
+opSetN:
+    r1 = instrs[ctx->ip++];
+    ct_ctx_storeAtom(ctx, r1, (ctAtom){.as_uint=0}, ctAtomType_NoneType);
+    goto next;
+
+opAddI: 
+	INSTR_BINARYOP(ctAtomType_Int, as_int, +); 
+	goto next;
+
+opSubI: 
+	INSTR_BINARYOP(ctAtomType_Int, as_int, -); 
+	goto next;
+
+opMulI: 
+	INSTR_BINARYOP(ctAtomType_Int, as_int, *); 
+	goto next;
+
+opDivI: 
+	INSTR_BINARYOP(ctAtomType_Int, as_int, /); 
+	goto next;
+
+opModI: 
+	INSTR_BINARYOP(ctAtomType_Int, as_int, %); 
+	goto next;
+
+opNegI: 
+	INSTR_UNARYOP(ctAtomType_Int, as_int, -); 
+	goto next;
+
+opIncI: 
+	r1 = instrs[ctx->ip++];
+	ct_ctx_loadAtom(ctx, r1, &a1, &t1);
+	a1.as_int++;
+	ct_ctx_storeAtom(ctx, r1, a1, ctAtomType_UInt);
+	goto next;
+
+opDecI: 
+	r1 = instrs[ctx->ip++];
+	ct_ctx_loadAtom(ctx, r1, &a1, &t1);
+	a1.as_int--;
+	ct_ctx_storeAtom(ctx, r1, a1, ctAtomType_UInt);
+	goto next;
+
+opAbsI: 
+	INSTR_UNARYOP(ctAtomType_Int, as_int, labs); 
+	goto next;
+
+opAddU: 
+	INSTR_BINARYOP(ctAtomType_UInt, as_uint, +); 
+	goto next;
+
+opSubU: 
+	INSTR_BINARYOP(ctAtomType_UInt, as_uint, -); 
+	goto next;
+
+opMulU: 
+	INSTR_BINARYOP(ctAtomType_UInt, as_uint, *); 
+	goto next;
+
+opDivU: 
+	INSTR_BINARYOP(ctAtomType_UInt, as_uint, /); 
+	goto next;
+
+opModU: 
+	INSTR_BINARYOP(ctAtomType_UInt, as_uint, %); 
+	goto next;
+
+opIncU: 
+	r1 = instrs[ctx->ip++];
+	ct_ctx_loadAtom(ctx, r1, &a1, &t1);
+	a1.as_uint++;
+	ct_ctx_storeAtom(ctx, r1, a1, ctAtomType_UInt);
+	goto next;
+
+opDecU: 
+	r1 = instrs[ctx->ip++];
+	ct_ctx_loadAtom(ctx, r1, &a1, &t1);
+	a1.as_uint--;
+	ct_ctx_storeAtom(ctx, r1, a1, ctAtomType_UInt);
+	goto next;
+
+opAddF: 
+	INSTR_BINARYOP(ctAtomType_Float, as_float, +); 
+	goto next;
+
+opSubF: 
+	INSTR_BINARYOP(ctAtomType_Float, as_float, -); 
+	goto next;
+
+opMulF: 
+	INSTR_BINARYOP(ctAtomType_Float, as_float, *); 
+	goto next;
+
+opDivF: 
+	INSTR_BINARYOP(ctAtomType_Float, as_float, /); 
+	goto next;
+
+opNegF:
+	INSTR_UNARYOP(ctAtomType_Float, as_float, -); 
+	goto next;
+
+opAbsF: 
+	INSTR_UNARYOP(ctAtomType_Float, as_float, fabs); 
+	goto next;
+
+opLogicAnd: 
+	INSTR_BINARYOP(ctAtomType_Bool, as_bool, &&); 
+	goto next;
+
+opLogicOr: 
+	INSTR_BINARYOP(ctAtomType_Bool, as_bool, ||); 
+	goto next;
+
+opLogicNot: 	
+	INSTR_UNARYOP(ctAtomType_Bool, as_bool, !); 
+	goto next;
+
+opLogicXor: 
+	INSTR_BINARYOP(ctAtomType_Bool, as_bool, ^); 
+	goto next;
+
+opBitAnd: 
+	INSTR_BINARYOP(ctAtomType_UInt, as_uint, &); 
+	goto next;
+
+opBitOr: 
+	INSTR_BINARYOP(ctAtomType_UInt, as_uint, |); 
+	goto next;
+
+opBitNot: 
+	INSTR_UNARYOP(ctAtomType_UInt, as_uint, ~); 
+	goto next;
+
+opBitXor: 
+	INSTR_BINARYOP(ctAtomType_UInt, as_uint, ^); 
+	goto next;
+
+opBitShl: 
+	INSTR_BINARYOP(ctAtomType_UInt, as_uint, <<); 
+	goto next;
+
+opBitShr: 
+	INSTR_BINARYOP(ctAtomType_UInt, as_uint, >>); 
+	goto next;
+
+opCmpI: 
+	INSTR_CMP(ctAtomType_Int, as_int); 
+	goto next;
+
+opCmpU: 
+	INSTR_CMP(ctAtomType_UInt, as_uint); 
+	goto next;
+
+opCmpF: 
+	INSTR_CMP(ctAtomType_Float, as_float); 
+	goto next;
+
+opEq: 
+	INSTR_CMP_RESOLVER(==);
+	goto next;
+
+opNotEq: 
+	INSTR_CMP_RESOLVER(!=);
+	goto next;
+
+opLess: 
+	INSTR_CMP_RESOLVER(<);
+	goto next;
+
+opLessEq: 
+	INSTR_CMP_RESOLVER(<=);
+	goto next;
+
+opGreater: 
+	INSTR_CMP_RESOLVER(>);
+	goto next;
+
+opGreaterEq: 
+	INSTR_CMP_RESOLVER(>=);
+	goto next;
+
+
+opJmp: 
+	INSTR_JMP(); 
+	goto next;
+
+opJmpIf:
+    r1 = instrs[ctx->ip++];
+    ct_ctx_loadAtom(ctx, r1, &a1, &t1);
+    if (a1.as_bool) { INSTR_JMP(); goto next; }
+    ctx->ip += 4;
+    goto next;
+
+opJmpIfNot:
+    r1 = instrs[ctx->ip++];
+    ct_ctx_loadAtom(ctx, r1, &a1, &t1);
+    if (!a1.as_bool) { INSTR_JMP(); goto next; }
+    ctx->ip += 4;
+    goto next;
+
+opJmpAbs: 
+	INSTR_JMPABS(); 
+	goto next;
+
+opJmpAbsIf:
+    r1 = instrs[ctx->ip++];
+    ct_ctx_loadAtom(ctx, r1, &a1, &t1);
+    if (a1.as_bool) { INSTR_JMPABS(); goto next; }
+    ctx->ip += 4;
+    goto next;
+
+opJmpAbsIfNot:
+    r1 = instrs[ctx->ip++];
+    ct_ctx_loadAtom(ctx, r1, &a1, &t1);
+    if (!a1.as_bool) { INSTR_JMPABS(); goto next; }
+    ctx->ip += 4;
+    goto next;
+
+opCall:
+    r1 = instrs[ctx->ip++];
+    r2 = instrs[ctx->ip++];
+    r3 = instrs[ctx->ip++];
+    r4 = instrs[ctx->ip++];
+    ct_ctx_loadAtom(ctx, r1, &a1, &t1);
+    ct_ctx_callProcedure(ctx, a1.as_uint, r2, r3, r4);
+    goto next;
+
+opCallStatic:
+    ct_loadBytes(instrs, &ctx->ip, sizeof(u32), &u32);
+    r2 = instrs[ctx->ip++];
+    r3 = instrs[ctx->ip++];
+    r4 = instrs[ctx->ip++];
+    ct_ctx_callProcedure(ctx, u32, r2, r3, r4);
+    goto next;
+
+opReturn:
+    ct_ctx_returnProcedure(ctx, (ctAtom){.as_uint=0}, ctAtomType_NoneType);
+    goto next;
+
+opReturnVal:
+    r1 = instrs[ctx->ip++];
+    ct_ctx_loadAtom(ctx, r1, &a1, &t1);
+    ct_ctx_returnProcedure(ctx, a1, t1);
+    goto next;
+
+opConNew:
+    r1 = instrs[ctx->ip++];
+    r2 = instrs[ctx->ip++];
+    ct_ctx_loadAtom(ctx, r2, &a1, &t1);
+    a2.as_container = ct_containers_newContainer(ctx->containers, a1.as_uint);
+    if (ctx->containers->error.code != ctErrorCode_None) {
+        ct_ctx_throwError(ctx, ctx->containers->error);
+        return;
+    }
+    ct_ctx_storeAtom(ctx, r1, a2, ctAtomType_Container);
+    goto next;
+
+opConDel:
+    r1 = instrs[ctx->ip++];
+    ct_ctx_loadAtom(ctx, r1, &a1, &t1);
+    ct_ctx_storeAtom(ctx, r1, (ctAtom){.as_uint=0}, ctAtomType_NoneType);
+    goto next;
+
+opConGet:
+    r1 = instrs[ctx->ip++];
+    r2 = instrs[ctx->ip++];
+    r3 = instrs[ctx->ip++];
+    ct_ctx_loadAtom(ctx, r2, &a1, &t1);
+    ct_ctx_loadAtom(ctx, r3, &a2, &t2);
+    typed_atom = ct_containers_conGet(ctx->containers, a1.as_container, a2.as_uint);
+    if (ctx->containers->error.code != ctErrorCode_None) {
+        ct_ctx_throwError(ctx, ctx->containers->error);
+        return;
+    }
+    ct_ctx_storeAtom(ctx, r1, typed_atom.atom, typed_atom.type);
+    goto next;
+
+opConSet:
+    r1 = instrs[ctx->ip++];
+    r2 = instrs[ctx->ip++];
+    r3 = instrs[ctx->ip++];
+    ct_ctx_loadAtom(ctx, r1, &a1, &t1);
+    ct_ctx_loadAtom(ctx, r2, &a2, &t2);
+    ct_ctx_loadAtom(ctx, r3, &a3, &t3);
+    ct_containers_conSet(ctx->containers, a1.as_container, a2.as_uint, (ctTypedAtom){t3, a3});
+    if (ctx->containers->error.code != ctErrorCode_None) {
+        ct_ctx_throwError(ctx, ctx->containers->error);
+        return;
+    }
+    goto next;
+
+opConLen:
+    r1 = instrs[ctx->ip++];
+    r2 = instrs[ctx->ip++];
+    ct_ctx_loadAtom(ctx, r2, &a1, &t1);
+    ct_ctx_storeAtom(ctx, r1, (ctAtom){.as_uint = a1.as_container->size}, ctAtomType_UInt);
+    goto next;
+
+opConResize:
+    r1 = instrs[ctx->ip++];
+    r2 = instrs[ctx->ip++];
+    ct_ctx_loadAtom(ctx, r1, &a1, &t1);
+    ct_ctx_loadAtom(ctx, r2, &a2, &t2);
+    ct_containers_conResize(ctx->containers, a1.as_container, a2.as_uint);
+    if (ctx->containers->error.code != ctErrorCode_None) {
+        ct_ctx_throwError(ctx, ctx->containers->error);
+        return;
+    }
+    goto next;
+
+opConCopy:
+    r1 = instrs[ctx->ip++];
+    r2 = instrs[ctx->ip++];
+    ct_ctx_loadAtom(ctx, r2, &a2, &t2);
+    a1.as_container = ct_containers_conCopy(ctx->containers, a2.as_container);
+    if (ctx->containers->error.code != ctErrorCode_None) {
+        ct_ctx_throwError(ctx, ctx->containers->error);
+        return;
+    }
+    ct_ctx_storeAtom(ctx, r1, a1, ctAtomType_Container);
+    goto next;
+
+opConClone:
+    r1 = instrs[ctx->ip++];
+    r2 = instrs[ctx->ip++];
+    ct_ctx_loadAtom(ctx, r2, &a2, &t2);
+    a1.as_container = ct_containers_conClone(ctx->containers, a2.as_container);
+    if (ctx->containers->error.code != ctErrorCode_None) {
+        ct_ctx_throwError(ctx, ctx->containers->error);
+        return;
+    }
+    ct_ctx_storeAtom(ctx, r1, a1, ctAtomType_Container);
+    goto next;
+
+next:
+    if (ctx->running) {
+		CUTE_LOG("trace", "ip: %08lu | instr: 0x%02X | ctx: %p\n", ctx->ip, instrs[ctx->ip], ctx); 
+        goto *dispatch_table[instrs[ctx->ip++]];
+    }
+
+}
