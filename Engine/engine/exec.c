@@ -14,6 +14,7 @@
 #include "context.h"
 #include "error.h"
 #include "containers/container.h"
+#include "utils/utils.h"
 
 
 
@@ -49,13 +50,17 @@ ct_ctx_storeAtom(ctx, r1, (ctAtom){.as_bool = ctx->cmp_diff OP 0 ? 1 : 0}, ctAto
 #define INSTR_JMP() \
 ct_loadBytes(instrs, &ctx->ip, 4, &i32); \
 ctx->ip += i32; \
-if (ctx->ip >= ctx->image->header.instruction_count) {ct_ctx_throwError(ctx, ct_error_make(ctErrorCode_IllegalInstruction, "Out of range ip.")); return;};
+if (ctx->ip >= ctx->image->header.instruction_count) { \
+ctx->error = (ctError) {.code=ctErrorCode_IllegalInstruction}; \
+ct_utils_format(ctx->error.msg, sizeof(ctx->error.msg), "Out of range ip: 0x%08lX", ctx->ip); ct_ctx_throwError(ctx, ctx->error); };
 
 
 #define INSTR_JMPABS() \
 ct_loadBytes(instrs, &ctx->ip, 4, &u32); \
 ctx->ip = u32; \
-if (ctx->ip >= ctx->image->header.instruction_count) {ct_ctx_throwError(ctx, ct_error_make(ctErrorCode_IllegalInstruction, "Out of range ip.")); return;};
+if (ctx->ip >= ctx->image->header.instruction_count) { \
+ctx->error = (ctError) {.code=ctErrorCode_IllegalInstruction}; \
+ct_utils_format(ctx->error.msg, sizeof(ctx->error.msg), "Out of range ip: 0x%08lX", ctx->ip); ct_ctx_throwError(ctx, ctx->error); };
 
 
 static inline void
@@ -188,7 +193,14 @@ opAssert:
     r1 = instrs[ctx->ip++];
     ct_ctx_loadAtom(ctx, r1, &a1, &t1);
     if (!a1.as_bool) {
-        ct_ctx_throwError(ctx, ct_error_make(ctErrorCode_AssertionFailed, "Assertion Failed."));
+		ctx->error = (ctError) {.code=ctErrorCode_AssertionFailed};
+		ct_utils_format(
+			ctx->error.msg, 
+			sizeof(ctx->error.msg), 
+			"Assertion failed at ip 0x%08lX, targeting slot '%u'",
+			ctx->ip-1, r1
+		);
+		ct_ctx_throwError(ctx, ctx->error);
         return;
     }
     goto next;
@@ -420,7 +432,6 @@ opGreaterEq:
 	INSTR_CMP_RESOLVER(>=);
 	goto next;
 
-
 opJmp: 
 	INSTR_JMP(); 
 	goto next;
@@ -575,7 +586,7 @@ opConClone:
 
 next:
     if (ctx->running) {
-		CUTE_LOG("trace", "ip: %08lu | instr: 0x%02X | ctx: %p\n", ctx->ip, instrs[ctx->ip], ctx); 
+		CUTE_LOG("trace", "ip: 0x%08lX | instr: 0x%02X | ctx: %p\n", ctx->ip, instrs[ctx->ip], ctx); 
         goto *dispatch_table[instrs[ctx->ip++]];
     }
 

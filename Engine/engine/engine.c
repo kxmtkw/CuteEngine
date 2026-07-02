@@ -11,6 +11,7 @@
 #include "context.h"
 #include "exec.h"
 #include "error.h"
+#include "utils/utils.h"
 
 
 void
@@ -47,20 +48,45 @@ ct_engine_loadFile(ctEngine* engine, const char* filepath) {
 	ctError error;
 
 	switch (code) {
+
 		case ctImageCode_Success:
 			CUTE_LOG("engine", "Image loaded successfully.\n");
 			break;
+
 		case ctImageCode_FileNotFound:
-			error = ct_error_make(ctErrorCode_EngineFailure, "Cannot find image file.");
+			error.code = ctErrorCode_EngineFailure;
+			ct_utils_format(
+				error.msg,
+				sizeof(error.msg),
+				"Cannot find image file: %s", filepath
+			);
 			break;
+
 		case ctImageCode_ReadWriteFailure:
-			error = ct_error_make(ctErrorCode_EngineFailure, "Failed to read/write image.");
+			error.code = ctErrorCode_EngineFailure;
+			ct_utils_format(
+				error.msg,
+				sizeof(error.msg),
+				"Failed to read image file: %s", filepath
+			);
 			break;
+
 		case ctImageCode_InvalidImage:
-			error = ct_error_make(ctErrorCode_EngineFailure, "Invalid image file.");
+			error.code = ctErrorCode_EngineFailure;
+			ct_utils_format(
+				error.msg,
+				sizeof(error.msg),
+				"Invalid image file: %s", filepath
+			);
 			break;
+
 		default:
-			error = ct_error_make(ctErrorCode_EngineFailure, "Unknown error code returned from image read.");
+			error.code = ctErrorCode_EngineFailure;
+			ct_utils_format(
+				error.msg,
+				sizeof(error.msg),
+				"Unknown failure while reading image file: %s", filepath
+			);
 			break;
 	}
 

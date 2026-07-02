@@ -143,8 +143,13 @@ ct_containers_newContainer(ctContainerManager* manager, uint32_t size) {
 	};
 
 	if (!assigned_con) {
+		manager->error.code = ctErrorCode_EngineFailure;
+		ct_utils_format(
+			manager->error.msg, 
+			sizeof(manager->error.msg), 
+			"Engine failed to find a free slot for a container. This should never happen."
+		);
 		CUTE_LOG("containers", "Failed to allocate new container. No available slots in bucket (%u)\n", assigned_bucket->id);
-		manager->error = ct_error_make(ctErrorCode_EngineFailure, "Engine failed to find a free slot for a container. This should never happen.");
 		return NULL;
 	}
 
@@ -157,8 +162,14 @@ ct_containers_newContainer(ctContainerManager* manager, uint32_t size) {
 
 	if (ptr == NULL) {
 		ct_utils_clearBit(&assigned_bucket->bitmask, assigned_con->bucket_index);
-		CUTE_LOG("containers", "Failed to allocate memory for container (%u:%u) [%p] of size %u\n", assigned_con->bucket_id, assigned_con->bucket_index, assigned_con, size);
-		manager->error = ct_error_make(ctErrorCode_EngineFailure, "Engine failed to allocate memory for new container. Out of memory.");
+		manager->error.code = ctErrorCode_EngineFailure;
+		ct_utils_format(
+			manager->error.msg, 
+			sizeof(manager->error.msg), 
+			"Engine failed to allocate memory for new container (%u.%u). Out of memory.", assigned_con->bucket_id, assigned_con->bucket_index
+		);
+
+		CUTE_LOG("containers", "Failed to allocate memory for container (%u.%u) [%p] of size %u\n", assigned_con->bucket_id, assigned_con->bucket_index, assigned_con, size);
 		return NULL;
 	}
 
@@ -172,7 +183,7 @@ ct_containers_newContainer(ctContainerManager* manager, uint32_t size) {
 	memset(assigned_con->types, ctAtomType_NoneType, size);
 	
 
-	CUTE_LOG("containers", "New container (%u:%u) [%p] allocated to bucket (%u)\n", assigned_con->bucket_id, assigned_con->bucket_index, assigned_con, assigned_bucket->id);
+	CUTE_LOG("containers", "New container (%u.%u) [%p] allocated to bucket (%u)\n", assigned_con->bucket_id, assigned_con->bucket_index, assigned_con, assigned_bucket->id);
 	return assigned_con;
 }
 
@@ -199,7 +210,7 @@ ct_containers_delContainer(ctContainerManager* manager, ctContainer* con) {
 
 	free(con->atoms);
 
-	CUTE_LOG("containers", "Container (%u:%u) [%p] deallocated.\n", con->bucket_id, con->bucket_index, con);
+	CUTE_LOG("containers", "Container (%u.%u) [%p] deallocated.\n", con->bucket_id, con->bucket_index, con);
 }
 
 
@@ -207,7 +218,12 @@ ctTypedAtom
 ct_containers_conGet(ctContainerManager* manager, ctContainer* con, uint32_t index) {
 
 	if (index >= con->size) {
-		manager->error = ct_error_make(ctErrorCode_OutOfBounds, "Can not get atom at invalid container index.");
+		manager->error.code = ctErrorCode_OutOfBounds;
+		ct_utils_format(
+			manager->error.msg, 
+			sizeof(manager->error.msg), 
+			"Can not access container slot #%u (>= %u)", index, con->size
+		);
 		return (ctTypedAtom){ctAtomType_NoneType, (ctAtom){0}};
 	}
 
@@ -218,7 +234,12 @@ ct_containers_conGet(ctContainerManager* manager, ctContainer* con, uint32_t ind
 void
 ct_containers_conSet(ctContainerManager* manager, ctContainer* con, uint32_t index, ctTypedAtom atom) {
 	if (index >= con->size) {
-		manager->error = ct_error_make(ctErrorCode_OutOfBounds, "Can not set atom at invalid container index.");
+		manager->error.code = ctErrorCode_OutOfBounds;
+		ct_utils_format(
+			manager->error.msg, 
+			sizeof(manager->error.msg), 
+			"Can not set container slot #%u (>= %u)", index, con->size
+		);
 		return;
 	}
 
@@ -268,7 +289,7 @@ ct_containers_conResize(ctContainerManager* manager, ctContainer* con, uint32_t 
 	con->types = temp.types;
 	con->size = new_size;
 
-	CUTE_LOG("containers", "Resized container (%u:%u) [%p] from %u to %u\n", con->bucket_id, con->bucket_index, con, temp.size, new_size);
+	CUTE_LOG("containers", "Resized container (%u.%u) [%p] from %u to %u\n", con->bucket_id, con->bucket_index, con, temp.size, new_size);
 }
 
 
@@ -294,7 +315,7 @@ ct_containers_conCopy(ctContainerManager* manager, ctContainer* src) {
 		}
 	}
 	
-	CUTE_LOG("containers", "Copied container (%u:%u) [%p] from container (%u:%u) [%p]\n", copy->bucket_id, copy->bucket_index, copy, src->bucket_id, src->bucket_index, src);
+	CUTE_LOG("containers", "Copied container (%u.%u) [%p] from container (%u.%u) [%p]\n", copy->bucket_id, copy->bucket_index, copy, src->bucket_id, src->bucket_index, src);
 
 	return copy;
 }
@@ -323,7 +344,7 @@ ct_containers_conClone(ctContainerManager* manager, ctContainer* src) {
 		}
 	}
 	
-	CUTE_LOG("containers", "Cloned container (%u:%u) [%p] from container (%u:%u) [%p]\n", clone->bucket_id, clone->bucket_index, clone, src->bucket_id, src->bucket_index, src);
+	CUTE_LOG("containers", "Cloned container (%u.%u) [%p] from container (%u.%u) [%p]\n", clone->bucket_id, clone->bucket_index, clone, src->bucket_id, src->bucket_index, src);
 
 	return clone;
 }

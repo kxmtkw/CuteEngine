@@ -55,17 +55,9 @@ static const char* ct_error_stringforms[] = {
 
 typedef struct {
 	ctErrorCode code;
-	char*       msg;
+	char        msg[256];
 } ctError;
 
-
-static inline ctError
-ct_error_make(ctErrorCode code, char* message) {
-	ctError err;
-	err.code = code;
-	err.msg = message;
-	return err;
-}
 
 static inline void
 ct_error_print(ctError err) {

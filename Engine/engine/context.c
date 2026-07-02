@@ -10,6 +10,7 @@
 #include "CuteInstr.h"
 #include "containers/container.h"
 #include "engine/error.h"
+#include "utils/utils.h"
 
 #include "context.h"
 
@@ -72,12 +73,30 @@ void
 ct_ctx_callProcedure(ctContext* ctx, uint32_t procedure_id, uint8_t arg_count, uint8_t arg_start_slot, uint8_t return_slot) {
 
 	if (ctx->callstack.size >= ctx->callstack.capacity) {
-		ct_ctx_throwError(ctx, ct_error_make(ctErrorCode_RecursionDepth, "Max recursion depth reached."));
+		ctx->error = (ctError){.code=ctErrorCode_RecursionDepth};
+		ct_utils_format(
+			ctx->error.msg, 
+			sizeof(ctx->error.msg), 
+			"Recursion depth reached. (%u calls)", ctx->callstack.capacity
+		);
+		ct_ctx_throwError(
+			ctx, 
+			ctx->error
+		);
 		return;
 	};
 
 	if (procedure_id >= ctx->image->header.procedure_count) {
-		ct_ctx_throwError(ctx, ct_error_make(ctErrorCode_ProcedureError, "Invalid procedure ID called."));
+		ctx->error = (ctError){.code=ctErrorCode_ProcedureError};
+		ct_utils_format(
+			ctx->error.msg, 
+			sizeof(ctx->error.msg), 
+			"Invalid procedure ID '%u' called. [%u-%u]", procedure_id, 0, ctx->image->header.procedure_count-1
+		);
+		ct_ctx_throwError(
+			ctx, 
+			ctx->error
+		);
 		return;
 	}
 
