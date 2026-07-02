@@ -16,9 +16,14 @@
 void
 ct_containers_init(ctContainerManager* manager) {
 	manager->internal_id = 0;
+
+	manager->buckets = NULL;
 	manager->bucket_count = 0;
 	manager->bucket_capacity = 0;
-	manager->buckets = NULL;
+	
+	manager->empty_buckets = NULL;
+	manager->empty_bucket_count = 0;
+	manager->empty_bucket_capacity = 0;
 
 	ct_containers_newBucket(manager);
 }
@@ -70,10 +75,33 @@ ct_containers_newBucket(ctContainerManager* manager) {
 	manager->buckets[manager->bucket_count] = bucket;
 	manager->bucket_count++;
 
-	CUTE_LOG("containers", "New bucket (%u) [%p] allocated.\n", bucket->id, bucket);
+	ct_containers_pushEmptyBucket(manager, bucket);
+
+	CUTE_LOG("containers", "New bucket (%u) [%p] allocated. Pushed it to empty buckets stack.\n", bucket->id, bucket);
 	return bucket->id;
 };
 
+
+// Mark a bucket as empty and push it to the empty buckets stack
+void
+ct_containers_pushEmptyBucket(ctContainerManager* manager, ctContainerBucket* bucket) {
+	
+	if (manager->empty_bucket_count == manager->empty_bucket_capacity) {
+		manager->empty_bucket_capacity = manager->empty_bucket_capacity == 0 ? 1 : manager->empty_bucket_capacity * 2;
+		manager->empty_buckets = realloc(manager->empty_buckets, sizeof(ctContainerBucket*) * manager->empty_bucket_capacity);
+	}
+
+	manager->empty_buckets[manager->empty_bucket_count++] = bucket;
+};
+
+
+ctContainerBucket*
+ct_containers_popEmptyBucket(ctContainerManager* manager) {
+	if (manager->empty_bucket_count == 0) {
+		return NULL;
+	};
+	return manager->empty_buckets[--manager->empty_bucket_count];
+};
 
 
 ctContainer*
@@ -82,24 +110,15 @@ ct_containers_newContainer(ctContainerManager* manager, uint32_t size) {
 	ctContainerBucket* assigned_bucket = NULL;
 	ctContainer* assigned_con = NULL;
 
-	// Looking for an not-filled bucket
-	for (uint32_t i = 0; i < manager->bucket_count; i++) {
-
-		ctContainerBucket* bucket = manager->buckets[i];
-
-		if (bucket->bitmask == 0xFFFFFFFFFFFFFFFF) {
-			continue;
-		}
-
-		assigned_bucket = bucket;
-		break;
-	}
-
+	assigned_bucket = ct_containers_popEmptyBucket(manager);
+	
 	// Have to allocate a new bucket if no bucket was found
 	if (!assigned_bucket) {
-		uint32_t new_bucket_id = ct_containers_newBucket(manager);
-		assigned_bucket = manager->buckets[new_bucket_id];
+		ct_containers_newBucket(manager);
+		assigned_bucket = ct_containers_popEmptyBucket(manager);
 	}
+	
+
 
 	// Looking for a valid index to assign the container to in the bucket
 	for (uint32_t j = 0; j < sizeof(assigned_bucket->containers)/sizeof(assigned_bucket->containers[0]); j++) {
@@ -113,6 +132,13 @@ ct_containers_newContainer(ctContainerManager* manager, uint32_t size) {
 		assigned_con->bucket_index = j;
 
 		ct_utils_setBit(&assigned_bucket->bitmask, j);
+
+		if (assigned_bucket->bitmask == 0xFFFFFFFFFFFFFFFF) {
+			CUTE_LOG("containers", "Bucket (%u) [%p] is full, so did not push to empty buckets stack.\n", assigned_bucket->id, assigned_bucket);
+		} else {
+			CUTE_LOG("containers", "Bucket (%u) [%p] is not full, so pushed to empty buckets stack.\n", assigned_bucket->id, assigned_bucket);
+			ct_containers_pushEmptyBucket(manager, assigned_bucket);
+		}
 
 		break;
 	};
@@ -144,6 +170,8 @@ ct_containers_newContainer(ctContainerManager* manager, uint32_t size) {
 	assigned_con->sub_containers = 0;
 	memset(assigned_con->types, ctAtomType_NoneType, size);
 	
+	CUTE_LOG("containers", "Empty Bucket Stack Size: %u\n", manager->empty_bucket_count);
+
 	CUTE_LOG("containers", "New container (%u:%u) [%p] allocated to bucket (%u)\n", assigned_con->bucket_id, assigned_con->bucket_index, assigned_con, assigned_bucket->id);
 	return assigned_con;
 }
@@ -162,6 +190,11 @@ ct_containers_delContainer(ctContainerManager* manager, ctContainer* con) {
 	}
 	
 	ctContainerBucket* bucket = manager->buckets[con->bucket_id];
+
+	if (bucket->bitmask == 0xFFFFFFFFFFFFFFFF) {
+		ct_containers_pushEmptyBucket(manager, bucket);
+	};
+
 	ct_utils_clearBit(&bucket->bitmask, con->bucket_index);
 
 	free(con->atoms);

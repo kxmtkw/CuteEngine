@@ -14,14 +14,3 @@ int ct_utils_format(char* buffer, size_t size, const char* format, ...) {
     return written;
 }
 
-bool ct_utils_isBitSet(uint64_t value, int n) {
-    return (value & (1ULL << n)) != 0;
-}
-
-void ct_utils_setBit(uint64_t *value, int n) {
-    *value |= (1ULL << n);
-}
-
-void ct_utils_clearBit(uint64_t *value, int n) {
-    *value &= ~(1ULL << n);
-}

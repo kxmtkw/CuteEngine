@@ -23,6 +23,9 @@ typedef struct {
 	ctContainerBucket** buckets;
 	uint32_t            bucket_count;
 	uint32_t            bucket_capacity;
+	ctContainerBucket** empty_buckets;
+	uint32_t            empty_bucket_count;
+	uint32_t            empty_bucket_capacity;
 } ctContainerManager;
 
 
@@ -37,6 +40,14 @@ ct_containers_end(ctContainerManager* manager);
 // Allocate a new bucket, return its id
 uint32_t
 ct_containers_newBucket(ctContainerManager* manager);
+
+// Mark a bucket as empty and push it to the empty buckets stack
+void
+ct_containers_pushEmptyBucket(ctContainerManager* manager, ctContainerBucket* bucket);
+
+// Mark a bucket as not empty and remove it from the empty buckets stack
+ctContainerBucket*
+ct_containers_popEmptyBucket(ctContainerManager* manager);
 
 // Allocate a new container
 ctContainer*

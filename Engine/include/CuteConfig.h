@@ -11,7 +11,7 @@
 
 #ifdef CUTE_CONF_DEBUG
 
-#define CUTE_CONF_LOG_FILTER(DOMAIN) true
+#define CUTE_CONF_LOG_FILTER(DOMAIN) DOMAIN == "containers"
 
 #define CUTE_LOG(DOMAIN, ...) \
     do { \
