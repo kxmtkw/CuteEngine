@@ -133,7 +133,7 @@ ct_ctx_returnProcedure(ctContext* ctx, ctAtom returned_atom, ctAtomType returned
 	ctx->ip = frame.return_ip;
 	ct_ctx_storeAtom(ctx, frame.return_value_slot, returned_atom, returned_atom_type);
 
-	CUTE_LOG("context", "Returned from procedure(%u) with return value: %s\n", frame.procedure_id, ct_atom_stringforms[returned_atom_type]);
+	CUTE_LOG("context", "Returned from procedure(%u) with return value: %s 0x%lx\n", frame.procedure_id, ct_atom_stringforms[returned_atom_type], returned_atom.raw);
 }
 
 inline void

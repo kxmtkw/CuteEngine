@@ -61,14 +61,14 @@ ct_containers_delContainer(ctContainerManager* manager, ctContainer* con);
 static inline void
 ct_containers_incRef(ctContainerManager* manager, ctContainer* con) {
 	con->ref_count++;
-	CUTE_LOG("containers", "Container (%u:%u) [%p] referenced. References: %u\n", con->bucket_id, con->bucket_index, con, con->ref_count);
+	CUTE_LOG("containers", "Container (%u.%u) [%p] referenced. References: %u\n", con->bucket_id, con->bucket_index, con, con->ref_count);
 }
 
 
 static inline void
 ct_containers_decRef(ctContainerManager* manager, ctContainer* con) {
 	con->ref_count--;
-	CUTE_LOG("containers", "Container (%u:%u) [%p] dereferenced. References: %u\n", con->bucket_id, con->bucket_index, con, con->ref_count);
+	CUTE_LOG("containers", "Container (%u.%u) [%p] dereferenced. References: %u\n", con->bucket_id, con->bucket_index, con, con->ref_count);
 	if (con->ref_count == 0) {
 		ct_containers_delContainer(manager, con);
 	}
