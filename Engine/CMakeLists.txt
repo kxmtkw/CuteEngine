@@ -2,6 +2,7 @@
 file(GLOB ENGINE_SRC "${CMAKE_CURRENT_SOURCE_DIR}/engine/*.c")
 file(GLOB IMAGE_SRC "${CMAKE_CURRENT_SOURCE_DIR}/image/*.c")
 file(GLOB CONTAINER_SRC "${CMAKE_CURRENT_SOURCE_DIR}/containers/*.c")
+file(GLOB MODULES_SRC "${CMAKE_CURRENT_SOURCE_DIR}/modules/*.c")
 file(GLOB UTILS_SRC "${CMAKE_CURRENT_SOURCE_DIR}/utils/*.c")
 
 
@@ -12,6 +13,7 @@ add_library(
     ${ENGINE_SRC}
 	${IMAGE_SRC}
 	${CONTAINER_SRC}
+	${MODULES_SRC}
 	${UTILS_SRC}
 )
 

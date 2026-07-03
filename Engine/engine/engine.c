@@ -8,6 +8,8 @@
 #include "CuteEngine.h"
 
 #include "containers/container.h"
+#include "modules/modules.h"
+#include "modules/modulespec.h"
 #include "context.h"
 #include "exec.h"
 #include "error.h"
