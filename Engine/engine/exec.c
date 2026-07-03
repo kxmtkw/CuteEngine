@@ -157,7 +157,6 @@ void ct_exec(ctContext* ctx) {
         [instrJmpAbsIf] = &&opJmpAbsIf,
         [instrJmpAbsIfNot] = &&opJmpAbsIfNot,
         [instrCall] = &&opCall,
-        [instrCallStatic] = &&opCallStatic,
         [instrReturn] = &&opReturn,
         [instrReturnVal] = &&opReturnVal,
         [instrConNew] = &&opConNew,
@@ -475,14 +474,6 @@ opCall:
     r4 = instrs[ctx->ip++];
     ct_ctx_loadAtom(ctx, r1, &a1, &t1);
     ct_ctx_callProcedure(ctx, a1.as_uint, r2, r3, r4);
-    goto next;
-
-opCallStatic:
-    ct_loadBytes(instrs, &ctx->ip, sizeof(u32), &u32);
-    r2 = instrs[ctx->ip++];
-    r3 = instrs[ctx->ip++];
-    r4 = instrs[ctx->ip++];
-    ct_ctx_callProcedure(ctx, u32, r2, r3, r4);
     goto next;
 
 opReturn:
