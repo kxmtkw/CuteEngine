@@ -52,6 +52,10 @@ ct_mbuffer_getSize(ctModuleArguments args) {
 
 	ctAtom buffer = args.atoms[0];
 
+	if (!ct_modules_utils_isContainer(args.types[0], &result)) {
+		return result;
+	};
+
 	result.returned_atom.as_uint = _ct_mbuffer_getBufferCapacity(buffer.as_container->size);
 	result.returned_atom_type = ctAtomType_UInt;
 	result.success = true;
@@ -71,6 +75,10 @@ ct_mbuffer_resize(ctModuleArguments args) {
 
 	ctAtom buffer = args.atoms[0];
 	ctAtom new_capacity = args.atoms[1];
+
+	if (!ct_modules_utils_isContainer(args.types[0], &result)) {
+		return result;
+	};
 
 	uint32_t bytes_as_atoms = (new_capacity.as_uint + 7) / 8;
 	ct_containers_conResize(args.container_manager, buffer.as_container, bytes_as_atoms);
@@ -93,6 +101,10 @@ ct_mbuffer_getByte(ctModuleArguments args) {
 
 	ctAtom buffer = args.atoms[0];
 	ctAtom index = args.atoms[1];
+
+	if (!ct_modules_utils_isContainer(args.types[0], &result)) {
+		return result;
+	};
 
 	if (index.as_uint >= _ct_mbuffer_getBufferCapacity(buffer.as_container->size)) {
 		result.returned_atom_type = ctAtomType_NoneType;
@@ -129,6 +141,10 @@ ct_mbuffer_setByte(ctModuleArguments args) {
     ctAtom buffer = args.atoms[0];
     ctAtom index = args.atoms[1];
     ctAtom byte_val = args.atoms[2];
+
+	if (!ct_modules_utils_isContainer(args.types[0], &result)) {
+		return result;
+	};
 
     uint32_t buffer_size = _ct_mbuffer_getBufferCapacity(buffer.as_container->size);
 
@@ -169,6 +185,10 @@ ct_mbuffer_setBytes(ctModuleArguments args) {
     ctAtom index = args.atoms[1];
     ctAtom count = args.atoms[2];
     ctAtom byte_val = args.atoms[3];
+
+	if (!ct_modules_utils_isContainer(args.types[0], &result)) {
+		return result;
+	};
 
     uint32_t buffer_size = _ct_mbuffer_getBufferCapacity(buffer.as_container->size);
 

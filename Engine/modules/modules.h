@@ -2,10 +2,12 @@
 #ifndef ENGINE_MODULES_H
 #define ENGINE_MODULES_H
 
+#include "CuteAtom.h"
 #include "CuteModules.h"
 
 #include <stdint.h>
 #include <string.h>
+#include "engine/error.h"
 #include "modules/modulespec.h"
 
 #include "modules/buffer.h"
@@ -16,8 +18,8 @@
 /*
 Module registration for the Cute Engine.
 Each module must define these macros:
-	MODULE_****_METHODS
-	MODULE_****_METHODS_COUNT
+	CUTE_MODULE_****_METHODS
+	CUTE_MODULE_****_METHODS_COUNT
 
 How to use the dispatch map:
 	map[index] -> module_map: gives you the dispatch table for the module at index.
@@ -27,11 +29,11 @@ How to use the dispatch map:
 
 
 static const ctModuleMethod* ct_modules_dispatch_map[] = {
-	[0] = MODULE_BUFFER_METHODS,
+	[0] = CUTE_MODULE_BUFFER_METHODS,
 };
 
 static const uint32_t ct_modules_method_count[] = {
-	[0] = MODULE_BUFFER_METHODS_COUNT,
+	[0] = CUTE_MODULE_BUFFER_METHODS_COUNT,
 };
 
 static const uint32_t ct_modules_count = sizeof(ct_modules_dispatch_map) / sizeof(ct_modules_dispatch_map[0]);
@@ -78,5 +80,15 @@ ct_modules_utils_areArgsEnough(uint32_t required_args, uint32_t obtained_args, c
 	return false;
 };
 
+static inline bool
+ct_modules_utils_isContainer(ctAtomType type, ctModuleResult* result) {
+	if (type == ctAtomType_Container) {return true;}
+
+	result->returned_atom_type = ctAtomType_NoneType;
+	result->error.code = ctErrorCode_ValueError;
+	result->success = false;
+	ct_utils_format(result->error.msg, sizeof(result->error.msg), "Modcall expected container. Got %s.", ct_atom_stringforms[type]);
+	return false;
+};
 
 #endif // ENGINE_MODULES_H

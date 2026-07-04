@@ -92,13 +92,13 @@ static const ctModuleMethod ct_mbuffer_dispatchMap[] = {
 	ct_mbuffer_setBytes
 };
 
-#define MODULE_BUFFER_METHODS ct_mbuffer_dispatchMap
-#define MODULE_BUFFER_METHODS_COUNT (sizeof(ct_mbuffer_dispatchMap) / sizeof(ct_mbuffer_dispatchMap[0]))
+#define CUTE_MODULE_BUFFER_METHODS ct_mbuffer_dispatchMap
+#define CUTE_MODULE_BUFFER_METHODS_COUNT (sizeof(ct_mbuffer_dispatchMap) / sizeof(ct_mbuffer_dispatchMap[0]))
 
 #else
 
-#define MODULE_BUFFER_METHODS NULL
-#define MODULE_BUFFER_METHODS_COUNT 0
+#define CUTE_MODULE_BUFFER_METHODS NULL
+#define CUTE_MODULE_BUFFER_METHODS_COUNT 0
 
 #endif // CUTE_BUILTIN_MODULE_BUFFER
 
