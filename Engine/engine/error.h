@@ -17,6 +17,7 @@ typedef enum {
 	ctErrorCode_OutOfBounds        = 0x03,
 	ctErrorCode_ProcedureError     = 0x04,
 	ctErrorCode_AssertionFailed    = 0x05,
+	ctErrorCode_ModuleError        = 0x06,
 
 	ctErrorCode_TypeError          = 0x10,
 	ctErrorCode_ValueError         = 0x11,
@@ -24,6 +25,7 @@ typedef enum {
 	ctErrorCode_IndexError         = 0x13,
 	ctErrorCode_OverflowError      = 0x14,
 	ctErrorCode_UnderflowError     = 0x15,
+	ctErrorCode_ArgumentError      = 0x16,
 
 	ctErrorCode_RecursionDepth     = 0x20,
 
@@ -39,6 +41,7 @@ static const char* ct_error_stringforms[] = {
 	[ctErrorCode_OutOfBounds]        = "OutOfBoundsError",
 	[ctErrorCode_ProcedureError]     = "ProcedureError",
 	[ctErrorCode_AssertionFailed]    = "AssertionFailed",
+	[ctErrorCode_ModuleError]        = "ModuleError",
 
 	[ctErrorCode_TypeError]          = "TypeError",
 	[ctErrorCode_ValueError]         = "ValueError",
@@ -46,6 +49,7 @@ static const char* ct_error_stringforms[] = {
 	[ctErrorCode_IndexError]         = "IndexError",
 	[ctErrorCode_OverflowError]      = "OverflowError",
 	[ctErrorCode_UnderflowError]     = "UnderflowError",
+	[ctErrorCode_ArgumentError]      = "ArgumentError",
 
 	[ctErrorCode_RecursionDepth]     = "RecursionError",
 

@@ -76,8 +76,9 @@ typedef enum {
 	instrJmpAbsIfNot     = 0xA5,
 
 	instrCall        = 0xB0,
-	instrReturn      = 0xBA,
-	instrReturnVal   = 0xBB,
+	instrReturn      = 0xB1,
+	instrReturnVal   = 0xB2,
+	instrModCall     = 0xBA,
 
 	instrConNew     = 0xC1,
 	instrConDel     = 0xC2,

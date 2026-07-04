@@ -110,6 +110,8 @@ ct_ctx_moveAtom(ctContext* ctx, uint8_t src_slot, uint8_t dest_slot) {
 void
 ct_ctx_throwError(ctContext* ctx, ctError error);
 
-
+// Call a module method
+void
+ct_ctx_modcall(ctContext* ctx, uint32_t module_id, uint32_t method_id, uint8_t arg_count, uint8_t arg_start_slot, uint8_t return_slot);
 
 #endif // ENGINE_CONTEXT_H

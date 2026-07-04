@@ -103,6 +103,7 @@ static const std::map<std::string, ctInstrSpec> ctInstrMap = {
     {"call",    {instrCall,    {ctOperandType::Register, ctOperandType::Register, ctOperandType::Register, ctOperandType::Register}}},
     {"ret",     {instrReturn,  {}}},
 	{"retval",  {instrReturnVal,{ctOperandType::Register}}},
+	{"modcall", {instrModCall, {ctOperandType::Register, ctOperandType::Register, ctOperandType::Register, ctOperandType::Register, ctOperandType::Register}}},
 
     {"connew",   {instrConNew,  {ctOperandType::Register, ctOperandType::Register}}},
     {"condel",   {instrConDel,  {ctOperandType::Register}}},

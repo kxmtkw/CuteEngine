@@ -9,6 +9,7 @@
 #include "modules/modulespec.h"
 
 #include "modules/buffer.h"
+#include "utils/utils.h"
 
 
 
@@ -56,12 +57,25 @@ ct_modules_getMethod(uint32_t module_id, uint32_t method_id, ctModuleMethod* met
 		return ctModuleDispatchCode_ModuleNotFound;
 	};
 
+
 	if (method_id >= ct_modules_method_count[module_id]) {
 		return ctModuleDispatchCode_MethodNotFound;
 	};
 
 	*method = module_map[method_id];
 	return ctModuleDispatchCode_Success;
+};
+
+
+static inline bool
+ct_modules_utils_areArgsEnough(uint32_t required_args, uint32_t obtained_args, ctModuleResult* result) {
+	if (obtained_args == required_args) {return true;}
+
+	result->returned_atom_type = ctAtomType_NoneType;
+	result->error.code = ctErrorCode_ArgumentError;
+	result->success = false;
+	ct_utils_format(result->error.msg, sizeof(result->error.msg), "Expected %u arguments. Got %u.", required_args, obtained_args);
+	return false;
 };
 
 

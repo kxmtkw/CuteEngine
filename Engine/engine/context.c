@@ -10,6 +10,8 @@
 #include "CuteInstr.h"
 #include "containers/container.h"
 #include "engine/error.h"
+#include "modules/modules.h"
+#include "modules/modulespec.h"
 #include "utils/utils.h"
 
 #include "context.h"
@@ -136,9 +138,51 @@ ct_ctx_returnProcedure(ctContext* ctx, ctAtom returned_atom, ctAtomType returned
 	CUTE_LOG("context", "Returned from procedure(%u) with return value: %s 0x%lx\n", frame.procedure_id, ct_atom_stringforms[returned_atom_type], returned_atom.raw);
 }
 
+
 inline void
 ct_ctx_throwError(ctContext* ctx, ctError error) {
 	ctx->running = false;
 	ctx->has_error = true;
 	ctx->error = error;
 }
+
+
+void
+ct_ctx_modcall(ctContext* ctx, uint32_t module_id, uint32_t method_id, uint8_t arg_count, uint8_t arg_start_slot, uint8_t return_slot) {
+
+	ctModuleMethod method;
+
+	ctModuleDispatchCode code = ct_modules_getMethod(module_id, method_id, &method);
+
+	if (code != ctModuleDispatchCode_Success) {
+		ctx->error.code = ctErrorCode_ModuleError;
+		ct_utils_format(
+			ctx->error.msg,
+			sizeof(ctx->error.msg),
+			"Unknown module method: %u.%u", 
+			module_id, method_id
+		);
+		ct_ctx_throwError(ctx, ctx->error);
+		return;
+	};
+
+	CUTE_LOG("context", "Calling module method: %u.%u with %u arguments starting from slot %u. Returning to slot %u.\n", module_id, method_id, arg_count, arg_start_slot, return_slot);
+
+	ctModuleArguments args = {
+		.atoms = &ctx->current_frame->file.atoms[arg_start_slot],
+		.types = (ctAtomType*) &ctx->current_frame->file.types[arg_start_slot],
+		.container_manager = ctx->containers,
+		.count = arg_count
+	};
+
+
+	ctModuleResult result = method(args);
+
+	if (!result.success) {
+		ct_ctx_throwError(ctx, result.error);
+		return;
+	};
+
+	ctx->current_frame->file.atoms[return_slot] = result.returned_atom;
+	ctx->current_frame->file.types[return_slot] = result.returned_atom_type;
+};
