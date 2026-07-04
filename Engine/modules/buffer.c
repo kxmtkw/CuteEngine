@@ -14,8 +14,13 @@
 #ifdef CUTE_BUILTIN_MODULE_BUFFER
 
 static inline uint32_t
-_ct_mbuffer_getBufferCapacity(uint32_t con_size) {
-	return con_size*8;
+_ct_mbuffer_getBufferCapacity(ctContainer* con) {
+	return con->size * 8;
+}
+
+ctBuffer
+ct_mbuffer_makeBuffer(ctContainer* con) {
+	return (ctBuffer) {(uint8_t*) con->atoms, con->size * 8};;
 };
 
 
@@ -56,7 +61,7 @@ ct_mbuffer_getSize(ctModuleArguments args) {
 		return result;
 	};
 
-	result.returned_atom.as_uint = _ct_mbuffer_getBufferCapacity(buffer.as_container->size);
+	result.returned_atom.as_uint = _ct_mbuffer_getBufferCapacity(buffer.as_container);
 	result.returned_atom_type = ctAtomType_UInt;
 	result.success = true;
 
@@ -99,14 +104,16 @@ ct_mbuffer_getByte(ctModuleArguments args) {
 		return result;
 	};
 
-	ctAtom buffer = args.atoms[0];
+	ctAtom buffer_atom = args.atoms[0];
 	ctAtom index = args.atoms[1];
 
 	if (!ct_modules_utils_isContainer(args.types[0], &result)) {
 		return result;
 	};
 
-	if (index.as_uint >= _ct_mbuffer_getBufferCapacity(buffer.as_container->size)) {
+	ctBuffer buffer = ct_mbuffer_makeBuffer(buffer_atom.as_container);
+
+	if (index.as_uint >= buffer.size) {
 		result.returned_atom_type = ctAtomType_NoneType;
 		result.returned_atom.raw = 0;
 		result.success = false;
@@ -114,14 +121,13 @@ ct_mbuffer_getByte(ctModuleArguments args) {
 		ct_utils_format(
 			result.error.msg,
 			sizeof(result.error.msg),
-			"Accessed index %u (>=%u)", index.as_uint, _ct_mbuffer_getBufferCapacity(buffer.as_container->size)
+			"Accessed index %u (>=%u)", index.as_uint, buffer.size
 		);
 		return result;
 	};
 
-	uint8_t* raw_bytes = (uint8_t*) buffer.as_container->atoms;
 	
-	result.returned_atom.as_uint = raw_bytes[index.as_uint];
+	result.returned_atom.as_uint = buffer.bytes[index.as_uint];
 	result.returned_atom_type = ctAtomType_UInt;
 	result.success = true;
 
@@ -138,7 +144,7 @@ ct_mbuffer_setByte(ctModuleArguments args) {
         return result;
     };
 
-    ctAtom buffer = args.atoms[0];
+    ctAtom buffer_atom = args.atoms[0];
     ctAtom index = args.atoms[1];
     ctAtom byte_val = args.atoms[2];
 
@@ -146,9 +152,9 @@ ct_mbuffer_setByte(ctModuleArguments args) {
 		return result;
 	};
 
-    uint32_t buffer_size = _ct_mbuffer_getBufferCapacity(buffer.as_container->size);
+	ctBuffer buffer = ct_mbuffer_makeBuffer(buffer_atom.as_container);
 
-	if (index.as_uint >= buffer_size) {
+	if (index.as_uint >= buffer.size) {
         result.returned_atom_type = ctAtomType_NoneType;
         result.returned_atom.raw = 0;
         result.success = false;
@@ -156,13 +162,12 @@ ct_mbuffer_setByte(ctModuleArguments args) {
         ct_utils_format(
             result.error.msg,
             sizeof(result.error.msg),
-            "Accessed index %u (>=%u)", index.as_uint, buffer_size
+            "Accessed index %u (>=%u)", index.as_uint, buffer.size
         );
         return result;
     };
 
-    uint8_t* raw_bytes = (uint8_t*) buffer.as_container->atoms;
-    raw_bytes[index.as_uint] = (uint8_t) byte_val.as_uint;
+    buffer.bytes[index.as_uint] = (uint8_t) byte_val.as_uint;
 
     result.returned_atom_type = ctAtomType_NoneType;
     result.returned_atom.raw = 0;
@@ -181,7 +186,7 @@ ct_mbuffer_setBytes(ctModuleArguments args) {
         return result;
     };
 
-    ctAtom buffer = args.atoms[0];
+    ctAtom buffer_atom = args.atoms[0];
     ctAtom index = args.atoms[1];
     ctAtom count = args.atoms[2];
     ctAtom byte_val = args.atoms[3];
@@ -190,9 +195,9 @@ ct_mbuffer_setBytes(ctModuleArguments args) {
 		return result;
 	};
 
-    uint32_t buffer_size = _ct_mbuffer_getBufferCapacity(buffer.as_container->size);
+	ctBuffer buffer = ct_mbuffer_makeBuffer(buffer_atom.as_container);
 
-    if (index.as_uint >= buffer_size || (index.as_uint + count.as_uint) > buffer_size) {
+    if (index.as_uint >= buffer.size || (index.as_uint + count.as_uint) > buffer.size) {
         result.returned_atom_type = ctAtomType_NoneType;
         result.returned_atom.raw = 0;
         result.success = false;
@@ -201,15 +206,14 @@ ct_mbuffer_setBytes(ctModuleArguments args) {
             result.error.msg,
             sizeof(result.error.msg),
             "Accessed range %u to %u (>=%u)", 
-            index.as_uint, (index.as_uint + count.as_uint), buffer_size
+            index.as_uint, (index.as_uint + count.as_uint), buffer.size
         );
         return result;
     };
 
-    uint8_t* raw_bytes = (uint8_t*) buffer.as_container->atoms;
     
     for (uint32_t i = 0; i < count.as_uint; i++) {
-        raw_bytes[index.as_uint + i] = (uint8_t) byte_val.as_uint;
+        buffer.bytes[index.as_uint + i] = (uint8_t) byte_val.as_uint;
     }
 
     result.returned_atom_type = ctAtomType_NoneType;

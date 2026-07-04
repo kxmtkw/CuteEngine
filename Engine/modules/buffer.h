@@ -2,10 +2,20 @@
 #ifndef ENGINE_MODULES_BUFFER_H
 #define ENGINE_MODULES_BUFFER_H
 
+#include "CuteAtom.h"
 #include "CuteModules.h"
 #include "modulespec.h"
 
 #ifdef CUTE_BUILTIN_MODULE_BUFFER
+
+// Representation of a container as a buffer object
+typedef struct {
+	uint8_t* bytes;
+	uint32_t size;
+} ctBuffer;
+
+ctBuffer
+ct_mbuffer_makeBuffer(ctContainer* con);
 
 /*
 Allocate a new buffer.
