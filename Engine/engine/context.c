@@ -72,7 +72,7 @@ ct_ctx_del(ctContext* ctx) {
 
 
 void
-ct_ctx_callProcedure(ctContext* ctx, uint32_t procedure_id, uint8_t arg_count, uint8_t arg_start_slot, uint8_t return_slot) {
+ct_ctx_callProcedure(ctContext* ctx, uint32_t procedure_id, uint32_t arg_count, uint8_t arg_start_slot, uint8_t return_slot) {
 
 	if (ctx->callstack.size >= ctx->callstack.capacity) {
 		ctx->error = (ctError){.code=ctErrorCode_RecursionDepth};
@@ -101,6 +101,20 @@ ct_ctx_callProcedure(ctContext* ctx, uint32_t procedure_id, uint8_t arg_count, u
 		);
 		return;
 	}
+
+	if (arg_count >= CUTE_CONF_SLOT_COUNT) {
+		ctx->error = (ctError){.code=ctErrorCode_ProcedureError};
+		ct_utils_format(
+			ctx->error.msg, 
+			sizeof(ctx->error.msg), 
+			"Too many arguments passed to procedure: '%u' (>=%u)", arg_count, CUTE_CONF_SLOT_COUNT
+		);
+		ct_ctx_throwError(
+			ctx, 
+			ctx->error
+		);
+		return;
+	};
 
 	ctCallFrame frame;
 	frame.procedure_id = procedure_id;
@@ -148,7 +162,7 @@ ct_ctx_throwError(ctContext* ctx, ctError error) {
 
 
 void
-ct_ctx_modcall(ctContext* ctx, uint32_t module_id, uint32_t method_id, uint8_t arg_count, uint8_t arg_start_slot, uint8_t return_slot) {
+ct_ctx_modcall(ctContext* ctx, uint32_t module_id, uint32_t method_id, uint32_t arg_count, uint8_t arg_start_slot, uint8_t return_slot) {
 
 	ctModuleMethod method;
 
