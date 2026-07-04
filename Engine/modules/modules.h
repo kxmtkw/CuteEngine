@@ -10,10 +10,10 @@
 #include "engine/error.h"
 #include "modules/modulespec.h"
 
-#include "modules/buffer.h"
 #include "utils/utils.h"
 
 
+#include "modules/buffer.h"
 
 /*
 Module registration for the Cute Engine.
