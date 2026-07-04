@@ -90,8 +90,10 @@ ct_containers_conCopy(ctContainerManager* manager, ctContainer* src);
 ctContainer*
 ct_containers_conDeepCopy(ctContainerManager* manager, ctContainer* src);
 
-// Makes a clone of the container
-ctContainer*
-ct_containers_conClone(ctContainerManager* manager, ctContainer* src);
+
+// Resize the container
+void
+ct_containers_conResize(ctContainerManager* manager, ctContainer* con, uint32_t new_size);
+
 
 #endif // CONTAINERS_CONTAINER_H

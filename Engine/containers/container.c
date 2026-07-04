@@ -319,32 +319,37 @@ ct_containers_conDeepCopy(ctContainerManager* manager, ctContainer* src) {
 	return copy;
 }
 
-ctContainer*
-ct_containers_conClone(ctContainerManager* manager, ctContainer* src) {
 
-	ctContainer* clone = ct_containers_newContainer(manager, src->size);
+// Resize the container
+void
+ct_containers_conResize(ctContainerManager* manager, ctContainer* con, uint32_t new_size) {
 
-	if (!clone) {
-		return NULL;
-	}
-
-	memcpy(clone->atoms, src->atoms, src->size * sizeof(ctAtom));
-	memcpy(clone->types, src->types, src->size * sizeof(ctAtomTypeSize));
-
-	clone->sub_containers = src->sub_containers;
-	clone->proto = src;
-
-	uint32_t j = 0;
-	
-	for (uint32_t i = 0; i < src->size && j < src->sub_containers; i++) {
-		if (src->types[i] == ctAtomType_Container) {
-			clone->atoms[i].as_container = ct_containers_conDeepCopy(manager, src->atoms[i].as_container);
-			ct_containers_incRef(manager, clone->atoms[i].as_container);
-			j++;
-		}
+	if (con->size == new_size) {
+		return;
 	}
 	
-	CUTE_LOG("containers", "Cloned container (%u.%u) [%p] from container (%u.%u) [%p]\n", clone->bucket_id, clone->bucket_index, clone, src->bucket_id, src->bucket_index, src);
+	ctContainer temp;
+	temp.size = con->size; // for logging later
 
-	return clone;
+	// Cannot use realloc here because of my weird hack
+
+	uint8_t* ptr = malloc(
+		sizeof(ctAtom) * new_size +
+		sizeof(ctAtomTypeSize) * new_size
+	);
+	temp.atoms = (ctAtom*) (ptr);
+	temp.types = (ctAtomTypeSize*) (ptr + sizeof(ctAtom) * new_size);
+
+	size_t size_to_copy = new_size < con->size ? new_size: con->size;
+
+	memcpy(temp.atoms, con->atoms, size_to_copy * sizeof(ctAtom));
+	memcpy(temp.types, con->types, size_to_copy * sizeof(ctAtomTypeSize));
+
+	free(con->atoms);
+
+	con->atoms = temp.atoms;
+	con->types = temp.types;
+	con->size = new_size;
+
+	CUTE_LOG("containers", "Resized container (%u.%u) [%p] from %u to %u\n", con->bucket_id, con->bucket_index, con, temp.size, new_size);
 }

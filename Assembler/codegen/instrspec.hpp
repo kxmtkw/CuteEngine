@@ -112,7 +112,7 @@ static const std::map<std::string, ctInstrSpec> ctInstrMap = {
     {"consize",     {instrConSize,{ctOperandType::Register, ctOperandType::Register}}},
 	{"concopy",     {instrConCopy,{ctOperandType::Register, ctOperandType::Register}}},
 	{"condeepcopy", {instrConDeepCopy,{ctOperandType::Register, ctOperandType::Register}}},
-	{"conclone",    {instrConClone,{ctOperandType::Register, ctOperandType::Register}}},
+	{"conresize",   {instrConResize,{ctOperandType::Register, ctOperandType::Register}}},
 
 };
 
