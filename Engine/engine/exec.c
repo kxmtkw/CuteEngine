@@ -63,6 +63,14 @@ ctx->error = (ctError) {.code=ctErrorCode_IllegalInstruction}; \
 ct_utils_format(ctx->error.msg, sizeof(ctx->error.msg), "Out of range ip: 0x%08lX", ctx->ip); ct_ctx_throwError(ctx, ctx->error); };
 
 
+#define CHECK_IF_CONTAINER(TYPE) \
+if (TYPE != ctAtomType_Container) { \
+	ctx->error.code = ctErrorCode_IllegalInstruction; \
+	ct_utils_format(ctx->error.msg, sizeof(ctx->error.msg), "Expected container, got %s.", ct_atom_stringforms[TYPE]); \
+	ct_ctx_throwError(ctx, ctx->error); \
+	return; \
+}; \
+
 static inline void
 ct_loadBytes(ctInstructionSize* instrs, uint64_t* ip, uint32_t n, void* dest) {
 	memcpy(dest, &instrs[*ip], n);
@@ -514,7 +522,6 @@ opConNew:
 
 opConDel:
     r1 = instrs[ctx->ip++];
-    ct_ctx_loadAtom(ctx, r1, &a1, &t1);
     ct_ctx_storeAtom(ctx, r1, (ctAtom){.as_uint=0}, ctAtomType_NoneType);
     goto next;
 
@@ -524,6 +531,7 @@ opConGet:
     r3 = instrs[ctx->ip++];
     ct_ctx_loadAtom(ctx, r2, &a1, &t1);
     ct_ctx_loadAtom(ctx, r3, &a2, &t2);
+	CHECK_IF_CONTAINER(t1);
     typed_atom = ct_containers_conGet(ctx->containers, a1.as_container, a2.as_uint);
     if (ctx->containers->error.code != ctErrorCode_None) {
         ct_ctx_throwError(ctx, ctx->containers->error);
@@ -539,6 +547,7 @@ opConSet:
     ct_ctx_loadAtom(ctx, r1, &a1, &t1);
     ct_ctx_loadAtom(ctx, r2, &a2, &t2);
     ct_ctx_loadAtom(ctx, r3, &a3, &t3);
+	CHECK_IF_CONTAINER(t1);
     ct_containers_conSet(ctx->containers, a1.as_container, a2.as_uint, (ctTypedAtom){t3, a3});
     if (ctx->containers->error.code != ctErrorCode_None) {
         ct_ctx_throwError(ctx, ctx->containers->error);
@@ -550,6 +559,7 @@ opConSize:
     r1 = instrs[ctx->ip++];
     r2 = instrs[ctx->ip++];
     ct_ctx_loadAtom(ctx, r2, &a1, &t1);
+	CHECK_IF_CONTAINER(t1);
     ct_ctx_storeAtom(ctx, r1, (ctAtom){.as_uint = a1.as_container->size}, ctAtomType_UInt);
     goto next;
 
@@ -558,6 +568,7 @@ opConCopy:
     r1 = instrs[ctx->ip++];
     r2 = instrs[ctx->ip++];
     ct_ctx_loadAtom(ctx, r2, &a2, &t2);
+	CHECK_IF_CONTAINER(t2);
     a1.as_container = ct_containers_conCopy(ctx->containers, a2.as_container);
     if (ctx->containers->error.code != ctErrorCode_None) {
         ct_ctx_throwError(ctx, ctx->containers->error);
@@ -570,6 +581,7 @@ opConDeepCopy:
     r1 = instrs[ctx->ip++];
     r2 = instrs[ctx->ip++];
     ct_ctx_loadAtom(ctx, r2, &a2, &t2);
+	CHECK_IF_CONTAINER(t2);
     a1.as_container = ct_containers_conDeepCopy(ctx->containers, a2.as_container);
     if (ctx->containers->error.code != ctErrorCode_None) {
         ct_ctx_throwError(ctx, ctx->containers->error);
@@ -583,6 +595,7 @@ opConResize:
 	r2 = instrs[ctx->ip++];
 	ct_ctx_loadAtom(ctx, r1, &a1, &t1);
     ct_ctx_loadAtom(ctx, r2, &a2, &t2);
+	CHECK_IF_CONTAINER(t1);
     ct_containers_conResize(ctx->containers, a1.as_container, a2.as_uint);
     if (ctx->containers->error.code != ctErrorCode_None) {
         ct_ctx_throwError(ctx, ctx->containers->error);
