@@ -21,6 +21,7 @@ typedef struct {
 
 typedef struct {
 	uint32_t            procedure_id;
+	uint32_t            container_field_count;
 	uint64_t            return_ip;
 	uint8_t             args_count;
 	uint8_t             return_value_slot;
@@ -72,6 +73,7 @@ ct_ctx_storeAtom(ctContext* ctx, uint8_t slot, ctAtom atom, ctAtomType type) {
 
 	if (ctx->current_frame->file.types[slot] == ctAtomType_Container) {
 		ct_containers_decRef(ctx->containers, ctx->current_frame->file.atoms[slot].as_container);
+		ctx->current_frame->container_field_count--;
 	};
 
 	ctx->current_frame->file.atoms[slot] = atom;
@@ -79,6 +81,7 @@ ct_ctx_storeAtom(ctContext* ctx, uint8_t slot, ctAtom atom, ctAtomType type) {
 
 	if (type == ctAtomType_Container) {
 		ct_containers_incRef(ctx->containers, atom.as_container);
+		ctx->current_frame->container_field_count++;
 	};
 };
 
@@ -95,6 +98,7 @@ ct_ctx_moveAtom(ctContext* ctx, uint8_t src_slot, uint8_t dest_slot) {
 
 	if (ctx->current_frame->file.types[dest_slot] == ctAtomType_Container) {
 		ct_containers_decRef(ctx->containers, ctx->current_frame->file.atoms[dest_slot].as_container);
+		ctx->current_frame->container_field_count--;
 	};
 
 	ctx->current_frame->file.atoms[dest_slot] = ctx->current_frame->file.atoms[src_slot];
@@ -102,6 +106,7 @@ ct_ctx_moveAtom(ctContext* ctx, uint8_t src_slot, uint8_t dest_slot) {
 
 	if (ctx->current_frame->file.types[src_slot] == ctAtomType_Container) {
 		ct_containers_incRef(ctx->containers, ctx->current_frame->file.atoms[src_slot].as_container);
+		ctx->current_frame->container_field_count++;
 	};
 };
 

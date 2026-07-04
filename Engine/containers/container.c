@@ -246,7 +246,7 @@ ct_containers_conSet(ctContainerManager* manager, ctContainer* con, uint32_t ind
 
 	if (con->types[index] == ctAtomType_Container) {
 		ct_containers_decRef(manager, con->atoms[index].as_container);
-		if (con->sub_containers > 0) con->sub_containers--; // remove these checks later since sub_containers will always be ++
+		if (con->sub_containers > 0) con->sub_containers--;
 	}
 
 	con->atoms[index] = atom.atom;
@@ -329,7 +329,6 @@ ct_containers_conResize(ctContainerManager* manager, ctContainer* con, uint32_t 
 	}
 	
 	ctContainer temp;
-	temp.size = con->size; // for logging later
 
 	// Cannot use realloc here because of my weird hack
 
@@ -340,7 +339,14 @@ ct_containers_conResize(ctContainerManager* manager, ctContainer* con, uint32_t 
 	temp.atoms = (ctAtom*) (ptr);
 	temp.types = (ctAtomTypeSize*) (ptr + sizeof(ctAtom) * new_size);
 
-	size_t size_to_copy = new_size < con->size ? new_size: con->size;
+	size_t size_to_copy = new_size < con->size ? new_size : con->size;
+
+	for (size_t i = new_size; i <= con->size && con->sub_containers; i++) {
+		if (con->types[i] == ctAtomType_Container) {
+			ct_containers_decRef(manager, con->atoms[i].as_container);
+			con->sub_containers--;
+		}
+	};
 
 	memcpy(temp.atoms, con->atoms, size_to_copy * sizeof(ctAtom));
 	memcpy(temp.types, con->types, size_to_copy * sizeof(ctAtomTypeSize));
@@ -349,6 +355,8 @@ ct_containers_conResize(ctContainerManager* manager, ctContainer* con, uint32_t 
 
 	con->atoms = temp.atoms;
 	con->types = temp.types;
+
+	temp.size = con->size; // for logging
 	con->size = new_size;
 
 	CUTE_LOG("containers", "Resized container (%u.%u) [%p] from %u to %u\n", con->bucket_id, con->bucket_index, con, temp.size, new_size);

@@ -118,14 +118,20 @@ ct_ctx_callProcedure(ctContext* ctx, uint32_t procedure_id, uint32_t arg_count, 
 
 	ctCallFrame frame;
 	frame.procedure_id = procedure_id;
+	frame.container_field_count = 0;
 	frame.return_ip = ctx->ip;
 	frame.return_value_slot = return_slot;
 	frame.args_count = arg_count;
 	memset(frame.file.types, 0, CUTE_CONF_SLOT_COUNT);
 
-	for (size_t i = arg_start_slot; i < arg_start_slot + arg_count; i++) {
-		frame.file.atoms[i] = ctx->current_frame->file.atoms[i];
-		frame.file.types[i] = ctx->current_frame->file.types[i];
+	for (size_t i = 0; i < arg_count; i++) {
+		frame.file.atoms[i] = ctx->current_frame->file.atoms[arg_start_slot + i];
+		frame.file.types[i] = ctx->current_frame->file.types[arg_start_slot + i];
+
+		if (frame.file.types[i] == ctAtomType_Container) {
+			ct_containers_incRef(ctx->containers, frame.file.atoms[i].as_container);
+			frame.container_field_count++;
+		}
 	};
 	
 	ct_ctx_pushFrame(&ctx->callstack, frame);
@@ -148,6 +154,13 @@ ct_ctx_returnProcedure(ctContext* ctx, ctAtom returned_atom, ctAtomType returned
 	ctx->current_frame = ct_ctx_peekFrame(&ctx->callstack);
 	ctx->ip = frame.return_ip;
 	ct_ctx_storeAtom(ctx, frame.return_value_slot, returned_atom, returned_atom_type);
+
+	for (size_t i = 0; i < CUTE_CONF_SLOT_COUNT && frame.container_field_count; i++) {
+		if (frame.file.types[i] == ctAtomType_Container) {
+			ct_containers_decRef(ctx->containers, frame.file.atoms[i].as_container);
+			frame.container_field_count--;
+		}
+	};
 
 	CUTE_LOG("context", "Returned from procedure(%u) with return value: %s 0x%lx\n", frame.procedure_id, ct_atom_stringforms[returned_atom_type], returned_atom.raw);
 }
