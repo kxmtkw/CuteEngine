@@ -105,14 +105,14 @@ static const std::map<std::string, ctInstrSpec> ctInstrMap = {
 	{"retval",  {instrReturnVal,{ctOperandType::Register}}},
 	{"modcall", {instrModCall, {ctOperandType::Register, ctOperandType::Register, ctOperandType::Register, ctOperandType::Register, ctOperandType::Register}}},
 
-    {"connew",   {instrConNew,  {ctOperandType::Register, ctOperandType::Register}}},
-    {"condel",   {instrConDel,  {ctOperandType::Register}}},
-    {"conget",   {instrConGet,  {ctOperandType::Register, ctOperandType::Register, ctOperandType::Register}}},
-    {"conset",   {instrConSet,  {ctOperandType::Register, ctOperandType::Register, ctOperandType::Register}}},
-    {"conresize",{instrConResize,{ctOperandType::Register, ctOperandType::Register}}},
-    {"conlen",   {instrConLen,  {ctOperandType::Register, ctOperandType::Register}}},
-	{"concopy",  {instrConCopy,{ctOperandType::Register, ctOperandType::Register}}},
-	{"conclone", {instrConClone,{ctOperandType::Register, ctOperandType::Register}}},
+    {"connew",      {instrConNew,  {ctOperandType::Register, ctOperandType::Register}}},
+    {"condel",      {instrConDel,  {ctOperandType::Register}}},
+    {"conget",      {instrConGet,  {ctOperandType::Register, ctOperandType::Register, ctOperandType::Register}}},
+    {"conset",      {instrConSet,  {ctOperandType::Register, ctOperandType::Register, ctOperandType::Register}}},
+    {"consize",     {instrConSize,{ctOperandType::Register, ctOperandType::Register}}},
+	{"concopy",     {instrConCopy,{ctOperandType::Register, ctOperandType::Register}}},
+	{"condeepcopy", {instrConDeepCopy,{ctOperandType::Register, ctOperandType::Register}}},
+	{"conclone",    {instrConClone,{ctOperandType::Register, ctOperandType::Register}}},
 
 };
 

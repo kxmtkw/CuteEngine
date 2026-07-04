@@ -164,10 +164,10 @@ void ct_exec(ctContext* ctx) {
         [instrConDel] = &&opConDel,
         [instrConGet] = &&opConGet,
         [instrConSet] = &&opConSet,
-        [instrConLen] = &&opConLen,
-        [instrConResize] = &&opConResize,
+        [instrConSize] = &&opConSize,
         [instrConCopy] = &&opConCopy,
-        [instrConClone] = &&opConClone
+		[instrConDeepCopy] = &&opConDeepCopy,
+        [instrConClone] = &&opConClone,
     };
 
     uint8_t r1, r2, r3, r4, r5;
@@ -546,30 +546,31 @@ opConSet:
     }
     goto next;
 
-opConLen:
+opConSize:
     r1 = instrs[ctx->ip++];
     r2 = instrs[ctx->ip++];
     ct_ctx_loadAtom(ctx, r2, &a1, &t1);
     ct_ctx_storeAtom(ctx, r1, (ctAtom){.as_uint = a1.as_container->size}, ctAtomType_UInt);
     goto next;
 
-opConResize:
-    r1 = instrs[ctx->ip++];
-    r2 = instrs[ctx->ip++];
-    ct_ctx_loadAtom(ctx, r1, &a1, &t1);
-    ct_ctx_loadAtom(ctx, r2, &a2, &t2);
-    ct_containers_conResize(ctx->containers, a1.as_container, a2.as_uint);
-    if (ctx->containers->error.code != ctErrorCode_None) {
-        ct_ctx_throwError(ctx, ctx->containers->error);
-        return;
-    }
-    goto next;
 
 opConCopy:
     r1 = instrs[ctx->ip++];
     r2 = instrs[ctx->ip++];
     ct_ctx_loadAtom(ctx, r2, &a2, &t2);
     a1.as_container = ct_containers_conCopy(ctx->containers, a2.as_container);
+    if (ctx->containers->error.code != ctErrorCode_None) {
+        ct_ctx_throwError(ctx, ctx->containers->error);
+        return;
+    }
+    ct_ctx_storeAtom(ctx, r1, a1, ctAtomType_Container);
+    goto next;
+
+opConDeepCopy:
+    r1 = instrs[ctx->ip++];
+    r2 = instrs[ctx->ip++];
+    ct_ctx_loadAtom(ctx, r2, &a2, &t2);
+    a1.as_container = ct_containers_conDeepCopy(ctx->containers, a2.as_container);
     if (ctx->containers->error.code != ctErrorCode_None) {
         ct_ctx_throwError(ctx, ctx->containers->error);
         return;

@@ -60,28 +60,6 @@ ct_mbuffer_getCapacity(ctModuleArguments args) {
 
 
 ctModuleResult 
-ct_mbuffer_reserve(ctModuleArguments args) {
-
-	ctModuleResult result;
-
-	if (!ct_modules_utils_areArgsEnough(2, args.count, &result)) {
-		return result;
-	};
-
-	ctAtom buffer = args.atoms[0];
-	ctAtom new_capacity = args.atoms[1];
-
-	uint32_t bytes_as_atoms = (new_capacity.as_uint + 7) / 8;
-	ct_containers_conResize(args.container_manager, buffer.as_container, bytes_as_atoms);
-
-	result.returned_atom_type = ctAtomType_NoneType;
-	result.success = true;
-
-	return result;
-}
-
-
-ctModuleResult 
 ct_mbuffer_getByte(ctModuleArguments args) {
 
 	ctModuleResult result;

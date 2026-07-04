@@ -80,14 +80,14 @@ typedef enum {
 	instrReturnVal   = 0xB2,
 	instrModCall     = 0xBA,
 
-	instrConNew     = 0xC1,
-	instrConDel     = 0xC2,
-	instrConGet     = 0xC3,
-	instrConSet     = 0xC4,
-	instrConLen     = 0xC5,
-	instrConResize  = 0xC6,
-	instrConCopy    = 0xC7,
-	instrConClone   = 0xC8,
+	instrConNew         = 0xC0,
+	instrConDel         = 0xC1,
+	instrConGet         = 0xC2,
+	instrConSet         = 0xC3,
+	instrConSize        = 0xC4,
+	instrConCopy        = 0xC5,
+	instrConDeepCopy    = 0xC6,
+	instrConClone       = 0xC7,
 
 } ctInstruction;
 

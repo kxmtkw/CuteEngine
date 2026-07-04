@@ -30,18 +30,6 @@ ctModuleResult
 ct_mbuffer_getCapacity(ctModuleArguments args);
 
 
-/*
-Reserve specific space for the buffer. Truncates data if new capacity is less.
-
-Arg (1) container : Buffer object
-
-Arg (2) uint : New capacity
-
-Returns: none
-*/
-ctModuleResult 
-ct_mbuffer_reserve(ctModuleArguments args);
-
 
 /*
 Get a specific byte from the buffer
@@ -87,7 +75,6 @@ ct_mbuffer_setBytes(ctModuleArguments args);
 static const ctModuleMethod ct_mbuffer_dispatchMap[] = {
 	ct_mbuffer_newBuffer,
 	ct_mbuffer_getCapacity,
-	ct_mbuffer_reserve,
 	ct_mbuffer_getByte,
 	ct_mbuffer_setByte,
 	ct_mbuffer_setBytes

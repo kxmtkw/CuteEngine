@@ -32,14 +32,15 @@ typedef union {
 
 
 struct _ctContainer {
-	uint32_t         bucket_id;
-	uint32_t         bucket_index;
-	uint32_t         ref_count;
-	uint32_t         size;
-	uint32_t         sub_containers;
-	ctAtom*          atoms;
-	ctAtomTypeSize*  types;
-};
+	uint32_t                    bucket_id;
+	uint32_t                    bucket_index;
+	uint32_t                    ref_count;
+	uint32_t                    size;
+	uint32_t                    sub_containers;
+	struct _ctContainer*        proto;
+	ctAtom*                     atoms;
+	ctAtomTypeSize*             types;
+}; 
 
 typedef struct _ctContainer ctContainer;
 

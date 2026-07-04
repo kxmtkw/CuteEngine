@@ -180,6 +180,7 @@ ct_containers_newContainer(ctContainerManager* manager, uint32_t size) {
 	assigned_con->ref_count = 0;
 	assigned_con->size = size;
 	assigned_con->sub_containers = 0;
+	assigned_con->proto = NULL;
 	memset(assigned_con->types, ctAtomType_NoneType, size);
 	
 
@@ -258,40 +259,6 @@ ct_containers_conSet(ctContainerManager* manager, ctContainer* con, uint32_t ind
 }
 
 
-// Resize the container
-void
-ct_containers_conResize(ctContainerManager* manager, ctContainer* con, uint32_t new_size) {
-
-	if (con->size == new_size) {
-		return;
-	}
-	
-	ctContainer temp;
-	temp.size = con->size; // for logging later
-
-	// Cannot use realloc here because of my weird hack
-
-	uint8_t* ptr = malloc(
-		sizeof(ctAtom) * new_size +
-		sizeof(ctAtomTypeSize) * new_size
-	);
-	temp.atoms = (ctAtom*) (ptr);
-	temp.types = (ctAtomTypeSize*) (ptr + sizeof(ctAtom) * new_size);
-
-	size_t size_to_copy = new_size < con->size ? new_size: con->size;
-
-	memcpy(temp.atoms, con->atoms, size_to_copy * sizeof(ctAtom));
-	memcpy(temp.types, con->types, size_to_copy * sizeof(ctAtomTypeSize));
-
-	free(con->atoms);
-
-	con->atoms = temp.atoms;
-	con->types = temp.types;
-	con->size = new_size;
-
-	CUTE_LOG("containers", "Resized container (%u.%u) [%p] from %u to %u\n", con->bucket_id, con->bucket_index, con, temp.size, new_size);
-}
-
 
 ctContainer*
 ct_containers_conCopy(ctContainerManager* manager, ctContainer* src) {
@@ -306,6 +273,7 @@ ct_containers_conCopy(ctContainerManager* manager, ctContainer* src) {
 	memcpy(copy->types, src->types, src->size * sizeof(ctAtomTypeSize));
 
 	copy->sub_containers = src->sub_containers;
+	copy->proto = src->proto;
 	uint32_t j = 0;
 	
 	for (uint32_t i = 0; i < src->size && j < src->sub_containers; i++) {
@@ -322,6 +290,36 @@ ct_containers_conCopy(ctContainerManager* manager, ctContainer* src) {
 
 
 ctContainer*
+ct_containers_conDeepCopy(ctContainerManager* manager, ctContainer* src) {
+
+	ctContainer* copy = ct_containers_newContainer(manager, src->size);
+
+	if (!copy) {
+		return NULL;
+	}
+
+	memcpy(copy->atoms, src->atoms, src->size * sizeof(ctAtom));
+	memcpy(copy->types, src->types, src->size * sizeof(ctAtomTypeSize));
+
+	copy->sub_containers = src->sub_containers;
+	copy->proto = src->proto;
+
+	uint32_t j = 0;
+	
+	for (uint32_t i = 0; i < src->size && j < src->sub_containers; i++) {
+		if (src->types[i] == ctAtomType_Container) {
+			copy->atoms[i].as_container = ct_containers_conDeepCopy(manager, src->atoms[i].as_container);
+			ct_containers_incRef(manager, copy->atoms[i].as_container);
+			j++;
+		}
+	}
+	
+	CUTE_LOG("containers", "Deep copied container (%u.%u) [%p] from container (%u.%u) [%p]\n", copy->bucket_id, copy->bucket_index, copy, src->bucket_id, src->bucket_index, src);
+
+	return copy;
+}
+
+ctContainer*
 ct_containers_conClone(ctContainerManager* manager, ctContainer* src) {
 
 	ctContainer* clone = ct_containers_newContainer(manager, src->size);
@@ -334,11 +332,13 @@ ct_containers_conClone(ctContainerManager* manager, ctContainer* src) {
 	memcpy(clone->types, src->types, src->size * sizeof(ctAtomTypeSize));
 
 	clone->sub_containers = src->sub_containers;
+	clone->proto = src;
+
 	uint32_t j = 0;
 	
 	for (uint32_t i = 0; i < src->size && j < src->sub_containers; i++) {
 		if (src->types[i] == ctAtomType_Container) {
-			clone->atoms[i].as_container = ct_containers_conClone(manager, src->atoms[i].as_container);
+			clone->atoms[i].as_container = ct_containers_conDeepCopy(manager, src->atoms[i].as_container);
 			ct_containers_incRef(manager, clone->atoms[i].as_container);
 			j++;
 		}
