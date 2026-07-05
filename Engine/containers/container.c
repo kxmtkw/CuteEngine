@@ -189,6 +189,18 @@ ct_containers_newContainer(ctContainerManager* manager, uint32_t size) {
 }
 
 
+ctContainer*
+ct_containers_conLoad(ctContainerManager* manager, uint32_t size_in_bytes, uint8_t* bytes) {
+
+	uint32_t size_in_atoms = (size_in_bytes + 7) / 8;
+	ctContainer* con = ct_containers_newContainer(manager, size_in_atoms);
+	memcpy(con->atoms, bytes, size_in_bytes);
+	memset(con->types, ctAtomType_UInt, con->size);
+
+	return con;
+};
+
+
 void
 ct_containers_delContainer(ctContainerManager* manager, ctContainer* con) {
 

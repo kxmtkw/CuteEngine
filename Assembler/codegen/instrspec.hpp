@@ -113,7 +113,7 @@ static const std::map<std::string, ctInstrSpec> ctInstrMap = {
 	{"concopy",     {instrConCopy,{ctOperandType::Register, ctOperandType::Register}}},
 	{"condeepcopy", {instrConDeepCopy,{ctOperandType::Register, ctOperandType::Register}}},
 	{"conresize",   {instrConResize,{ctOperandType::Register, ctOperandType::Register}}},
-
+	{"conload",     {instrConLoad,{ctOperandType::Register, ctOperandType::Register}}},
 };
 
 #endif // CODEGEN_INSTRSPEC_HPP

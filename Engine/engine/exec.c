@@ -176,6 +176,7 @@ void ct_exec(ctContext* ctx) {
         [instrConCopy] = &&opConCopy,
 		[instrConDeepCopy] = &&opConDeepCopy,
         [instrConResize] = &&opConResize,
+		[instrConLoad] = &&opConLoad
     };
 
     uint8_t r1, r2, r3, r4, r5;
@@ -602,6 +603,28 @@ opConResize:
         return;
     }
     goto next;
+
+opConLoad:
+	r1 = instrs[ctx->ip++];
+	ct_loadBytes(instrs, &ctx->ip, 4, &u32);
+
+	if (ctx->ip + u32 >= ctx->image->header.instruction_count) {
+		ctx->error = (ctError) {.code=ctErrorCode_IllegalInstruction};
+		ct_utils_format(
+			ctx->error.msg, 
+			sizeof(ctx->error.msg), 
+			"Insufficient bytes to load a container of %u size from ip 0x%08lX",
+			u32, ctx->ip
+		);
+		ct_ctx_throwError(ctx, ctx->error);
+        return;
+	};
+
+	ctContainer* con = ct_containers_conLoad(ctx->containers, u32, &instrs[ctx->ip]);
+	ctx->ip += u32;
+	
+	ct_ctx_storeAtom(ctx, r1, (ctAtom){.as_container=con}, ctAtomType_Container);
+	goto next;
 
 next:
     if (ctx->running) {

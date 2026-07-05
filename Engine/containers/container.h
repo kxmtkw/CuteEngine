@@ -53,6 +53,11 @@ ct_containers_popEmptyBucket(ctContainerManager* manager);
 ctContainer*
 ct_containers_newContainer(ctContainerManager* manager, uint32_t size);
 
+// Load a container from the given bytes
+ctContainer*
+ct_containers_conLoad(ctContainerManager* manager, uint32_t size_in_bytes, uint8_t* bytes);
+
+
 // Delete a container, keeping in mind sub containers
 void
 ct_containers_delContainer(ctContainerManager* manager, ctContainer* con);
