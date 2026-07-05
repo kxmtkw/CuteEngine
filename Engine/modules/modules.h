@@ -8,6 +8,7 @@
 #include <stdint.h>
 #include <string.h>
 #include "engine/error.h"
+#include "modules/io.h"
 #include "modules/modulespec.h"
 
 #include "utils/utils.h"
@@ -30,10 +31,12 @@ How to use the dispatch map:
 
 static const ctModuleMethod* ct_modules_dispatch_map[] = {
 	[0] = CUTE_MODULE_BUFFER_METHODS,
+	[1] = CUTE_MODULE_IO_METHODS
 };
 
 static const uint32_t ct_modules_method_count[] = {
 	[0] = CUTE_MODULE_BUFFER_METHODS_COUNT,
+	[1] = CUTE_MODULE_IO_METHODS_COUNT
 };
 
 static const uint32_t ct_modules_count = sizeof(ct_modules_dispatch_map) / sizeof(ct_modules_dispatch_map[0]);

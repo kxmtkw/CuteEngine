@@ -10,17 +10,17 @@
 
 typedef struct {
 	const ctAtom*     atoms;
-	const ctAtomType* types;
+	const ctAtomTypeSize* types;
 	const uint32_t    count;
 	ctContainerManager* container_manager;
 } ctModuleArguments;
 
 
 typedef struct {
-	ctAtom     returned_atom;
-	ctAtomType returned_atom_type;
-	bool       success;
-	ctError    error;
+	ctAtom         returned_atom;
+	ctAtomTypeSize returned_atom_type;
+	bool           success;
+	ctError        error;
 } ctModuleResult;
 
 typedef ctModuleResult (*ctModuleMethod)(ctModuleArguments);

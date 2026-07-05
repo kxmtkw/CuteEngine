@@ -197,11 +197,10 @@ ct_ctx_modcall(ctContext* ctx, uint32_t module_id, uint32_t method_id, uint32_t 
 
 	ctModuleArguments args = {
 		.atoms = &ctx->current_frame->file.atoms[arg_start_slot],
-		.types = (ctAtomType*) &ctx->current_frame->file.types[arg_start_slot],
+		.types = &ctx->current_frame->file.types[arg_start_slot],
 		.container_manager = ctx->containers,
 		.count = arg_count
 	};
-
 
 	ctModuleResult result = method(args);
 
