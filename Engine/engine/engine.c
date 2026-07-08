@@ -7,7 +7,7 @@
 #include "CuteInstr.h"
 #include "CuteEngine.h"
 
-#include "containers/container.h"
+#include "containers/containers.h"
 #include "modules/modules.h"
 #include "modules/modulespec.h"
 #include "context.h"

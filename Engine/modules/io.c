@@ -1,4 +1,7 @@
 
+
+#ifdef CUTE_BUILTIN_MODULE_IO
+
 #include <stdbool.h>
 #include <sys/types.h>
 
@@ -11,8 +14,6 @@
 #include "utils/utils.h"
 #include "io.h"
 
-
-#ifdef CUTE_BUILTIN_MODULE_IO
 
 ctModuleResult 
 ct_mio_print(ctModuleArguments args) {

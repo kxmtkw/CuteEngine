@@ -2,7 +2,7 @@
 #define ENGINE_MODULESPEC_H
 
 #include "CuteAtom.h"
-#include "containers/container.h"
+#include "containers/containers.h"
 #include "engine/error.h"
 #include <stdint.h>
 #include <string.h>

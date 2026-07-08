@@ -1,4 +1,7 @@
 
+#ifdef CUTE_BUILTIN_MODULE_BUFFER
+
+
 #include <stdbool.h>
 #include <sys/types.h>
 
@@ -10,8 +13,6 @@
 #include "utils/utils.h"
 #include "buffer.h"
 
-
-#ifdef CUTE_BUILTIN_MODULE_BUFFER
 
 static inline uint32_t
 _ct_mbuffer_getBufferCapacity(ctContainer* con) {

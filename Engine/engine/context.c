@@ -8,7 +8,7 @@
 #include "CuteAtom.h"
 #include "CuteConfig.h"
 #include "CuteInstr.h"
-#include "containers/container.h"
+#include "containers/containers.h"
 #include "engine/error.h"
 #include "modules/modules.h"
 #include "modules/modulespec.h"

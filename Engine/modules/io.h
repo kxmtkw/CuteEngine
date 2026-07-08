@@ -2,11 +2,13 @@
 #ifndef ENGINE_MODULES_IO_H
 #define ENGINE_MODULES_IO_H
 
+
+
+#ifdef CUTE_BUILTIN_MODULE_IO
+
 #include "CuteAtom.h"
 #include "CuteModules.h"
 #include "modulespec.h"
-
-#ifdef CUTE_BUILTIN_MODULE_IO
 
 
 /*

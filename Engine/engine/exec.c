@@ -11,9 +11,10 @@
 #include "CuteInstr.h"
 
 
+#include "containers/atomcon.h"
 #include "context.h"
 #include "error.h"
-#include "containers/container.h"
+#include "containers/containers.h"
 #include "utils/utils.h"
 
 
@@ -513,7 +514,7 @@ opConNew:
     r1 = instrs[ctx->ip++];
     r2 = instrs[ctx->ip++];
     ct_ctx_loadAtom(ctx, r2, &a1, &t1);
-    a2.as_container = ct_containers_newContainer(ctx->containers, a1.as_uint);
+    a2.as_container = ct_atomcon_new(ctx->containers, a1.as_uint);
     if (ctx->containers->error.code != ctErrorCode_None) {
         ct_ctx_throwError(ctx, ctx->containers->error);
         return;
@@ -533,7 +534,7 @@ opConGet:
     ct_ctx_loadAtom(ctx, r2, &a1, &t1);
     ct_ctx_loadAtom(ctx, r3, &a2, &t2);
 	CHECK_IF_CONTAINER(t1);
-    typed_atom = ct_containers_conGet(ctx->containers, a1.as_container, a2.as_uint);
+    typed_atom = ct_atomcon_get(ctx->containers, a1.as_container, a2.as_uint);
     if (ctx->containers->error.code != ctErrorCode_None) {
         ct_ctx_throwError(ctx, ctx->containers->error);
         return;
@@ -549,7 +550,7 @@ opConSet:
     ct_ctx_loadAtom(ctx, r2, &a2, &t2);
     ct_ctx_loadAtom(ctx, r3, &a3, &t3);
 	CHECK_IF_CONTAINER(t1);
-    ct_containers_conSet(ctx->containers, a1.as_container, a2.as_uint, (ctTypedAtom){t3, a3});
+    ct_atomcon_set(ctx->containers, a1.as_container, a2.as_uint, (ctTypedAtom){t3, a3});
     if (ctx->containers->error.code != ctErrorCode_None) {
         ct_ctx_throwError(ctx, ctx->containers->error);
         return;
@@ -561,7 +562,7 @@ opConSize:
     r2 = instrs[ctx->ip++];
     ct_ctx_loadAtom(ctx, r2, &a1, &t1);
 	CHECK_IF_CONTAINER(t1);
-    ct_ctx_storeAtom(ctx, r1, (ctAtom){.as_uint = a1.as_container->size}, ctAtomType_UInt);
+    ct_ctx_storeAtom(ctx, r1, (ctAtom){.as_uint = ct_atomcon_size(ctx->containers, a1.as_container)}, ctAtomType_UInt);
     goto next;
 
 
@@ -570,7 +571,7 @@ opConCopy:
     r2 = instrs[ctx->ip++];
     ct_ctx_loadAtom(ctx, r2, &a2, &t2);
 	CHECK_IF_CONTAINER(t2);
-    a1.as_container = ct_containers_conCopy(ctx->containers, a2.as_container);
+    a1.as_container = ct_atomcon_copy(ctx->containers, a2.as_container);
     if (ctx->containers->error.code != ctErrorCode_None) {
         ct_ctx_throwError(ctx, ctx->containers->error);
         return;
@@ -583,7 +584,7 @@ opConDeepCopy:
     r2 = instrs[ctx->ip++];
     ct_ctx_loadAtom(ctx, r2, &a2, &t2);
 	CHECK_IF_CONTAINER(t2);
-    a1.as_container = ct_containers_conDeepCopy(ctx->containers, a2.as_container);
+    a1.as_container = ct_atomcon_deepcopy(ctx->containers, a2.as_container);
     if (ctx->containers->error.code != ctErrorCode_None) {
         ct_ctx_throwError(ctx, ctx->containers->error);
         return;
@@ -597,7 +598,7 @@ opConResize:
 	ct_ctx_loadAtom(ctx, r1, &a1, &t1);
     ct_ctx_loadAtom(ctx, r2, &a2, &t2);
 	CHECK_IF_CONTAINER(t1);
-    ct_containers_conResize(ctx->containers, a1.as_container, a2.as_uint);
+    ct_atomcon_resize(ctx->containers, a1.as_container, a2.as_uint);
     if (ctx->containers->error.code != ctErrorCode_None) {
         ct_ctx_throwError(ctx, ctx->containers->error);
         return;
@@ -605,6 +606,7 @@ opConResize:
     goto next;
 
 opConLoad:
+/*
 	r1 = instrs[ctx->ip++];
 	ct_loadBytes(instrs, &ctx->ip, 4, &u32);
 
@@ -620,11 +622,12 @@ opConLoad:
         return;
 	};
 
-	ctContainer* con = ct_containers_conLoad(ctx->containers, u32, &instrs[ctx->ip]);
+	ctContainer* con = ct_atomcon_Load(ctx->containers, u32, &instrs[ctx->ip]);
 	ctx->ip += u32;
 	
 	ct_ctx_storeAtom(ctx, r1, (ctAtom){.as_container=con}, ctAtomType_Container);
 	goto next;
+*/
 
 next:
     if (ctx->running) {

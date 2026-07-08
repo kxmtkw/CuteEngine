@@ -2,11 +2,12 @@
 #ifndef ENGINE_MODULES_BUFFER_H
 #define ENGINE_MODULES_BUFFER_H
 
+
+#ifdef CUTE_BUILTIN_MODULE_BUFFER
+
 #include "CuteAtom.h"
 #include "CuteModules.h"
 #include "modulespec.h"
-
-#ifdef CUTE_BUILTIN_MODULE_BUFFER
 
 // Representation of a container as a buffer object
 typedef struct {

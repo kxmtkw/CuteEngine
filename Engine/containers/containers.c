@@ -10,7 +10,7 @@
 #include "engine/error.h"
 #include "utils/utils.h"
 
-#include "container.h"
+#include "containers.h"
 
 
 
@@ -39,7 +39,7 @@ ct_containers_end(ctContainerManager* manager) {
 
 		for (uint32_t j = 0; j < sizeof(bucket->containers)/sizeof(bucket->containers[0]); j++) {
 			if (ct_utils_isBitSet(bucket->bitmask, j)) {
-				free(bucket->containers[j].atoms);
+				free(bucket->containers[j].data);
 			}
 		}
 		free(bucket);
@@ -105,7 +105,7 @@ ct_containers_popEmptyBucket(ctContainerManager* manager) {
 
 
 ctContainer*
-ct_containers_newContainer(ctContainerManager* manager, uint32_t size) {
+ct_containers_newContainer(ctContainerManager* manager, uint32_t data_size, uint64_t data_type) {
 
 	ctContainerBucket* assigned_bucket = NULL;
 	ctContainer* assigned_con = NULL;
@@ -155,10 +155,7 @@ ct_containers_newContainer(ctContainerManager* manager, uint32_t size) {
 
 
 	// Allocating atoms
-	uint8_t* ptr = malloc(
-		sizeof(ctAtom) * size +
-		sizeof(ctAtomTypeSize) * size
-	);
+	uint8_t* ptr = malloc(data_size);
 
 	if (ptr == NULL) {
 		ct_utils_clearBit(&assigned_bucket->bitmask, assigned_con->bucket_index);
@@ -169,49 +166,24 @@ ct_containers_newContainer(ctContainerManager* manager, uint32_t size) {
 			"Engine failed to allocate memory for new container (%u.%u). Out of memory.", assigned_con->bucket_id, assigned_con->bucket_index
 		);
 
-		CUTE_LOG("containers", "Failed to allocate memory for container (%u.%u) [%p] of size %u\n", assigned_con->bucket_id, assigned_con->bucket_index, assigned_con, size);
+		CUTE_LOG("containers", "Failed to allocate memory for container (%u.%u) [%p] of size %u\n", assigned_con->bucket_id, assigned_con->bucket_index, assigned_con, data_size);
 		return NULL;
 	}
-
-	assigned_con->atoms = (ctAtom*) (ptr);
-	assigned_con->types = (ctAtomTypeSize*) (ptr + sizeof(ctAtom) * size);
-
 	
 	assigned_con->ref_count = 0;
-	assigned_con->size = size;
-	assigned_con->sub_containers = 0;
-	assigned_con->proto = NULL;
-	memset(assigned_con->types, ctAtomType_NoneType, size);
-	
+	assigned_con->data_size = data_size;
+	assigned_con->data = ptr;
+	assigned_con->data_type = data_type;
+
 
 	CUTE_LOG("containers", "New container (%u.%u) [%p] allocated to bucket (%u)\n", assigned_con->bucket_id, assigned_con->bucket_index, assigned_con, assigned_bucket->id);
 	return assigned_con;
 }
 
 
-ctContainer*
-ct_containers_conLoad(ctContainerManager* manager, uint32_t size_in_bytes, uint8_t* bytes) {
-
-	uint32_t size_in_atoms = (size_in_bytes + 7) / 8;
-	ctContainer* con = ct_containers_newContainer(manager, size_in_atoms);
-	memcpy(con->atoms, bytes, size_in_bytes);
-	memset(con->types, ctAtomType_UInt, con->size);
-
-	return con;
-};
-
-
 void
 ct_containers_delContainer(ctContainerManager* manager, ctContainer* con) {
 
-	uint32_t j = 0;
-	
-	for (uint32_t i = 0; i < con->size && j < con->sub_containers; i++) {
-		if (con->types[i] == ctAtomType_Container) {
-			ct_containers_decRef(manager, con->atoms[i].as_container);
-			j++;
-		}
-	}
 	
 	ctContainerBucket* bucket = manager->buckets[con->bucket_id];
 
@@ -221,155 +193,7 @@ ct_containers_delContainer(ctContainerManager* manager, ctContainer* con) {
 
 	ct_utils_clearBit(&bucket->bitmask, con->bucket_index);
 
-	free(con->atoms);
+	free(con->data);
 
 	CUTE_LOG("containers", "Container (%u.%u) [%p] deallocated.\n", con->bucket_id, con->bucket_index, con);
-}
-
-
-ctTypedAtom
-ct_containers_conGet(ctContainerManager* manager, ctContainer* con, uint32_t index) {
-
-	if (index >= con->size) {
-		manager->error.code = ctErrorCode_OutOfBounds;
-		ct_utils_format(
-			manager->error.msg, 
-			sizeof(manager->error.msg), 
-			"Can not access container slot #%u (>= %u)", index, con->size
-		);
-		return (ctTypedAtom){ctAtomType_NoneType, (ctAtom){0}};
-	}
-
-	return (ctTypedAtom){con->types[index], con->atoms[index]};
-}
-
-
-void
-ct_containers_conSet(ctContainerManager* manager, ctContainer* con, uint32_t index, ctTypedAtom atom) {
-	if (index >= con->size) {
-		manager->error.code = ctErrorCode_OutOfBounds;
-		ct_utils_format(
-			manager->error.msg, 
-			sizeof(manager->error.msg), 
-			"Can not set container slot #%u (>= %u)", index, con->size
-		);
-		return;
-	}
-
-	if (con->types[index] == ctAtomType_Container) {
-		ct_containers_decRef(manager, con->atoms[index].as_container);
-		if (con->sub_containers > 0) con->sub_containers--;
-	}
-
-	con->atoms[index] = atom.atom;
-	con->types[index] = atom.type;
-
-	if (con->types[index] == ctAtomType_Container) {
-		ct_containers_incRef(manager, con->atoms[index].as_container);
-		con->sub_containers++; 
-	}
-}
-
-
-
-ctContainer*
-ct_containers_conCopy(ctContainerManager* manager, ctContainer* src) {
-	
-	ctContainer* copy = ct_containers_newContainer(manager, src->size);
-
-	if (!copy) {
-		return NULL;
-	}
-
-	memcpy(copy->atoms, src->atoms, src->size * sizeof(ctAtom));
-	memcpy(copy->types, src->types, src->size * sizeof(ctAtomTypeSize));
-
-	copy->sub_containers = src->sub_containers;
-	copy->proto = src->proto;
-	uint32_t j = 0;
-	
-	for (uint32_t i = 0; i < src->size && j < src->sub_containers; i++) {
-		if (src->types[i] == ctAtomType_Container) {
-			ct_containers_incRef(manager, src->atoms[i].as_container);
-			j++;
-		}
-	}
-	
-	CUTE_LOG("containers", "Copied container (%u.%u) [%p] from container (%u.%u) [%p]\n", copy->bucket_id, copy->bucket_index, copy, src->bucket_id, src->bucket_index, src);
-
-	return copy;
-}
-
-
-ctContainer*
-ct_containers_conDeepCopy(ctContainerManager* manager, ctContainer* src) {
-
-	ctContainer* copy = ct_containers_newContainer(manager, src->size);
-
-	if (!copy) {
-		return NULL;
-	}
-
-	memcpy(copy->atoms, src->atoms, src->size * sizeof(ctAtom));
-	memcpy(copy->types, src->types, src->size * sizeof(ctAtomTypeSize));
-
-	copy->sub_containers = src->sub_containers;
-	copy->proto = src->proto;
-
-	uint32_t j = 0;
-	
-	for (uint32_t i = 0; i < src->size && j < src->sub_containers; i++) {
-		if (src->types[i] == ctAtomType_Container) {
-			copy->atoms[i].as_container = ct_containers_conDeepCopy(manager, src->atoms[i].as_container);
-			ct_containers_incRef(manager, copy->atoms[i].as_container);
-			j++;
-		}
-	}
-	
-	CUTE_LOG("containers", "Deep copied container (%u.%u) [%p] from container (%u.%u) [%p]\n", copy->bucket_id, copy->bucket_index, copy, src->bucket_id, src->bucket_index, src);
-
-	return copy;
-}
-
-
-// Resize the container
-void
-ct_containers_conResize(ctContainerManager* manager, ctContainer* con, uint32_t new_size) {
-
-	if (con->size == new_size) {
-		return;
-	}
-	
-	ctContainer temp;
-
-	// Cannot use realloc here because of my weird hack
-
-	uint8_t* ptr = malloc(
-		sizeof(ctAtom) * new_size +
-		sizeof(ctAtomTypeSize) * new_size
-	);
-	temp.atoms = (ctAtom*) (ptr);
-	temp.types = (ctAtomTypeSize*) (ptr + sizeof(ctAtom) * new_size);
-
-	size_t size_to_copy = new_size < con->size ? new_size : con->size;
-
-	for (size_t i = new_size; i <= con->size && con->sub_containers; i++) {
-		if (con->types[i] == ctAtomType_Container) {
-			ct_containers_decRef(manager, con->atoms[i].as_container);
-			con->sub_containers--;
-		}
-	};
-
-	memcpy(temp.atoms, con->atoms, size_to_copy * sizeof(ctAtom));
-	memcpy(temp.types, con->types, size_to_copy * sizeof(ctAtomTypeSize));
-
-	free(con->atoms);
-
-	con->atoms = temp.atoms;
-	con->types = temp.types;
-
-	temp.size = con->size; // for logging
-	con->size = new_size;
-
-	CUTE_LOG("containers", "Resized container (%u.%u) [%p] from %u to %u\n", con->bucket_id, con->bucket_index, con, temp.size, new_size);
 }
