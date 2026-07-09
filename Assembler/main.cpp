@@ -1,18 +1,22 @@
-#include "codegen/generator.hpp"
-#include "core/core.hpp"
-#include "parser/parser.hpp"
 #include "tokenizer/tokenizer.hpp"
 #include "tokenizer/tokens.hpp"
-#include "utils/utils.hpp"
 #include <fstream>
-#include <memory>
 #include <sstream>
-#include <string>
-#include <vector>
 
 
 int main() {
-	ctAssemblerCore assembler;
-	assembler.assembleFile("asm.test");
+	ctTokenizer tokenizer;
+	
+	std::ifstream file("test.cta");
+	std::stringstream ss;
+	ss << file.rdbuf();
+	std::string content = ss.str();
+
+	auto stream = tokenizer.tokenize(content);
+
+	while (stream.peek().type != ctTokenType::EndOfFile) {
+		ctToken token = stream.next();
+		std::cout << "[ " << tokenTypeToString(token.type) << " " << stream.getValue(token) << " ]\n";
+	}
 	return 0;
 }
