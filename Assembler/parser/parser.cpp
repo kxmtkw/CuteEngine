@@ -56,14 +56,11 @@ ctParser::parseProcedure() {
 std::unique_ptr<ctStatementNode>
 ctParser::parseStmt() {
 
-	if (mStream->expectToken("@")) {
+	if (mStream->expectToken("label")) {
 
-		if (mStream->expectToken("label")) {
-			auto label = parseLabel();
-			if (label) return label;
-		} else {
-			// unknown 
-		}
+		auto label = parseLabel();
+		if (label) return label;
+
 	} else {
 		auto op = parseOp();
 		if (op) return op;
