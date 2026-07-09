@@ -289,18 +289,18 @@ opNegI:
 	INSTR_UNARYOP(ctAtomType_Int, as_int, -); 
 	goto next;
 
-opIncI: 
+opIncI:
 	r1 = instrs[ctx->ip++];
 	ct_ctx_loadAtom(ctx, r1, &a1, &t1);
 	a1.as_int++;
-	ct_ctx_storeAtom(ctx, r1, a1, ctAtomType_UInt);
+	ct_ctx_storeAtom(ctx, r1, a1, ctAtomType_Int);
 	goto next;
 
 opDecI: 
 	r1 = instrs[ctx->ip++];
 	ct_ctx_loadAtom(ctx, r1, &a1, &t1);
 	a1.as_int--;
-	ct_ctx_storeAtom(ctx, r1, a1, ctAtomType_UInt);
+	ct_ctx_storeAtom(ctx, r1, a1, ctAtomType_Int);
 	goto next;
 
 opAbsI: 
