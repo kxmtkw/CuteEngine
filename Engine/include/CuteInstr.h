@@ -109,6 +109,7 @@ typedef struct {
 typedef struct {
 	uint32_t id;
 	uint32_t bytecode_index;
+	uint32_t arg_count;
 } ctImageProcedure;
 
 

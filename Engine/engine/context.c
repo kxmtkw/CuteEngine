@@ -60,7 +60,7 @@ ct_ctx_new(ctImage* img, ctObjectManager* objects, uint32_t procedure_id) {
 	ctx->current_frame = NULL;
 	ctx->has_error = false;
 	ct_ctx_initStack(&ctx->callstack);
-	ct_ctx_callProcedure(ctx, procedure_id, 0, 0, 0);
+	ct_ctx_callProcedure(ctx, procedure_id, 0, 0);
 	return ctx;
 }
 
@@ -72,7 +72,7 @@ ct_ctx_del(ctContext* ctx) {
 
 
 void
-ct_ctx_callProcedure(ctContext* ctx, uint32_t procedure_id, uint32_t arg_count, uint8_t arg_start_slot, uint8_t return_slot) {
+ct_ctx_callProcedure(ctContext* ctx, uint32_t procedure_id, uint8_t arg_start_slot, uint8_t return_slot) {
 
 	if (ctx->callstack.size >= ctx->callstack.capacity) {
 		ctx->error = (ctError){.code=ctErrorCode_RecursionDepth};
@@ -102,12 +102,15 @@ ct_ctx_callProcedure(ctContext* ctx, uint32_t procedure_id, uint32_t arg_count, 
 		return;
 	}
 
+	ctImageProcedure proc = ctx->image->procedure_table[procedure_id];
+	uint32_t arg_count = procedure_id == 0 ? 0 : proc.arg_count;
+
 	if (arg_count >= CUTE_CONF_SLOT_COUNT) {
 		ctx->error = (ctError){.code=ctErrorCode_ProcedureError};
 		ct_utils_format(
 			ctx->error.msg, 
 			sizeof(ctx->error.msg), 
-			"Too many arguments passed to procedure: '%u' (>=%u)", arg_count, CUTE_CONF_SLOT_COUNT
+			"Too many arguments requested by procedure(%u): '%u' (>=%u)", procedure_id, arg_count, CUTE_CONF_SLOT_COUNT
 		);
 		ct_ctx_throwError(
 			ctx, 
@@ -136,7 +139,7 @@ ct_ctx_callProcedure(ctContext* ctx, uint32_t procedure_id, uint32_t arg_count, 
 	
 	ct_ctx_pushFrame(&ctx->callstack, frame);
 
-	ctx->ip = ctx->image->procedure_table[procedure_id].bytecode_index;
+	ctx->ip = proc.bytecode_index;
 	ctx->current_frame = ct_ctx_peekFrame(&ctx->callstack);
 
 	CUTE_LOG(

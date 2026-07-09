@@ -481,10 +481,8 @@ opCall:
     r1 = instrs[ctx->ip++];
     r2 = instrs[ctx->ip++];
     r3 = instrs[ctx->ip++];
-    r4 = instrs[ctx->ip++];
     ct_ctx_loadAtom(ctx, r1, &a1, &t1);
-	ct_ctx_loadAtom(ctx, r2, &a2, &t2);
-    ct_ctx_callProcedure(ctx, a1.as_uint, a2.as_uint, r3, r4);
+    ct_ctx_callProcedure(ctx, a1.as_uint, r2, r3);
     goto next;
 
 opReturn:
