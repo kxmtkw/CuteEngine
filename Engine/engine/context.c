@@ -8,7 +8,7 @@
 #include "CuteAtom.h"
 #include "CuteConfig.h"
 #include "CuteInstr.h"
-#include "containers/containers.h"
+#include "object/object.h"
 #include "engine/error.h"
 #include "modules/modules.h"
 #include "modules/modulespec.h"
@@ -52,10 +52,10 @@ ct_ctx_peekFrame(ctCallStack* s) {
 // Context methods
 
 ctContext*
-ct_ctx_new(ctImage* img, ctContainerManager* containers, uint32_t procedure_id) {
+ct_ctx_new(ctImage* img, ctObjectManager* objects, uint32_t procedure_id) {
 	ctContext* ctx = malloc(sizeof(ctContext));
 	ctx->image = img;
-	ctx->containers = containers;
+	ctx->objects = objects;
 	ctx->running = true;
 	ctx->current_frame = NULL;
 	ctx->has_error = false;
@@ -118,7 +118,7 @@ ct_ctx_callProcedure(ctContext* ctx, uint32_t procedure_id, uint32_t arg_count, 
 
 	ctCallFrame frame;
 	frame.procedure_id = procedure_id;
-	frame.container_field_count = 0;
+	frame.object_field_count = 0;
 	frame.return_ip = ctx->ip;
 	frame.return_value_slot = return_slot;
 	frame.args_count = arg_count;
@@ -128,9 +128,9 @@ ct_ctx_callProcedure(ctContext* ctx, uint32_t procedure_id, uint32_t arg_count, 
 		frame.file.atoms[i] = ctx->current_frame->file.atoms[arg_start_slot + i];
 		frame.file.types[i] = ctx->current_frame->file.types[arg_start_slot + i];
 
-		if (frame.file.types[i] == ctAtomType_Container) {
-			ct_containers_incRef(ctx->containers, frame.file.atoms[i].as_container);
-			frame.container_field_count++;
+		if (frame.file.types[i] == ctAtomType_Object) {
+			ct_objects_incRef(ctx->objects, frame.file.atoms[i].as_object);
+			frame.object_field_count++;
 		}
 	};
 	
@@ -155,10 +155,10 @@ ct_ctx_returnProcedure(ctContext* ctx, ctAtom returned_atom, ctAtomType returned
 	ctx->ip = frame.return_ip;
 	ct_ctx_storeAtom(ctx, frame.return_value_slot, returned_atom, returned_atom_type);
 
-	for (size_t i = 0; i < CUTE_CONF_SLOT_COUNT && frame.container_field_count; i++) {
-		if (frame.file.types[i] == ctAtomType_Container) {
-			ct_containers_decRef(ctx->containers, frame.file.atoms[i].as_container);
-			frame.container_field_count--;
+	for (size_t i = 0; i < CUTE_CONF_SLOT_COUNT && frame.object_field_count; i++) {
+		if (frame.file.types[i] == ctAtomType_Object) {
+			ct_objects_decRef(ctx->objects, frame.file.atoms[i].as_object);
+			frame.object_field_count--;
 		}
 	};
 
@@ -198,7 +198,7 @@ ct_ctx_modcall(ctContext* ctx, uint32_t module_id, uint32_t method_id, uint32_t 
 	ctModuleArguments args = {
 		.atoms = &ctx->current_frame->file.atoms[arg_start_slot],
 		.types = &ctx->current_frame->file.types[arg_start_slot],
-		.container_manager = ctx->containers,
+		.container_manager = ctx->objects,
 		.count = arg_count
 	};
 

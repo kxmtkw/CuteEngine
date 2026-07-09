@@ -12,13 +12,13 @@ typedef enum {
 	ctAtomType_UInt      = 0x2,
 	ctAtomType_Float     = 0x3,
 	ctAtomType_Bool      = 0x4,
-	ctAtomType_Container = 0x5
+	ctAtomType_Object    = 0x5
 } ctAtomType;
 
 
 typedef uint8_t ctAtomTypeSize;
 
-struct _ctContainer;
+struct _ctObject;
 
 
 typedef union {
@@ -27,7 +27,7 @@ typedef union {
 	uint64_t             as_uint;
 	uint64_t             as_bool;
 	double               as_float;
-	struct _ctContainer* as_container;
+	struct _ctObject*    as_object;
 } ctAtom;
 
 
@@ -51,7 +51,7 @@ static const char* ct_atom_stringforms[] = {
 	[ctAtomType_UInt]      = "uint",
 	[ctAtomType_Float]     = "float",
 	[ctAtomType_Bool]      = "bool",
-	[ctAtomType_Container] = "container"
+	[ctAtomType_Object]    = "object"
 };
 
 #endif // CUTE_ATOM_H

@@ -7,7 +7,7 @@
 #include "CuteInstr.h"
 #include "CuteEngine.h"
 
-#include "containers/containers.h"
+#include "object/object.h"
 #include "modules/modules.h"
 #include "modules/modulespec.h"
 #include "context.h"
@@ -20,7 +20,7 @@ void
 ct_engine_init(ctEngine* engine) {
 	CUTE_LOG("engine", "vroom vroom\n");
 	engine->ctx = NULL;
-	ct_containers_init(&engine->manager);
+	ct_objects_init(&engine->manager);
 }
 
 // End the engine and free all resources
@@ -31,7 +31,7 @@ ct_engine_end(ctEngine* engine) {
 		ct_ctx_del(engine->ctx);
 	}
 	
-	ct_containers_end(&engine->manager);
+	ct_objects_end(&engine->manager);
 
 	if (engine->image.header.magic_id == ctMagicId) {
 		CUTE_LOG("engine", "Freeing image resources.\n");

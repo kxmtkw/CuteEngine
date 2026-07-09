@@ -8,7 +8,7 @@
 #include "CuteAtom.h"
 #include "CuteConfig.h"
 #include "CuteInstr.h"
-#include "containers/containers.h"
+#include "object/object.h"
 #include "engine/error.h"
 
 
@@ -21,7 +21,7 @@ typedef struct {
 
 typedef struct {
 	uint32_t            procedure_id;
-	uint32_t            container_field_count;
+	uint32_t            object_field_count;
 	uint64_t            return_ip;
 	uint8_t             args_count;
 	uint8_t             return_value_slot;
@@ -39,7 +39,7 @@ typedef struct {
 
 typedef struct {
 	ctImage*            image;
-	ctContainerManager* containers;
+	ctObjectManager*    objects;
 	uint64_t            ip;
 	ctCallStack         callstack;
 	ctCallFrame*        current_frame;
@@ -47,13 +47,13 @@ typedef struct {
 	bool                running;
 	bool                has_error;
 	ctError             error;
-	uint8_t            exit_code;
+	uint8_t             exit_code;
 } ctContext;
 
 
 // Create a new context. Requires the image to be ran and the starting procedure.
 ctContext*
-ct_ctx_new(ctImage* img, ctContainerManager* containers, uint32_t procedure_id);
+ct_ctx_new(ctImage* img, ctObjectManager* objects, uint32_t procedure_id);
 
 // Free the context and its resources.
 void
@@ -71,17 +71,17 @@ ct_ctx_returnProcedure(ctContext* ctx, ctAtom returned_atom, ctAtomType returned
 static inline void
 ct_ctx_storeAtom(ctContext* ctx, uint8_t slot, ctAtom atom, ctAtomType type) {
 
-	if (ctx->current_frame->file.types[slot] == ctAtomType_Container) {
-		ct_containers_decRef(ctx->containers, ctx->current_frame->file.atoms[slot].as_container);
-		ctx->current_frame->container_field_count--;
+	if (ctx->current_frame->file.types[slot] == ctAtomType_Object) {
+		ct_objects_decRef(ctx->objects, ctx->current_frame->file.atoms[slot].as_object);
+		ctx->current_frame->object_field_count--;
 	};
 
 	ctx->current_frame->file.atoms[slot] = atom;
 	ctx->current_frame->file.types[slot] = type;
 
-	if (type == ctAtomType_Container) {
-		ct_containers_incRef(ctx->containers, atom.as_container);
-		ctx->current_frame->container_field_count++;
+	if (type == ctAtomType_Object) {
+		ct_objects_incRef(ctx->objects, atom.as_object);
+		ctx->current_frame->object_field_count++;
 	};
 };
 
@@ -96,17 +96,17 @@ ct_ctx_loadAtom(ctContext* ctx, uint8_t slot, ctAtom* atom, ctAtomType* type) {
 static inline void
 ct_ctx_moveAtom(ctContext* ctx, uint8_t src_slot, uint8_t dest_slot) {
 
-	if (ctx->current_frame->file.types[dest_slot] == ctAtomType_Container) {
-		ct_containers_decRef(ctx->containers, ctx->current_frame->file.atoms[dest_slot].as_container);
-		ctx->current_frame->container_field_count--;
+	if (ctx->current_frame->file.types[dest_slot] == ctAtomType_Object) {
+		ct_objects_decRef(ctx->objects, ctx->current_frame->file.atoms[dest_slot].as_object);
+		ctx->current_frame->object_field_count--;
 	};
 
 	ctx->current_frame->file.atoms[dest_slot] = ctx->current_frame->file.atoms[src_slot];
 	ctx->current_frame->file.types[dest_slot] = ctx->current_frame->file.types[src_slot];
 
-	if (ctx->current_frame->file.types[src_slot] == ctAtomType_Container) {
-		ct_containers_incRef(ctx->containers, ctx->current_frame->file.atoms[src_slot].as_container);
-		ctx->current_frame->container_field_count++;
+	if (ctx->current_frame->file.types[src_slot] == ctAtomType_Object) {
+		ct_objects_incRef(ctx->objects, ctx->current_frame->file.atoms[src_slot].as_object);
+		ctx->current_frame->object_field_count++;
 	};
 };
 

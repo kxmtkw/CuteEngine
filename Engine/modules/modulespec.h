@@ -2,7 +2,7 @@
 #define ENGINE_MODULESPEC_H
 
 #include "CuteAtom.h"
-#include "containers/containers.h"
+#include "object/object.h"
 #include "engine/error.h"
 #include <stdint.h>
 #include <string.h>
@@ -12,7 +12,7 @@ typedef struct {
 	const ctAtom*     atoms;
 	const ctAtomTypeSize* types;
 	const uint32_t    count;
-	ctContainerManager* container_manager;
+	ctObjectManager* container_manager;
 } ctModuleArguments;
 
 

@@ -85,7 +85,7 @@ ct_modules_utils_areArgsEnough(uint32_t required_args, uint32_t obtained_args, c
 
 static inline bool
 ct_modules_utils_isContainer(ctAtomType type, ctModuleResult* result) {
-	if (type == ctAtomType_Container) {return true;}
+	if (type == ctAtomType_Object) {return true;}
 
 	result->returned_atom_type = ctAtomType_NoneType;
 	result->error.code = ctErrorCode_ValueError;
