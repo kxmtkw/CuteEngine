@@ -1,10 +1,12 @@
 
 file(GLOB TOKENIZER_SRC "${CMAKE_CURRENT_SOURCE_DIR}/tokenizer/*.cpp")
+file(GLOB PARSER_SRC "${CMAKE_CURRENT_SOURCE_DIR}/parser/*.cpp")
 
 add_executable(
 	cuteasm
     main.cpp
 	${TOKENIZER_SRC}
+	${PARSER_SRC}
 )
 
 target_link_libraries(cuteasm PRIVATE CuteEngine)

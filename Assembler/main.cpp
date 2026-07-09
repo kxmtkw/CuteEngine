@@ -1,3 +1,5 @@
+#include "parser/nodes.hpp"
+#include "parser/parser.hpp"
 #include "tokenizer/tokenizer.hpp"
 #include "tokenizer/tokens.hpp"
 #include <fstream>
@@ -18,5 +20,12 @@ int main() {
 		ctToken token = stream.next();
 		std::cout << "[ " << tokenTypeToString(token.type) << " " << stream.getValue(token) << " ]\n";
 	}
+	stream.reset();
+	ctParser parser;
+	auto program = parser.parse(&stream);
+
+	ctNodePrinter printer;
+	program->accept(printer);
+
 	return 0;
 }

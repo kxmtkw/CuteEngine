@@ -35,6 +35,7 @@ tokenTypeToString(ctTokenType type) {
         case ctTokenType::Int:       return "Int";
         case ctTokenType::Float:     return "Float";
         case ctTokenType::String:    return "String";
+		case ctTokenType::Char:      return "Char";
         case ctTokenType::Symbol:    return "Symbol";
         default:                     return "Unknown";
     }
