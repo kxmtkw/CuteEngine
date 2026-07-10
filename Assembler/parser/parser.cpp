@@ -133,11 +133,21 @@ ctParser::parseExpr() {
 		std::unique_ptr<ctSlotNode> slot = std::make_unique<ctSlotNode>();
 		slot->index = std::stoul(val);
 		return slot;
+	} else if (mStream->expectToken("%")) {
+		
+		if (!mStream->expectTokenType(ctTokenType::Word, val)) {
+			// failure
+		}
+
+		std::unique_ptr<ctDirectiveNode> directive = std::make_unique<ctDirectiveNode>();
+		directive->dir = std::move(val);
+		directive->expr = parseExpr();
+
+		return directive;
 	}
 
 	return nullptr;
 }
-
 
 
 std::unique_ptr<ctProgramNode>

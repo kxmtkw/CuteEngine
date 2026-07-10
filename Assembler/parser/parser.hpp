@@ -31,7 +31,6 @@ class ctParser {
 	std::unique_ptr<ctExpressionNode>
 	parseExpr();
 
-
 	public:
 
 	ctParser() = default;

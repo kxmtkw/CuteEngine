@@ -139,7 +139,7 @@ struct ctSlotNode : public ctExpressionNode {
 struct ctDirectiveNode : public ctExpressionNode {
 
 	std::string dir;
-	std::unique_ptr<std::unique_ptr<ctExpressionNode>> expr;
+	std::unique_ptr<ctExpressionNode> expr;
 
     NodeType getType() const override { return NodeType::Directive; }
     void accept(ctNodeVisitor& visitor) override { visitor.visit(*this); }
@@ -229,9 +229,9 @@ class ctNodePrinter : public ctNodeVisitor {
 			printIndent();
 			std::cout << "DirectiveNode [Dir: " << node.dir << "]\n";
 			
-			if (node.expr && *node.expr) {
+			if (node.expr) {
 				indent_level++;
-				(*node.expr)->accept(*this);
+				node.expr->accept(*this);
 				indent_level--;
 			}
 		}
