@@ -14,7 +14,7 @@ ctParser::parseProgram() {
 
 	while (mStream->peek().type != ctTokenType::EndOfFile) {
 		
-		if (mStream->expectToken("proc")) {
+		if (mStream->expectToken("@")) {
 			auto proc = parseProcedure();
 			if (proc) program->procedures.push_back(std::move(proc));
 		}
@@ -56,7 +56,7 @@ ctParser::parseProcedure() {
 std::unique_ptr<ctStatementNode>
 ctParser::parseStmt() {
 
-	if (mStream->expectToken("label")) {
+	if (mStream->expectToken("@")) {
 
 		auto label = parseLabel();
 		if (label) return label;
@@ -133,9 +133,13 @@ ctParser::parseExpr() {
 		std::unique_ptr<ctSlotNode> slot = std::make_unique<ctSlotNode>();
 		slot->index = std::stoul(val);
 		return slot;
-	} else if (mStream->expectToken("%")) {
+	} else if (mStream->expectToken("{")) {
 		
 		if (!mStream->expectTokenType(ctTokenType::Word, val)) {
+			// failure
+		}
+
+		if (!mStream->expectToken("}")) {
 			// failure
 		}
 

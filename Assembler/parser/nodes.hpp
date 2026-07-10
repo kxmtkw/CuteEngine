@@ -130,7 +130,7 @@ struct ctWordNode : public ctExpressionNode {
 
 struct ctSlotNode : public ctExpressionNode {
 
-	uint8_t index;
+	unsigned int index;
 	
     NodeType getType() const override { return NodeType::Slot; }
     void accept(ctNodeVisitor& visitor) override { visitor.visit(*this); }
