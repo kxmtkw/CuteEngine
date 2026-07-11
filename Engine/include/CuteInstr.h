@@ -90,8 +90,6 @@ typedef enum {
     instrConSize        = 0xC4,
     instrConCopy        = 0xC5,
     instrConDeepCopy    = 0xC6,
-    instrConResize      = 0xC7,
-    instrConLoad        = 0xC8
 
 } ctInstruction;
 

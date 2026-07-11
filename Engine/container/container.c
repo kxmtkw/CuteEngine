@@ -157,14 +157,7 @@ ct_container_deepcopy(ctObjectManager* manager, ctObject* src) {
 		}
 	}
 	
-	CUTE_LOG("containers", "Copied container (%u.%u) [%p] from container (%u.%u) [%p]\n", copy->bucket_id, copy->bucket_index, copy, src->bucket_id, src->bucket_index, src);
+	CUTE_LOG("containers", "Deep copied container (%u.%u) [%p] from container (%u.%u) [%p]\n", copy->bucket_id, copy->bucket_index, copy, src->bucket_id, src->bucket_index, src);
 
 	return copy;
-}
-
-// Resize the container
-void
-ct_container_resize(ctObjectManager* manager, ctObject* con, uint32_t new_size) {
-	printf("ATOM CONTAINER RESIZE NOT IMPLEMENTED!\n");
-	exit(1);
 }
