@@ -75,7 +75,7 @@ struct ctObjectNode : public ctNode {
 struct ctProcedureNode : public ctObjectNode {
 
 	uint32_t id;
-	uint8_t arg_count;
+	uint32_t arg_count;
 	std::vector<std::unique_ptr<ctStatementNode>> stmts;
 
 
@@ -165,7 +165,8 @@ class ctNodePrinter : public ctNodeVisitor {
 		void visit(ctProcedureNode& node) override {
 			printIndent();
 			std::cout << "ProcedureNode [ID: " << node.id
-					  << ", Args: " << node.arg_count;
+					  << ", Args: " << node.arg_count
+					  << "\n";
 			indent_level++;
 			for (auto& stmt : node.stmts) {
 				if (stmt) stmt->accept(*this);

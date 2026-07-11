@@ -7,6 +7,9 @@
 #include <memory>
 #include <vector>
 
+extern "C" {
+	#include "CuteInstr.h"
+}
 
 class ctCodeGen: ctNodeVisitor {
 

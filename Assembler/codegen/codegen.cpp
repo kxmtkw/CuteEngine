@@ -6,9 +6,6 @@
 #include "spec/nodes.hpp"
 #include "codegen.hpp"
 
-#include "CuteInstr.h"
-
-
 
 void ctCodeGen::visit(ctProgramNode& node) {
 
@@ -27,11 +24,16 @@ void ctCodeGen::visit(ctProcedureNode& node) {
 	proc.arg_count = node.arg_count;
 	proc.bytecode_index = mInstructions.size();
 
+
 	for (auto& stmt: node.stmts) {
 		stmt->accept(*this);
 	}
 
-	mProcedures.insert(mProcedures.begin() + proc.id, proc);
+	if (proc.id >= mProcedures.size()) {
+		mProcedures.resize(proc.id + 1);
+	}
+
+	mProcedures[proc.id] = proc;
 }
 
 
@@ -81,6 +83,8 @@ void ctCodeGen::generate(ctProgramNode& node, std::string filepath) {
 	mImage.header.procedure_count = mProcedures.size();
 	mImage.instruction_pool = mInstructions.data();
 	mImage.procedure_table = mProcedures.data();
+
+	for (auto& proc: mProcedures) std::cout << proc.id << " " << proc.arg_count << " " << proc.bytecode_index << "\n";
 
 	ct_image_write(&mImage, filepath.data());
 }

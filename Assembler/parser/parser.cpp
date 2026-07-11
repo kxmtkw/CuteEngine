@@ -16,7 +16,7 @@ ctParser::parseProgram() {
 
 	while (mStream->peek().type != ctTokenType::EndOfFile) {
 		
-		if (mStream->expectToken("@")) {
+		if (mStream->expectToken("proc")) {
 			auto proc = parseProcedure();
 			if (proc) program->procedures.push_back(std::move(proc));
 		}
