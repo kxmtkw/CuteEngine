@@ -1,5 +1,6 @@
 #include "parser/nodes.hpp"
 #include "parser/parser.hpp"
+#include "resolver/resolver.hpp"
 #include "tokenizer/tokenizer.hpp"
 #include "tokenizer/tokens.hpp"
 #include <fstream>
@@ -26,6 +27,9 @@ int main() {
 
 	ctNodePrinter printer;
 	program->accept(printer);
+
+	ctResolver resolver;
+	auto map = resolver.resolve(*program);
 
 	return 0;
 }
