@@ -3,8 +3,10 @@
 #include <string>
 #include <utility>
 #include "tokenizer/tokens.hpp"
-#include "nodes.hpp"
 #include "parser.hpp"
+#include "spec/nodes.hpp"
+#include "spec/instructions.hpp"
+
 
 
 std::unique_ptr<ctProgramNode>
@@ -28,17 +30,20 @@ ctParser::parseProcedure() {
 	
 	std::unique_ptr<ctProcedureNode> procedure = std::make_unique<ctProcedureNode>();
 
-	if (!mStream->expectTokenType(ctTokenType::Word, procedure->name)) {
+	std::string val;
+
+	if (!mStream->expectTokenType(ctTokenType::Int, val)) {
 		// did not get word.
 	};
 
-	std::string arg_count;
+	procedure->id = std::stoul(val);
 
-	if (! (mStream->expectToken("(") && mStream->expectTokenType(ctTokenType::Int, arg_count) && mStream->expectToken(")"))) {
+
+	if (! (mStream->expectToken("(") && mStream->expectTokenType(ctTokenType::Int, val) && mStream->expectToken(")"))) {
 		// did not get the req structure.
 	};
 
-	procedure->arg_count = std::stoul(arg_count);
+	procedure->arg_count = std::stoul(val);
 
 	if (!mStream->expectToken("{")) {
 		// nuh uh
@@ -56,42 +61,21 @@ ctParser::parseProcedure() {
 std::unique_ptr<ctStatementNode>
 ctParser::parseStmt() {
 
-	if (mStream->expectToken("@")) {
-
-		auto label = parseLabel();
-		if (label) return label;
-
-	} else {
-		auto op = parseOp();
-		if (op) return op;
-	};
+	auto op = parseOp();
+	if (op) return op;
 
 	return nullptr;
-}
-
-std::unique_ptr<ctLabelNode>
-ctParser::parseLabel() {
-
-	std::unique_ptr<ctLabelNode> label = std::make_unique<ctLabelNode>();
-
-	if (!mStream->expectTokenType(ctTokenType::Word, label->name)) {
-		// failure
-	};
-
-	if (!mStream->expectToken(";")) {
-		// failure
-	}
-
-	return label;
 }
 
 
 std::unique_ptr<ctOpNode>
 ctParser::parseOp() {
 
+	std::string val;
+
 	std::unique_ptr<ctOpNode> op = std::make_unique<ctOpNode>();
 	
-	if (!mStream->expectTokenType(ctTokenType::Word, op->opcode)) {
+	if (!mStream->expectTokenType(ctTokenType::Word, val)) {
 		// failure
 	};
 
@@ -99,6 +83,12 @@ ctParser::parseOp() {
 		auto expr = parseExpr();
 		if (expr) op->operands.push_back(std::move(expr));
 	}
+
+	if (!ctInstrMap.contains(val)) {
+		// failure
+	}
+
+	op->opcode = ctInstrMap.at(val);
 
 	return op;
 }
@@ -133,21 +123,6 @@ ctParser::parseExpr() {
 		std::unique_ptr<ctSlotNode> slot = std::make_unique<ctSlotNode>();
 		slot->index = std::stoul(val);
 		return slot;
-	} else if (mStream->expectToken("{")) {
-		
-		if (!mStream->expectTokenType(ctTokenType::Word, val)) {
-			// failure
-		}
-
-		if (!mStream->expectToken("}")) {
-			// failure
-		}
-
-		std::unique_ptr<ctDirectiveNode> directive = std::make_unique<ctDirectiveNode>();
-		directive->dir = std::move(val);
-		directive->expr = parseExpr();
-
-		return directive;
 	}
 
 	return nullptr;

@@ -1,21 +1,18 @@
 
 
+#include <cstdint>
+#include <cstring>
 #include <memory>
-#include "CuteInstr.h"
-#include "parser/nodes.hpp"
-#include "resolver/symbols.hpp"
+#include "spec/nodes.hpp"
 #include "codegen.hpp"
+
+#include "CuteInstr.h"
+
 
 
 void ctCodeGen::visit(ctProgramNode& node) {
 
-	mInstructions.clear();
-	mInstructions.reserve(256);
-
-	mProcedures.clear();
-	mProcedures.reserve(8);
-
-	mProcIndex = 1;
+	mProcedures.reserve(node.procedures.size());
 
 	for (auto& proc: node.procedures) {
 		proc->accept(*this);
@@ -25,12 +22,6 @@ void ctCodeGen::visit(ctProgramNode& node) {
 
 void ctCodeGen::visit(ctProcedureNode& node) {
 
-	if (node.name == "main") {
-		node.id = 0;
-	} else {
-		node.id = mProcIndex++;
-	};
-
 	ctImageProcedure proc;
 	proc.id = node.id;
 	proc.arg_count = node.arg_count;
@@ -39,26 +30,57 @@ void ctCodeGen::visit(ctProcedureNode& node) {
 	for (auto& stmt: node.stmts) {
 		stmt->accept(*this);
 	}
+
+	mProcedures.insert(mProcedures.begin() + proc.id, proc);
 }
 
 
 void ctCodeGen::visit(ctOpNode& node) {
 	
-	
+	mInstructions.push_back(node.opcode);
+
 	for (auto& expr: node.operands) {
 		expr->accept(*this);
 	}
 };
 
 
-void ctCodeGen::visit(ctLabelNode& node);
-void ctCodeGen::visit(ctWordNode& node);
-void ctCodeGen::visit(ctSlotNode& node);
-void ctCodeGen::visit(ctDirectiveNode& node);
-void ctCodeGen::visit(ctIntNode& node);
-void ctCodeGen::visit(ctFloatNode& node);
+void ctCodeGen::visit(ctWordNode& node) {
 
-void ctCodeGen::generate(ctProgramNode& node, std::map<std::string, ctSymbol> symbolMap) {
-	mSymbolMap = std::move(symbolMap);
+};
+
+
+void ctCodeGen::visit(ctSlotNode& node) {
+	mInstructions.push_back(node.index);
+}
+
+
+void ctCodeGen::visit(ctIntNode& node) {
+	ctInstructionSize* ptr = mInstructions.data() + mInstructions.size();
+	mInstructions.resize(mInstructions.size() + 4);
+	uint32_t i32 = std::stoi(node.val);
+	std::memcpy(ptr, &i32, 4);
+}
+
+void ctCodeGen::visit(ctFloatNode& node) {
+	ctInstructionSize* ptr = mInstructions.data() + mInstructions.size();
+	mInstructions.resize(mInstructions.size() + 4);
+	float f32 = std::stof(node.val);
+	std::memcpy(ptr, &f32, 4);
+}
+
+void ctCodeGen::generate(ctProgramNode& node, std::string filepath) {
+
+	mProcedures.clear();
+	mInstructions.clear();
+	mInstructions.reserve(256);
+
 	node.accept(*this);
+
+	mImage.header.instruction_count = mInstructions.size();
+	mImage.header.procedure_count = mProcedures.size();
+	mImage.instruction_pool = mInstructions.data();
+	mImage.procedure_table = mProcedures.data();
+
+	ct_image_write(&mImage, filepath.data());
 }

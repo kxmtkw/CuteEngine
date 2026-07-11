@@ -2,6 +2,7 @@
 #ifndef PARSER_NODES_HPP
 #define PARSER_NODES_HPP
 
+#include "CuteInstr.h"
 #include <cstdint>
 #include <iostream>
 #include <map>
@@ -17,12 +18,10 @@ struct ctObjectNode;
 
 struct ctStatementNode;
 	struct ctOpNode;
-	struct ctLabelNode;
 
 struct ctExpressionNode;
 	struct ctWordNode;
 	struct ctSlotNode;
-	struct ctDirectiveNode;
 	struct ctIntNode;
 	struct ctFloatNode;
 
@@ -30,11 +29,9 @@ struct ctExpressionNode;
 enum class NodeType {
 	Program,
 	Procedure,
-	Label,
 	Op,
 	Word,
 	Slot,
-	Directive,
 	Int,
 	Float
 };
@@ -45,10 +42,8 @@ struct ctNodeVisitor {
     virtual void visit(ctProgramNode& node) = 0;
     virtual void visit(ctProcedureNode& node) = 0;
     virtual void visit(ctOpNode& node) = 0;
-    virtual void visit(ctLabelNode& node) = 0;
     virtual void visit(ctWordNode& node) = 0;
     virtual void visit(ctSlotNode& node) = 0;
-    virtual void visit(ctDirectiveNode& node) = 0;
     virtual void visit(ctIntNode& node) = 0;
     virtual void visit(ctFloatNode& node) = 0;
 
@@ -79,11 +74,10 @@ struct ctObjectNode : public ctNode {
 
 struct ctProcedureNode : public ctObjectNode {
 
-	std::string name;
+	uint32_t id;
 	uint8_t arg_count;
 	std::vector<std::unique_ptr<ctStatementNode>> stmts;
 
-	unsigned int id;
 
     NodeType getType() const override { return NodeType::Procedure; }
     void accept(ctNodeVisitor& visitor) override { visitor.visit(*this); }
@@ -97,22 +91,13 @@ struct ctStatementNode : public ctNode {
 
 struct ctOpNode : public ctStatementNode {
 
-	std::string opcode;
+	ctInstruction opcode;
 	std::vector<std::unique_ptr<ctExpressionNode>> operands;
 
     NodeType getType() const override { return NodeType::Op; }
     void accept(ctNodeVisitor& visitor) override { visitor.visit(*this); }
 };
 
-struct ctLabelNode : public ctStatementNode {
-
-	std::string name;
-
-	unsigned int bytecode_index;
-
-    NodeType getType() const override { return NodeType::Label; }
-    void accept(ctNodeVisitor& visitor) override { visitor.visit(*this); }
-};
 
 // --- Group: Expressions ---
 
@@ -136,14 +121,6 @@ struct ctSlotNode : public ctExpressionNode {
     void accept(ctNodeVisitor& visitor) override { visitor.visit(*this); }
 };
 
-struct ctDirectiveNode : public ctExpressionNode {
-
-	std::string dir;
-	std::unique_ptr<ctExpressionNode> expr;
-
-    NodeType getType() const override { return NodeType::Directive; }
-    void accept(ctNodeVisitor& visitor) override { visitor.visit(*this); }
-};
 
 struct ctIntNode : public ctExpressionNode {
 
@@ -169,7 +146,7 @@ class ctNodePrinter : public ctNodeVisitor {
 	
 		void printIndent() {
 			for (int i = 0; i < indent_level; ++i) {
-				std::cout << "    "; // 2 spaces per indentation level
+				std::cout << "    ";
 			}
 		}
 	
@@ -187,10 +164,8 @@ class ctNodePrinter : public ctNodeVisitor {
 	
 		void visit(ctProcedureNode& node) override {
 			printIndent();
-			std::cout << "ProcedureNode [Name: " << node.name 
-					  << ", Args: " << static_cast<int>(node.arg_count) 
-					  << ", ID: " << node.id << "]\n";
-			
+			std::cout << "ProcedureNode [ID: " << node.id
+					  << ", Args: " << node.arg_count;
 			indent_level++;
 			for (auto& stmt : node.stmts) {
 				if (stmt) stmt->accept(*this);
@@ -209,12 +184,6 @@ class ctNodePrinter : public ctNodeVisitor {
 			indent_level--;
 		}
 	
-		void visit(ctLabelNode& node) override {
-			printIndent();
-			std::cout << "LabelNode [Name: " << node.name 
-					  << ", Bytecode Index: " << node.bytecode_index << "]\n";
-		}
-	
 		void visit(ctWordNode& node) override {
 			printIndent();
 			std::cout << "WordNode [Val: " << node.val << "]\n";
@@ -224,17 +193,7 @@ class ctNodePrinter : public ctNodeVisitor {
 			printIndent();
 			std::cout << "SlotNode [Index: " << static_cast<int>(node.index) << "]\n";
 		}
-	
-		void visit(ctDirectiveNode& node) override {
-			printIndent();
-			std::cout << "DirectiveNode [Dir: " << node.dir << "]\n";
-			
-			if (node.expr) {
-				indent_level++;
-				node.expr->accept(*this);
-				indent_level--;
-			}
-		}
+
 	
 		void visit(ctIntNode& node) override {
 			printIndent();

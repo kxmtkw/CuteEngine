@@ -4,7 +4,7 @@
 
 #include "tokenizer/tokens.hpp"
 #include "utils/utils.hpp"
-#include "nodes.hpp"
+#include "spec/nodes.hpp"
 #include <memory>
 
 
@@ -21,9 +21,6 @@ class ctParser {
 
 	std::unique_ptr<ctStatementNode>
 	parseStmt();
-
-	std::unique_ptr<ctLabelNode>
-	parseLabel();
 
 	std::unique_ptr<ctOpNode>
 	parseOp();
