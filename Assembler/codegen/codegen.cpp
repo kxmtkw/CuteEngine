@@ -84,7 +84,5 @@ void ctCodeGen::generate(ctProgramNode& node, std::string filepath) {
 	mImage.instruction_pool = mInstructions.data();
 	mImage.procedure_table = mProcedures.data();
 
-	for (auto& proc: mProcedures) std::cout << proc.id << " " << proc.arg_count << " " << proc.bytecode_index << "\n";
-
 	ct_image_write(&mImage, filepath.data());
 }
