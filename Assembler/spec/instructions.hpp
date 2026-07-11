@@ -92,8 +92,6 @@ static const std::map<std::string, ctInstruction> ctInstrMap = {
     {"consize",     {instrConSize}},
     {"concopy",     {instrConCopy}},
     {"condeepcopy", {instrConDeepCopy}},
-    {"conresize",   {instrConResize}},
-    {"conload",     {instrConLoad}}
 };
 
 
