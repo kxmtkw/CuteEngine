@@ -9,7 +9,7 @@
 #include "CuteConfig.h"
 #include "CuteInstr.h"
 #include "object/object.h"
-#include "engine/error.h"
+#include "error/error.h"
 #include "modules/modules.h"
 #include "modules/modulespec.h"
 #include "utils/utils.h"

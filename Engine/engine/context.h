@@ -9,7 +9,7 @@
 #include "CuteConfig.h"
 #include "CuteInstr.h"
 #include "object/object.h"
-#include "engine/error.h"
+#include "error/error.h"
 
 
 typedef struct {

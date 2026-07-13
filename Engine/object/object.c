@@ -5,7 +5,7 @@
 #include <stdbool.h>
 
 #include "CuteConfig.h"
-#include "engine/error.h"
+#include "error/error.h"
 #include "utils/utils.h"
 
 #include "object.h"

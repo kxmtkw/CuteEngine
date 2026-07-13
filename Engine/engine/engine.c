@@ -12,7 +12,7 @@
 #include "modules/modulespec.h"
 #include "context.h"
 #include "exec.h"
-#include "error.h"
+#include "error/error.h"
 #include "utils/utils.h"
 
 

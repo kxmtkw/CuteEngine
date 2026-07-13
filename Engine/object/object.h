@@ -3,7 +3,7 @@
 #define OBJECT_OBJECT_H
 
 #include "CuteConfig.h"
-#include "engine/error.h"
+#include "error/error.h"
 #include <stdint.h>
 
 struct _ctObjectManager;
