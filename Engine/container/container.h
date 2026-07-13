@@ -9,8 +9,9 @@
 
 
 typedef struct {
-	uint32_t            size;
+	ctObject            __object__;
 	uint32_t            sub_objects;
+	uint32_t            size;
 	ctAtom*             atoms;
 	ctAtomTypeSize*     types;
 } ctContainer;
@@ -25,7 +26,7 @@ ct_container_del(ctObjectManager* manager, ctObject* con);
 
 static inline uint32_t
 ct_container_size(ctObjectManager* manager, ctObject* con) {
-	ctContainer* container = (ctContainer*) con->data;
+	ctContainer* container = (ctContainer*) con;
 	return container->size;
 };
 

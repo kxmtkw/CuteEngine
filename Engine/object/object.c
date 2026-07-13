@@ -54,7 +54,7 @@ ct_objects_end(ctObjectManager** manager_ptr) {
 
 		for (uint32_t j = 0; j < sizeof(bucket->objects)/sizeof(bucket->objects[0]); j++) {
 			if (ct_utils_isBitSet(bucket->bitmask, j)) {
-				free(bucket->objects[j].data);
+				free(bucket->objects[j]);
 			}
 		}
 		free(bucket);
@@ -133,10 +133,9 @@ ct_objects_popEmptyBucket(ctObjectManager* manager) {
 
 
 ctObject*
-ct_objects_newObject(ctObjectManager* manager, uint32_t data_size, uint64_t data_type, ctObjectDelete del_func) {
+ct_objects_newObject(ctObjectManager* manager, uint32_t obj_size, uint64_t obj_type, ctObjectDelete del_func) {
 
 	ctObjectBucket* assigned_bucket = NULL;
-	ctObject* assigned_obj = NULL;
 
 	assigned_bucket = ct_objects_popEmptyBucket(manager);
 	
@@ -146,6 +145,7 @@ ct_objects_newObject(ctObjectManager* manager, uint32_t data_size, uint64_t data
 		assigned_bucket = ct_objects_popEmptyBucket(manager);
 	}
 	
+	uint32_t assigned_obj_slot;
 
 	// Looking for a valid index to assign the Object to in the bucket
 	for (uint32_t j = 0; j < sizeof(assigned_bucket->objects)/sizeof(assigned_bucket->objects[0]); j++) {
@@ -154,9 +154,7 @@ ct_objects_newObject(ctObjectManager* manager, uint32_t data_size, uint64_t data
 			continue;;
 		}
 
-		assigned_obj = &assigned_bucket->objects[j];
-		assigned_obj->bucket_id = assigned_bucket->id;
-		assigned_obj->bucket_index = j;
+		assigned_obj_slot = j;
 
 		ct_utils_setBit(&assigned_bucket->bitmask, j);
 
@@ -170,43 +168,33 @@ ct_objects_newObject(ctObjectManager* manager, uint32_t data_size, uint64_t data
 		break;
 	};
 
-	if (!assigned_obj) {
-		manager->error.code = ctErrorCode_EngineFailure;
-		ct_utils_format(
-			manager->error.msg, 
-			sizeof(manager->error.msg), 
-			"Engine failed to find a free slot for a Object. This should never happen."
-		);
-		CUTE_LOG("objects", "Failed to allocate new Object. No available slots in bucket (%u)\n", assigned_bucket->id);
-		return NULL;
-	}
-
 
 	// Allocating atoms
-	uint8_t* ptr = malloc(data_size);
+	ctObject* obj = malloc(obj_size);
 
-	if (ptr == NULL) {
-		ct_utils_clearBit(&assigned_bucket->bitmask, assigned_obj->bucket_index);
+	if (obj == NULL) {
+		ct_utils_clearBit(&assigned_bucket->bitmask, assigned_obj_slot);
 		manager->error.code = ctErrorCode_EngineFailure;
 		ct_utils_format(
 			manager->error.msg, 
 			sizeof(manager->error.msg), 
-			"Engine failed to allocate memory for new Object (%u.%u). Out of memory.", assigned_obj->bucket_id, assigned_obj->bucket_index
+			"Engine failed to allocate memory for new Object (%u.%u). Out of memory.", assigned_bucket->id, assigned_obj_slot
 		);
 
-		CUTE_LOG("objects", "Failed to allocate memory for Object (%u.%u) [%p] of size %u\n", assigned_obj->bucket_id, assigned_obj->bucket_index, assigned_obj, data_size);
+		CUTE_LOG("objects", "Failed to allocate memory for Object (%u.%u) [%p] of size %u\n", assigned_bucket->id, assigned_obj_slot, obj, obj_size);
 		return NULL;
 	}
 	
-	assigned_obj->ref_count = 0;
-	assigned_obj->data_size = data_size;
-	assigned_obj->data = ptr;
-	assigned_obj->data_type = data_type;
-	assigned_obj->data_del_func = del_func;
+	obj->bucket_id = assigned_bucket->id;
+	obj->bucket_index = assigned_obj_slot;
+	obj->obj_type = obj_type;
+	obj->obj_size = obj_size;
+	obj->obj_del_func = del_func;
 
 
-	CUTE_LOG("objects", "New Object (%u.%u) [%p] (data:%u bytes) allocated to bucket (%u)\n", assigned_obj->bucket_id, assigned_obj->bucket_index, assigned_obj, data_size, assigned_bucket->id);
-	return assigned_obj;
+	CUTE_LOG("objects", "New Object (%u.%u) [%p] (data:%u bytes) allocated to bucket (%u)\n", obj->bucket_id, obj->bucket_index, obj, obj_size, assigned_bucket->id);
+
+	return obj;
 }
 
 
@@ -222,11 +210,11 @@ ct_objects_delObject(ctObjectManager* manager, ctObject* obj) {
 
 	ct_utils_clearBit(&bucket->bitmask, obj->bucket_index);
 
-	if (obj->data_del_func) {
-		obj->data_del_func(manager, obj);
+	if (obj->obj_del_func) {
+		obj->obj_del_func(manager, obj);
 	}
 
-	free(obj->data);
+	free(obj);
 
 	CUTE_LOG("objects", "Object (%u.%u) [%p] unallocated.\n", obj->bucket_id, obj->bucket_index, obj);
 }

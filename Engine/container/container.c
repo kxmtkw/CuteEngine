@@ -21,13 +21,12 @@ ct_container_new(ctObjectManager* manager, uint32_t size,  ctError* err) {
 		return NULL;
 	};
 	
-	uint8_t* data = obj->data;
-	ctContainer* container = (ctContainer*) obj->data;
+	uint8_t* data = (uint8_t*) obj;
+	ctContainer* container = (ctContainer*) obj;
 	container->atoms = (ctAtom*) (data + sizeof(ctContainer));
 	container->types = (ctAtomTypeSize*) (data + sizeof(ctContainer) + sizeof(ctAtom) * size);
 	container->size = size;
 	container->sub_objects = 0;
-	
 
 	CUTE_LOG("containers", "New container (%u.%u) [%p] (size:%u atoms) allocated.\n", obj->bucket_id, obj->bucket_index, obj, size);
 
@@ -38,7 +37,7 @@ ct_container_new(ctObjectManager* manager, uint32_t size,  ctError* err) {
 void
 ct_container_del(ctObjectManager* manager, ctObject* obj) {
 
-	ctContainer* container = obj->data;
+	ctContainer* container = (ctContainer*) obj;
 
 	uint32_t j = 0;
 	
@@ -55,9 +54,9 @@ ct_container_del(ctObjectManager* manager, ctObject* obj) {
 
 // Get an atom in the container. Will return ctConManagerCode_OutOfBounds if index is out of bounds
 ctTypedAtom
-ct_container_get(ctObjectManager* manager, ctObject* con, uint32_t index, ctError* err) {
+ct_container_get(ctObjectManager* manager, ctObject* obj, uint32_t index, ctError* err) {
 
-	ctContainer* container = con->data;
+	ctContainer* container = (ctContainer*) obj;
 
 	if (index >= container->size) {
 		err->code = ctErrorCode_OutOfBounds;
@@ -74,9 +73,9 @@ ct_container_get(ctObjectManager* manager, ctObject* con, uint32_t index, ctErro
 
 // Set an atom in the container. Will return ctConManagerCode_OutOfBounds if index is out of bounds.
 void
-ct_container_set(ctObjectManager* manager, ctObject* con, uint32_t index, ctTypedAtom atom, ctError* err) {
+ct_container_set(ctObjectManager* manager, ctObject* obj, uint32_t index, ctTypedAtom atom, ctError* err) {
 
-	ctContainer* container = con->data;
+	ctContainer* container = (ctContainer*) obj;
 
 	if (index >= container->size) {
 		err->code = ctErrorCode_OutOfBounds;
@@ -106,12 +105,13 @@ ct_container_set(ctObjectManager* manager, ctObject* con, uint32_t index, ctType
 ctObject*
 ct_container_copy(ctObjectManager* manager, ctObject* src, ctError* err) {
 	
-	ctObject* copy = ct_container_new(manager, src->data_size, err);
+	ctContainer* consrc = (ctContainer*) src;
+
+	ctObject* copy = ct_container_new(manager, consrc->__object__.obj_size, err);
 
 	if (err->code) {return NULL;}
 
-	ctContainer* consrc = src->data;
-	ctContainer* concopy = copy->data;
+	ctContainer* concopy = (ctContainer*) copy;
 
 	if (!copy) {
 		return NULL;
@@ -141,12 +141,14 @@ ct_container_copy(ctObjectManager* manager, ctObject* src, ctError* err) {
 ctObject*
 ct_container_deepcopy(ctObjectManager* manager, ctObject* src, ctError* err) {
 	
-	ctObject* copy = ct_container_new(manager, src->data_size, err);
+	ctContainer* consrc = (ctContainer*) src;
+
+	ctObject* copy = ct_container_new(manager, consrc->__object__.obj_size, err);
 
 	if (err->code) {return NULL;}
 
-	ctContainer* consrc = src->data;
-	ctContainer* concopy = copy->data;
+	
+	ctContainer* concopy = (ctContainer*) copy;
 
 	if (!copy) {
 		return NULL;

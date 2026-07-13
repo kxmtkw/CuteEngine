@@ -7,7 +7,7 @@
 
 #include <stdint.h>
 #include <string.h>
-#include "engine/error.h"
+#include "error/error.h"
 #include "modules/modulespec.h"
 
 #include "utils/utils.h"

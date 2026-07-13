@@ -15,18 +15,17 @@ struct _ctObject {
 	uint32_t            bucket_id;
 	uint32_t            bucket_index;
 	uint32_t            ref_count;
-	uint32_t            data_size;
-	uint64_t            data_type;
-	ctObjectDelete      data_del_func;
-	void*               data;
+	uint32_t            obj_size;
+	uint64_t            obj_type;
+	ctObjectDelete      obj_del_func;
 }; 
 typedef struct _ctObject ctObject;
 
 
 typedef struct {
-	uint32_t id;
-	uint64_t bitmask;
-	ctObject objects[64];
+	uint32_t  id;
+	uint64_t  bitmask;
+	ctObject* objects[64];
 } ctObjectBucket;
 
 
@@ -58,25 +57,25 @@ ct_objects_popEmptyBucket(ctObjectManager* manager);
 
 // Allocate a new Object
 ctObject*
-ct_objects_newObject(ctObjectManager* manager, uint32_t data_size, uint64_t data_type, ctObjectDelete del_func);
+ct_objects_newObject(ctObjectManager* manager, uint32_t obj_size, uint64_t obj_type, ctObjectDelete del_func);
 
 // Delete a Object, keeping in mind sub Objects
 void
-ct_objects_delObject(ctObjectManager* manager, ctObject* con);
+ct_objects_delObject(ctObjectManager* manager, ctObject* obj);
 
 static inline void
-ct_objects_incRef(ctObjectManager* manager, ctObject* con) {
-	con->ref_count++;
-	CUTE_LOG("objects", "Object (%u.%u) [%p] referenced. References: %u\n", con->bucket_id, con->bucket_index, con, con->ref_count);
+ct_objects_incRef(ctObjectManager* manager, ctObject* obj) {
+	obj->ref_count++;
+	CUTE_LOG("objects", "Object (%u.%u) [%p] referenced. References: %u\n", obj->bucket_id, obj->bucket_index, obj, obj->ref_count);
 }
 
 // Decrease the ref count of an object. Returns true if the object is deleted.
 static inline bool
-ct_objects_decRef(ctObjectManager* manager, ctObject* con) {
-	con->ref_count--;
-	CUTE_LOG("objects", "Object (%u.%u) [%p] dereferenced. References: %u\n", con->bucket_id, con->bucket_index, con, con->ref_count);
-	if (con->ref_count == 0) {
-		ct_objects_delObject(manager, con);
+ct_objects_decRef(ctObjectManager* manager, ctObject* obj) {
+	obj->ref_count--;
+	CUTE_LOG("objects", "Object (%u.%u) [%p] dereferenced. References: %u\n", obj->bucket_id, obj->bucket_index, obj, obj->ref_count);
+	if (obj->ref_count == 0) {
+		ct_objects_delObject(manager, obj);
 	}
 }
 
