@@ -7,6 +7,7 @@
 extern "C" {
 #endif
 
+// Main Cute Instruction Set
 typedef enum {
 
     instrNull    = 0x00,
@@ -95,6 +96,8 @@ typedef enum {
 
 typedef uint8_t ctInstructionSize;
 
+
+// Cute Image Defintions
 
 static const uint32_t ctMagicId = 0x12345678; 
 

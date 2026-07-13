@@ -29,40 +29,39 @@ typedef struct {
 } ctObjectBucket;
 
 
-// Start up the Object manager 
+// Startup the object manager. Pushes the first object bucket as well.
 ctObjectManager*
 ct_objects_init();
 
-// End the Object manager, Also frees the object manager
+// End the Object manager and all its resources. Sets the pointer to NULL for convenience.
 void
 ct_objects_end(ctObjectManager** manager_ptr);
-
 
 // Check if the object manager failed.
 bool
 ct_objects_checkError(ctObjectManager* manager_ptr, ctError* error);
 
-
-// Allocate a new bucket, return its id
+// Allocate a new empty bucket and pushes it to the stack. Returns it's id.
 uint32_t
 ct_objects_newBucket(ctObjectManager* manager);
 
-// Mark a bucket as empty and push it to the empty buckets stack
+// Push a bucket to the empty stack. THe bucket SHOULD be empty (not filled) before it is pushed.
 void
 ct_objects_pushEmptyBucket(ctObjectManager* manager, ctObjectBucket* bucket);
 
-// Mark a bucket as not empty and remove it from the empty buckets stack
+// Pop an empty bucket from the stack. If the bucket is full after the allocation, do not push it back.
 ctObjectBucket*
 ct_objects_popEmptyBucket(ctObjectManager* manager);
 
-// Allocate a new Object
+// Allocate a new object.
 ctObject*
 ct_objects_newObject(ctObjectManager* manager, uint32_t obj_size, uint64_t obj_type, ctObjectDelete del_func);
 
-// Delete a Object, keeping in mind sub Objects
+// Delete an object, sub objects are NOT considered. The deleter if it exists, is also called.
 void
 ct_objects_delObject(ctObjectManager* manager, ctObject* obj);
 
+// Increase the refcount of the object.
 static inline void
 ct_objects_incRef(ctObjectManager* manager, ctObject* obj) {
 	obj->ref_count++;
@@ -76,7 +75,9 @@ ct_objects_decRef(ctObjectManager* manager, ctObject* obj) {
 	CUTE_LOG("objects", "Object (%u.%u) [%p] dereferenced. References: %u\n", obj->bucket_id, obj->bucket_index, obj, obj->ref_count);
 	if (obj->ref_count == 0) {
 		ct_objects_delObject(manager, obj);
+		return true;
 	}
+	return false;
 }
 
 

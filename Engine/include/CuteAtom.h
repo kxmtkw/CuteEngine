@@ -20,7 +20,7 @@ typedef uint8_t ctAtomTypeSize;
 
 struct _ctObject;
 
-
+// Main atom definition. Its just 64 bits.
 typedef union {
 	uint64_t             raw;
 	int64_t              as_int;
@@ -31,18 +31,10 @@ typedef union {
 } ctAtom;
 
 
-
 typedef struct {
 	ctAtomTypeSize type;
 	ctAtom         atom;
 } ctTypedAtom;
-
-
-static inline ctTypedAtom
-ct_atom_pack(ctAtom atom, ctAtomTypeSize type) {
-    return (ctTypedAtom){type, atom};
-}
-
 
 
 static const char* ct_atom_stringforms[] = {

@@ -58,7 +58,7 @@ ct_ctx_new(ctImage* img, ctObjectManager* objects, uint32_t procedure_id);
 void
 ct_ctx_del(ctContext* ctx);
 
-// Setup a callframe and allocated local variables for a procedure.
+// Setup a callframe, copy the specified arguments from the caller's frame and return value to the specified return slot.
 void
 ct_ctx_callProcedure(ctContext* ctx, uint32_t procedure_id, uint8_t arg_start_slot, uint8_t return_slot);
 
@@ -66,7 +66,7 @@ ct_ctx_callProcedure(ctContext* ctx, uint32_t procedure_id, uint8_t arg_start_sl
 void
 ct_ctx_returnProcedure(ctContext* ctx, ctAtom returned_atom, ctAtomType returned_atom_type);
 
-
+// Store an atom at a specified slot in the CURRENT call frame.
 static inline void
 ct_ctx_storeAtom(ctContext* ctx, uint8_t slot, ctAtom atom, ctAtomType type) {
 
@@ -84,7 +84,7 @@ ct_ctx_storeAtom(ctContext* ctx, uint8_t slot, ctAtom atom, ctAtomType type) {
 	};
 };
 
-
+// Load an atom from a specified index from the CURRENT call frame.
 static inline void
 ct_ctx_loadAtom(ctContext* ctx, uint8_t slot, ctAtom* atom, ctAtomType* type) {
 	*atom = ctx->current_frame->file.atoms[slot];
