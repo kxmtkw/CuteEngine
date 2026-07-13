@@ -20,7 +20,7 @@ void
 ct_engine_init(ctEngine* engine) {
 	CUTE_LOG("engine", "vroom vroom\n");
 	engine->ctx = NULL;
-	ct_objects_init(&engine->manager);
+	engine->object_manager = ct_objects_init();
 }
 
 // End the engine and free all resources
@@ -31,7 +31,7 @@ ct_engine_end(ctEngine* engine) {
 		ct_ctx_del(engine->ctx);
 	}
 	
-	ct_objects_end(&engine->manager);
+	ct_objects_end(&engine->object_manager);
 
 	if (engine->image.header.magic_id == ctMagicId) {
 		CUTE_LOG("engine", "Freeing image resources.\n");
@@ -103,10 +103,11 @@ ct_engine_loadFile(ctEngine* engine, const char* filepath) {
 // Run the engine with the loaded image file
 void
 ct_engine_run(ctEngine* engine) {
-	engine->ctx = ct_ctx_new(&engine->image, &engine->manager, 0);
+
+	engine->ctx = ct_ctx_new(&engine->image, engine->object_manager, 0);
 	ct_exec(engine->ctx);
 	
-	if (engine->ctx->has_error) {
+	if (engine->ctx->error.code) {
 		ct_error_print(engine->ctx->error);
 	}
 

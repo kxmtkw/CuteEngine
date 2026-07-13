@@ -10,10 +10,10 @@
 #include "object/object.h"
 
 typedef struct {
-	ctImage            image;
-	ctObjectManager    manager;
-	ctContext*         ctx;
-	uint8_t            exit_code;
+	ctImage             image;
+	ctObjectManager*    object_manager;
+	ctContext*          ctx;
+	uint8_t             exit_code;
 } ctEngine;
 
 

@@ -58,7 +58,6 @@ ct_ctx_new(ctImage* img, ctObjectManager* objects, uint32_t procedure_id) {
 	ctx->objects = objects;
 	ctx->running = true;
 	ctx->current_frame = NULL;
-	ctx->has_error = false;
 	ct_ctx_initStack(&ctx->callstack);
 	ct_ctx_callProcedure(ctx, procedure_id, 0, 0);
 	return ctx;
@@ -172,7 +171,6 @@ ct_ctx_returnProcedure(ctContext* ctx, ctAtom returned_atom, ctAtomType returned
 inline void
 ct_ctx_throwError(ctContext* ctx, ctError error) {
 	ctx->running = false;
-	ctx->has_error = true;
 	ctx->error = error;
 }
 

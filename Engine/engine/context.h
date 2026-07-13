@@ -45,7 +45,6 @@ typedef struct {
 	ctCallFrame*        current_frame;
 	double              cmp_diff;
 	bool                running;
-	bool                has_error;
 	ctError             error;
 	uint8_t             exit_code;
 } ctContext;

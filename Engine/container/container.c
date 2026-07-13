@@ -1,4 +1,5 @@
 #include <stdint.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -10,11 +11,15 @@
 
 
 ctObject*
-ct_container_new(ctObjectManager* manager, uint32_t size) {
+ct_container_new(ctObjectManager* manager, uint32_t size,  ctError* err) {
 
 	uint32_t req_size = sizeof(ctContainer) + sizeof(ctAtom) * size + sizeof(ctAtomTypeSize) * size;
 
 	ctObject* obj = ct_objects_newObject(manager, req_size, 0 /*placeholder*/, ct_container_del);
+
+	if (ct_objects_checkError(manager, err)) {
+		return NULL;
+	};
 	
 	uint8_t* data = obj->data;
 	ctContainer* container = (ctContainer*) obj->data;
@@ -50,35 +55,34 @@ ct_container_del(ctObjectManager* manager, ctObject* obj) {
 
 // Get an atom in the container. Will return ctConManagerCode_OutOfBounds if index is out of bounds
 ctTypedAtom
-ct_container_get(ctObjectManager* manager, ctObject* con, uint32_t index) {
+ct_container_get(ctObjectManager* manager, ctObject* con, uint32_t index, ctError* err) {
 
 	ctContainer* container = con->data;
 
 	if (index >= container->size) {
-		manager->error.code = ctErrorCode_OutOfBounds;
+		err->code = ctErrorCode_OutOfBounds;
 		ct_utils_format(
-			manager->error.msg, 
-			sizeof(manager->error.msg), 
+			err->msg, 
+			sizeof(err->msg), 
 			"Can not access container slot #%u (>= %u)", index, container->size
 		);
 		return (ctTypedAtom){ctAtomType_NoneType, (ctAtom){0}};
 	}
 
 	return (ctTypedAtom){container->types[index], container->atoms[index]};
-
 };
 
 // Set an atom in the container. Will return ctConManagerCode_OutOfBounds if index is out of bounds.
 void
-ct_container_set(ctObjectManager* manager, ctObject* con, uint32_t index, ctTypedAtom atom) {
+ct_container_set(ctObjectManager* manager, ctObject* con, uint32_t index, ctTypedAtom atom, ctError* err) {
 
 	ctContainer* container = con->data;
 
 	if (index >= container->size) {
-		manager->error.code = ctErrorCode_OutOfBounds;
+		err->code = ctErrorCode_OutOfBounds;
 		ct_utils_format(
-			manager->error.msg, 
-			sizeof(manager->error.msg), 
+			err->msg, 
+			sizeof(err->msg), 
 			"Can not set container slot #%u (>= %u)", index, container->size
 		);
 		return;
@@ -100,9 +104,12 @@ ct_container_set(ctObjectManager* manager, ctObject* con, uint32_t index, ctType
 
 // Create a shallow copy of a container
 ctObject*
-ct_container_copy(ctObjectManager* manager, ctObject* src) {
+ct_container_copy(ctObjectManager* manager, ctObject* src, ctError* err) {
 	
-	ctObject* copy = ct_container_new(manager, src->data_size);
+	ctObject* copy = ct_container_new(manager, src->data_size, err);
+
+	if (err->code) {return NULL;}
+
 	ctContainer* consrc = src->data;
 	ctContainer* concopy = copy->data;
 
@@ -132,9 +139,12 @@ ct_container_copy(ctObjectManager* manager, ctObject* src) {
 
 // Create a deep copy of a container
 ctObject*
-ct_container_deepcopy(ctObjectManager* manager, ctObject* src) {
+ct_container_deepcopy(ctObjectManager* manager, ctObject* src, ctError* err) {
 	
-	ctObject* copy = ct_container_new(manager, src->data_size);
+	ctObject* copy = ct_container_new(manager, src->data_size, err);
+
+	if (err->code) {return NULL;}
+
 	ctContainer* consrc = src->data;
 	ctContainer* concopy = copy->data;
 
@@ -151,7 +161,7 @@ ct_container_deepcopy(ctObjectManager* manager, ctObject* src) {
 	
 	for (uint32_t i = 0; i < consrc->size && j < consrc->sub_objects; i++) {
 		if (consrc->types[i] == ctAtomType_Object) {
-			concopy->atoms[i].as_object = ct_container_deepcopy(manager, consrc->atoms[i].as_object);
+			concopy->atoms[i].as_object = ct_container_deepcopy(manager, consrc->atoms[i].as_object, err);
 			ct_objects_incRef(manager, consrc->atoms[i].as_object);
 			j++;
 		}

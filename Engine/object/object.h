@@ -7,6 +7,7 @@
 #include <stdint.h>
 
 struct _ctObjectManager;
+typedef struct _ctObjectManager ctObjectManager;
 
 typedef void (*ctObjectDelete)(struct _ctObjectManager*, struct _ctObject*);
 
@@ -29,25 +30,19 @@ typedef struct {
 } ctObjectBucket;
 
 
-struct _ctObjectManager{
-	ctObjectBucket**    buckets;
-	uint32_t            bucket_count;
-	uint32_t            bucket_capacity;
-	ctObjectBucket**    empty_buckets;
-	uint32_t            empty_bucket_count;
-	uint32_t            empty_bucket_capacity;
-	ctError             error;
-};
-typedef struct _ctObjectManager ctObjectManager;
+// Start up the Object manager 
+ctObjectManager*
+ct_objects_init();
 
-
-// Start up the Object manager
+// End the Object manager, Also frees the object manager
 void
-ct_objects_init(ctObjectManager* manager);
+ct_objects_end(ctObjectManager** manager_ptr);
 
-// End the Object manager
-void
-ct_objects_end(ctObjectManager* manager);
+
+// Check if the object manager failed.
+bool
+ct_objects_checkError(ctObjectManager* manager_ptr, ctError* error);
+
 
 // Allocate a new bucket, return its id
 uint32_t
@@ -75,7 +70,8 @@ ct_objects_incRef(ctObjectManager* manager, ctObject* con) {
 	CUTE_LOG("objects", "Object (%u.%u) [%p] referenced. References: %u\n", con->bucket_id, con->bucket_index, con, con->ref_count);
 }
 
-static inline void
+// Decrease the ref count of an object. Returns true if the object is deleted.
+static inline bool
 ct_objects_decRef(ctObjectManager* manager, ctObject* con) {
 	con->ref_count--;
 	CUTE_LOG("objects", "Object (%u.%u) [%p] dereferenced. References: %u\n", con->bucket_id, con->bucket_index, con, con->ref_count);

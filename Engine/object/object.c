@@ -11,9 +11,22 @@
 #include "object.h"
 
 
+struct _ctObjectManager {
+	ctObjectBucket**    buckets;
+	uint32_t            bucket_count;
+	uint32_t            bucket_capacity;
+	ctObjectBucket**    empty_buckets;
+	uint32_t            empty_bucket_count;
+	uint32_t            empty_bucket_capacity;
+	ctError             error;
+};
+typedef struct _ctObjectManager ctObjectManager;
 
-void
-ct_objects_init(ctObjectManager* manager) {
+
+ctObjectManager*
+ct_objects_init() {
+
+	ctObjectManager* manager = malloc(sizeof(ctObjectManager));
 	
 	manager->buckets = NULL;
 	manager->bucket_count = 0;
@@ -24,11 +37,15 @@ ct_objects_init(ctObjectManager* manager) {
 	manager->empty_bucket_capacity = 0;
 
 	ct_objects_newBucket(manager);
+
+	return manager;
 }
 
 
 void
-ct_objects_end(ctObjectManager* manager) {
+ct_objects_end(ctObjectManager** manager_ptr) {
+
+	ctObjectManager* manager = *manager_ptr;
 
 	CUTE_LOG("objects", "Starting cleanup.\n");
 
@@ -48,7 +65,20 @@ ct_objects_end(ctObjectManager* manager) {
 	manager->bucket_capacity = 0;
 	manager->bucket_count = 0;
 
+	free(manager);
+	manager_ptr = NULL;
+
 	CUTE_LOG("objects", "All objects unallocated.\n");
+}
+
+
+bool
+ct_objects_checkError(ctObjectManager* manager, ctError* error) {
+	if (manager->error.code != ctErrorCode_None) {
+		*error = manager->error;
+		return true;
+	}
+	return false;
 }
 
 
