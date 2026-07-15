@@ -74,12 +74,13 @@ void
 ct_ctx_callProcedure(ctContext* ctx, uint32_t procedure_id, uint8_t arg_start_slot, uint8_t return_slot) {
 
 	if (ctx->callstack.size >= ctx->callstack.capacity) {
-		ctx->error = (ctError){.code=ctErrorCode_RecursionDepth};
-		ct_utils_format(
-			ctx->error.msg, 
-			sizeof(ctx->error.msg), 
+		
+		CUTE_ERROR(
+			(&ctx->error), 
+			ctErrorCode_Recursion, 
 			"Recursion depth reached. (%u calls)", ctx->callstack.capacity
 		);
+
 		ct_ctx_throwError(
 			ctx, 
 			ctx->error
@@ -88,12 +89,13 @@ ct_ctx_callProcedure(ctContext* ctx, uint32_t procedure_id, uint8_t arg_start_sl
 	};
 
 	if (procedure_id >= ctx->image->header.procedure_count) {
-		ctx->error = (ctError){.code=ctErrorCode_ProcedureError};
-		ct_utils_format(
-			ctx->error.msg, 
-			sizeof(ctx->error.msg), 
+
+		CUTE_ERROR(
+			(&ctx->error), 
+			ctErrorCode_Procedure, 
 			"Invalid procedure ID '%u' called. [%u-%u]", procedure_id, 0, ctx->image->header.procedure_count-1
 		);
+
 		ct_ctx_throwError(
 			ctx, 
 			ctx->error
@@ -105,16 +107,15 @@ ct_ctx_callProcedure(ctContext* ctx, uint32_t procedure_id, uint8_t arg_start_sl
 	uint32_t arg_count = procedure_id == 0 ? 0 : proc.arg_count;
 
 	if (arg_count >= CUTE_CONF_SLOT_COUNT) {
-		ctx->error = (ctError){.code=ctErrorCode_ProcedureError};
-		ct_utils_format(
-			ctx->error.msg, 
-			sizeof(ctx->error.msg), 
+		
+		CUTE_ERROR(
+			(&ctx->error), 
+			ctErrorCode_Procedure, 
 			"Too many arguments requested by procedure(%u): '%u' (>=%u)", procedure_id, arg_count, CUTE_CONF_SLOT_COUNT
 		);
-		ct_ctx_throwError(
-			ctx, 
-			ctx->error
-		);
+
+		ctx->error = (ctError){.code=ctErrorCode_Procedure};
+		ct_ctx_throwError(ctx, ctx->error);
 		return;
 	};
 
@@ -183,13 +184,7 @@ ct_ctx_modcall(ctContext* ctx, uint32_t module_id, uint32_t method_id, uint32_t 
 	ctModuleDispatchCode code = ct_modules_getMethod(module_id, method_id, &method);
 
 	if (code != ctModuleDispatchCode_Success) {
-		ctx->error.code = ctErrorCode_ModuleError;
-		ct_utils_format(
-			ctx->error.msg,
-			sizeof(ctx->error.msg),
-			"Unknown module method: %u.%u", 
-			module_id, method_id
-		);
+		CUTE_ERROR((&ctx->error), ctErrorCode_Module, "Can not access container slot #%u (>= %u)", "Unknown module method: %u.%u", module_id, method_id);
 		ct_ctx_throwError(ctx, ctx->error);
 		return;
 	};

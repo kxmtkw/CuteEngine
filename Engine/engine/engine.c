@@ -44,6 +44,7 @@ ct_engine_end(ctEngine* engine) {
 // Load an image file. For now, only one image can be loaded.
 void
 ct_engine_loadFile(ctEngine* engine, const char* filepath) {
+	
 	CUTE_LOG("engine", "Loading image file: %s\n", filepath);
 	ctImageCode code = ct_image_read(&engine->image, filepath);
 
@@ -56,7 +57,7 @@ ct_engine_loadFile(ctEngine* engine, const char* filepath) {
 			break;
 
 		case ctImageCode_FileNotFound:
-			error.code = ctErrorCode_EngineFailure;
+			error.code = ctErrorCode_Engine;
 			ct_utils_format(
 				error.msg,
 				sizeof(error.msg),
@@ -65,7 +66,7 @@ ct_engine_loadFile(ctEngine* engine, const char* filepath) {
 			break;
 
 		case ctImageCode_ReadWriteFailure:
-			error.code = ctErrorCode_EngineFailure;
+			error.code = ctErrorCode_Engine;
 			ct_utils_format(
 				error.msg,
 				sizeof(error.msg),
@@ -74,7 +75,7 @@ ct_engine_loadFile(ctEngine* engine, const char* filepath) {
 			break;
 
 		case ctImageCode_InvalidImage:
-			error.code = ctErrorCode_EngineFailure;
+			error.code = ctErrorCode_Engine;
 			ct_utils_format(
 				error.msg,
 				sizeof(error.msg),
@@ -83,7 +84,7 @@ ct_engine_loadFile(ctEngine* engine, const char* filepath) {
 			break;
 
 		default:
-			error.code = ctErrorCode_EngineFailure;
+			error.code = ctErrorCode_Engine;
 			ct_utils_format(
 				error.msg,
 				sizeof(error.msg),

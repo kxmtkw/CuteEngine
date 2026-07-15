@@ -52,7 +52,7 @@ ct_ctx_storeAtom(ctx, r1, (ctAtom){.as_bool = ctx->cmp_diff OP 0 ? 1 : 0}, ctAto
 ct_loadBytes(instrs, &ctx->ip, 4, &i32); \
 ctx->ip += i32; \
 if (ctx->ip >= ctx->image->header.instruction_count) { \
-ctx->error = (ctError) {.code=ctErrorCode_IllegalInstruction}; \
+ctx->error = (ctError) {.code=ctErrorCode_Engine}; \
 ct_utils_format(ctx->error.msg, sizeof(ctx->error.msg), "Out of range ip: 0x%08lX", ctx->ip); ct_ctx_throwError(ctx, ctx->error); };
 
 
@@ -60,13 +60,13 @@ ct_utils_format(ctx->error.msg, sizeof(ctx->error.msg), "Out of range ip: 0x%08l
 ct_loadBytes(instrs, &ctx->ip, 4, &u32); \
 ctx->ip = u32; \
 if (ctx->ip >= ctx->image->header.instruction_count) { \
-ctx->error = (ctError) {.code=ctErrorCode_IllegalInstruction}; \
+ctx->error = (ctError) {.code=ctErrorCode_Engine}; \
 ct_utils_format(ctx->error.msg, sizeof(ctx->error.msg), "Out of range ip: 0x%08lX", ctx->ip); ct_ctx_throwError(ctx, ctx->error); };
 
 
 #define CHECK_IF_OBJECT(TYPE) \
 if (TYPE != ctAtomType_Object) { \
-	ctx->error.code = ctErrorCode_IllegalInstruction; \
+	ctx->error.code = ctErrorCode_Type; \
 	ct_utils_format(ctx->error.msg, sizeof(ctx->error.msg), "Expected container, got %s.", ct_atom_stringforms[TYPE]); \
 	ct_ctx_throwError(ctx, ctx->error); \
 	return; \

@@ -5,6 +5,7 @@
 
 #include "CuteAtom.h"
 #include "container.h"
+#include "error/error.h"
 #include "object/object.h"
 #include "utils/utils.h"
 
@@ -59,12 +60,7 @@ ct_container_get(ctObjectManager* manager, ctObject* obj, uint32_t index, ctErro
 	ctContainer* container = (ctContainer*) obj;
 
 	if (index >= container->size) {
-		err->code = ctErrorCode_OutOfBounds;
-		ct_utils_format(
-			err->msg, 
-			sizeof(err->msg), 
-			"Can not access container slot #%u (>= %u)", index, container->size
-		);
+		CUTE_ERROR(err, ctErrorCode_OutOfBounds, "Can not access container slot #%u (>= %u)", index, container->size);
 		return (ctTypedAtom){ctAtomType_NoneType, (ctAtom){0}};
 	}
 
@@ -78,12 +74,7 @@ ct_container_set(ctObjectManager* manager, ctObject* obj, uint32_t index, ctType
 	ctContainer* container = (ctContainer*) obj;
 
 	if (index >= container->size) {
-		err->code = ctErrorCode_OutOfBounds;
-		ct_utils_format(
-			err->msg, 
-			sizeof(err->msg), 
-			"Can not set container slot #%u (>= %u)", index, container->size
-		);
+		CUTE_ERROR(err, ctErrorCode_OutOfBounds, "Can not access container slot #%u (>= %u)", index, container->size);
 		return;
 	}
 

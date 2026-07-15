@@ -174,12 +174,8 @@ ct_objects_newObject(ctObjectManager* manager, uint32_t obj_size, uint64_t obj_t
 
 	if (obj == NULL) {
 		ct_utils_clearBit(&assigned_bucket->bitmask, assigned_obj_slot);
-		manager->error.code = ctErrorCode_EngineFailure;
-		ct_utils_format(
-			manager->error.msg, 
-			sizeof(manager->error.msg), 
-			"Engine failed to allocate memory for new Object (%u.%u). Out of memory.", assigned_bucket->id, assigned_obj_slot
-		);
+
+		CUTE_ERROR((&manager->error), ctErrorCode_Memory, "Engine failed to allocate memory for new Object (%u.%u). Out of memory.", assigned_bucket->id, assigned_obj_slot)
 
 		CUTE_LOG("objects", "Failed to allocate memory for Object (%u.%u) [%p] of size %u\n", assigned_bucket->id, assigned_obj_slot, obj, obj_size);
 		return NULL;
