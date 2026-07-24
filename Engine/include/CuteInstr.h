@@ -12,7 +12,6 @@ typedef enum {
 
     instrNull    = 0x00,
     instrHalt    = 0x01,
-    instrAssert  = 0x02,
 
     instrOut     = 0x10,
     instrOutBits = 0x11,

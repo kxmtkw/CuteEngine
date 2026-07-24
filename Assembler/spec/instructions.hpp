@@ -15,7 +15,6 @@ extern "C" {
 static const std::map<std::string, ctInstruction> ctInstrMap = {
     {"halt",        {instrHalt}},
     {"null",        {instrNull}},
-    {"assert",      {instrAssert}},
 
     {"out",         {instrOut}},
     {"outb",        {instrOutBits}},

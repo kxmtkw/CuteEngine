@@ -108,7 +108,6 @@ void ct_exec(ctContext* ctx) {
     static void* dispatch_table[] = {
         [instrNull] = &&opNull,
         [instrHalt] = &&opHalt,
-        [instrAssert] = &&opAssert,
         [instrOut] = &&opOut,
         [instrOutBits] = &&opOutBits,
         [instrMov] = &&opMov,
@@ -193,22 +192,6 @@ opHalt:
     ct_ctx_loadAtom(ctx, r1, &a1, &t1);
     ctx->exit_code = a1.as_uint;
     return;
-
-opAssert:
-    r1 = instrs[ctx->ip++];
-    ct_ctx_loadAtom(ctx, r1, &a1, &t1);
-    if (!a1.as_bool) {
-		ctx->error = (ctError) {.code=ctErrorCode_AssertionFailed};
-		ct_utils_format(
-			ctx->error.msg, 
-			sizeof(ctx->error.msg), 
-			"Assertion failed at ip 0x%08lX, targeting slot '%u'",
-			ctx->ip-1, r1
-		);
-		ct_ctx_throwError(ctx, ctx->error);
-        return;
-    }
-    goto next;
 
 opOut:
     r1 = instrs[ctx->ip++];
