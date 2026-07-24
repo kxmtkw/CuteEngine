@@ -169,7 +169,6 @@ void ct_exec(ctContext* ctx) {
         [instrReturnVal] = &&opReturnVal,
 		[instrModCall] = &&opModCall,
         [instrConNew] = &&opConNew,
-        [instrConDel] = &&opConDel,
         [instrConGet] = &&opConGet,
         [instrConSet] = &&opConSet,
         [instrConSize] = &&opConSize,
@@ -516,10 +515,6 @@ opConNew:
     ct_ctx_storeAtom(ctx, r1, a2, ctAtomType_Object);
     goto next;
 
-opConDel:
-    r1 = instrs[ctx->ip++];
-    ct_ctx_storeAtom(ctx, r1, (ctAtom){.as_uint=0}, ctAtomType_NoneType);
-    goto next;
 
 opConGet:
     r1 = instrs[ctx->ip++];

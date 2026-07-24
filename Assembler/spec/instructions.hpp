@@ -86,7 +86,6 @@ static const std::map<std::string, ctInstruction> ctInstrMap = {
     {"modcall",     {instrModCall}},
 
     {"connew",      {instrConNew}},
-    {"condel",      {instrConDel}},
     {"conget",      {instrConGet}},
     {"conset",      {instrConSet}},
     {"consize",     {instrConSize}},

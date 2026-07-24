@@ -85,12 +85,11 @@ typedef enum {
     instrModCall     = 0xBA,
 
     instrConNew         = 0xC0,
-    instrConDel         = 0xC1,
-    instrConGet         = 0xC2,
-    instrConSet         = 0xC3,
-    instrConSize        = 0xC4,
-    instrConCopy        = 0xC5,
-	
+    instrConGet         = 0xC1,
+    instrConSet         = 0xC2,
+    instrConSize        = 0xC3,
+    instrConCopy        = 0xC4,
+
 } ctInstruction;
 
 typedef uint8_t ctInstructionSize;
