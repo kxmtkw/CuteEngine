@@ -53,7 +53,7 @@ ct_ctx_peekFrame(ctCallStack* s) {
 
 ctContext*
 ct_ctx_new(ctImage* img, ctObjectManager* objects, uint32_t procedure_id) {
-	ctContext* ctx = malloc(sizeof(ctContext));
+	ctContext* ctx = (ctContext*) malloc(sizeof(ctContext));
 	ctx->image = img;
 	ctx->objects = objects;
 	ctx->running = true;

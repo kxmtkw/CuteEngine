@@ -16,12 +16,27 @@
 #include "utils/utils.h"
 
 
-void
-ct_engine_init(ctEngine* engine) {
+
+struct _ctEngine {
+	ctImage             image;
+	ctObjectManager*    object_manager;
+	ctContext*          ctx;
+	uint8_t             exit_code;
+};
+
+typedef struct _ctEngine ctEngine;
+
+
+ctEngine*
+ct_engine_init() {
 	CUTE_LOG("engine", "vroom vroom\n");
+	ctEngine* engine = (ctEngine*) malloc(sizeof(ctEngine));
 	engine->ctx = NULL;
 	engine->object_manager = ct_objects_init();
+
+	return engine;
 }
+
 
 // End the engine and free all resources
 void

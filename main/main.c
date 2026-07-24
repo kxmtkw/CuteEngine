@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include "CuteEngine.h"
 
 int
@@ -8,10 +9,9 @@ main(int argc, char** argv) {
 		return 2;
 	}
 
-	ctEngine engine;
-	ct_engine_init(&engine);
-	ct_engine_loadFile(&engine, argv[1]);
-	ct_engine_run(&engine);
-	ct_engine_end(&engine);
+	ctEngine* engine = ct_engine_init();
+	ct_engine_loadFile(engine, argv[1]);
+	ct_engine_run(engine);
+	ct_engine_end(engine);
 	return 0;
 }

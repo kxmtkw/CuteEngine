@@ -6,20 +6,15 @@
 #include "CuteAtom.h"
 #include "CuteInstr.h"
 
-#include "engine/context.h"
-#include "object/object.h"
 
-typedef struct {
-	ctImage             image;
-	ctObjectManager*    object_manager;
-	ctContext*          ctx;
-	uint8_t             exit_code;
-} ctEngine;
+
+struct _ctEngine;
+typedef struct _ctEngine ctEngine;
 
 
 // Intialize the engine
-void
-ct_engine_init(ctEngine* engine);
+ctEngine*
+ct_engine_init();
 
 // End the engine and free all resources
 void
