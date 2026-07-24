@@ -10,8 +10,8 @@ main(int argc, char** argv) {
 	}
 
 	ctEngine* engine = ct_engine_init();
-	ct_engine_loadFile(engine, argv[1]);
+	ct_engine_load(engine, argv[1]);
 	ct_engine_run(engine);
 	ct_engine_end(engine);
-	return 0;
+	return 1;
 }

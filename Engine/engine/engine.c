@@ -18,9 +18,8 @@
 
 
 struct _ctEngine {
-	ctImage             image;
+	ctImage*            image;
 	ctObjectManager*    object_manager;
-	ctContext*          ctx;
 	uint8_t             exit_code;
 };
 
@@ -31,9 +30,9 @@ ctEngine*
 ct_engine_init() {
 	CUTE_LOG("engine", "vroom vroom\n");
 	ctEngine* engine = (ctEngine*) malloc(sizeof(ctEngine));
-	engine->ctx = NULL;
+	engine->image = NULL;
 	engine->object_manager = ct_objects_init();
-
+	engine->exit_code = 0;
 	return engine;
 }
 
@@ -42,26 +41,25 @@ ct_engine_init() {
 void
 ct_engine_end(ctEngine* engine) {
 
-	if (engine->ctx) {
-		ct_ctx_del(engine->ctx);
-	}
-	
 	ct_objects_end(&engine->object_manager);
 
-	if (engine->image.header.magic_id == ctMagicId) {
+	if (engine->image->header.magic_id == ctMagicId) {
 		CUTE_LOG("engine", "Freeing image resources.\n");
-		ct_image_free(&engine->image);
+		ct_image_free(engine->image);
 	}
 
 	CUTE_LOG("engine", "Ending engine.\n");
+	exit(engine->exit_code);
 }
 
 // Load an image file. For now, only one image can be loaded.
 void
-ct_engine_loadFile(ctEngine* engine, const char* filepath) {
+ct_engine_load(ctEngine* engine, const char* filepath) {
 	
 	CUTE_LOG("engine", "Loading image file: %s\n", filepath);
-	ctImageCode code = ct_image_read(&engine->image, filepath);
+
+	engine->image = (ctImage*) malloc(sizeof(ctImage));
+	ctImageCode code = ct_image_read(engine->image, filepath);
 
 	ctError error;
 
@@ -116,16 +114,36 @@ ct_engine_loadFile(ctEngine* engine, const char* filepath) {
 	}
 }
 
-// Run the engine with the loaded image file
+// Make a new context
+ctContext*
+ct_engine_newCtx(ctEngine* engine, uint32_t procedure_id) {
+	return ct_ctx_new(engine->image, engine->object_manager, procedure_id);
+}
+
+void
+ct_engine_delCtx(ctEngine* engine, ctContext* ctx) {
+	ct_ctx_del(ctx);
+}
+
+void
+ct_engine_runCtx(ctEngine* engine, ctContext* ctx) {
+
+	ct_exec(ctx);
+	
+	if (ctx->error.code) {
+		ct_error_print(ctx->error);
+	}
+
+	engine->exit_code = ctx->exit_code;
+}
+
+
 void
 ct_engine_run(ctEngine* engine) {
 
-	engine->ctx = ct_ctx_new(&engine->image, engine->object_manager, 0);
-	ct_exec(engine->ctx);
-	
-	if (engine->ctx->error.code) {
-		ct_error_print(engine->ctx->error);
-	}
+	ctContext* ctx = ct_ctx_new(engine->image, engine->object_manager, 0);
 
-	engine->exit_code = engine->ctx->exit_code;
+	ct_engine_runCtx(engine, ctx);
+
+	ct_ctx_del(ctx);
 }

@@ -11,7 +11,7 @@
 
 int main() {
 	
-	std::ifstream file("test.cta");
+	std::ifstream file("dev/test.cta");
 	std::stringstream ss;
 	ss << file.rdbuf();
 	std::string content = ss.str();
@@ -32,7 +32,7 @@ int main() {
 	program->accept(printer);
 
 	ctCodeGen gen;
-	gen.generate(*program, "test.cti");
+	gen.generate(*program, "dev/out");
 
 	return 0;
 }

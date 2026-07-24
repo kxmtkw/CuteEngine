@@ -7,6 +7,7 @@
 
 #include "CuteAtom.h"
 #include "CuteConfig.h"
+#include "CuteEngine.h"
 #include "CuteInstr.h"
 #include "object/object.h"
 #include "error/error.h"
@@ -16,7 +17,6 @@ typedef struct {
 	ctAtom         atoms[CUTE_CONF_SLOT_COUNT];
 	ctAtomTypeSize types[CUTE_CONF_SLOT_COUNT];
 } ctAtomFile;
-
 
 
 typedef struct {
@@ -37,7 +37,7 @@ typedef struct {
 } ctCallStack;
 
 
-typedef struct {
+struct _ctContext {
 	ctImage*            image;
 	ctObjectManager*    objects;
 	uint64_t            ip;
@@ -47,8 +47,9 @@ typedef struct {
 	bool                running;
 	ctError             error;
 	uint8_t             exit_code;
-} ctContext;
+};
 
+typedef struct _ctContext ctContext;
 
 // Create a new context. Requires the image to be ran and the starting procedure.
 ctContext*
