@@ -183,6 +183,7 @@ ct_objects_newObject(ctObjectManager* manager, uint32_t obj_size, uint64_t obj_t
 	
 	obj->bucket_id = assigned_bucket->id;
 	obj->bucket_index = assigned_obj_slot;
+	obj->ref_count = 0;
 	obj->obj_type = obj_type;
 	obj->obj_size = obj_size;
 	obj->obj_del_func = del_func;
