@@ -174,7 +174,6 @@ void ct_exec(ctContext* ctx) {
         [instrConSet] = &&opConSet,
         [instrConSize] = &&opConSize,
         [instrConCopy] = &&opConCopy,
-		[instrConDeepCopy] = &&opConDeepCopy,
     };
 
     uint8_t r1, r2, r3, r4, r5;
@@ -567,19 +566,6 @@ opConCopy:
     ct_ctx_loadAtom(ctx, r2, &a2, &t2);
 	CHECK_IF_OBJECT(t2);
     a1.as_object = ct_container_copy(ctx->objects, a2.as_object, &ctx->error);
-    if (ctx->error.code) {
-		ct_ctx_throwError(ctx, ctx->error);
-        return;
-	}
-    ct_ctx_storeAtom(ctx, r1, a1, ctAtomType_Object);
-    goto next;
-
-opConDeepCopy:
-    r1 = instrs[ctx->ip++];
-    r2 = instrs[ctx->ip++];
-    ct_ctx_loadAtom(ctx, r2, &a2, &t2);
-	CHECK_IF_OBJECT(t2);
-    a1.as_object = ct_container_deepcopy(ctx->objects, a2.as_object, &ctx->error);
     if (ctx->error.code) {
 		ct_ctx_throwError(ctx, ctx->error);
         return;
