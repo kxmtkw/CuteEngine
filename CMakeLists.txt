@@ -24,7 +24,7 @@ add_library(CuteEngine STATIC
     Engine/engine/exec.c
     Engine/engine/context.c
     Engine/object/object.c
-    Engine/container/container.c
+    Engine/object/container.c
     Engine/image/image.c
     Engine/utils/utils.c
 )

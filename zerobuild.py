@@ -15,7 +15,7 @@ CuteEngine.source = Source(
 	cute_engine_src / "engine" / "exec.c",
 	cute_engine_src / "engine" / "context.c",
 	cute_engine_src / "object" / "object.c",
-	cute_engine_src / "container" / "container.c",
+	cute_engine_src / "object" / "container.c",
 	cute_engine_src / "image" / "image.c",
 	cute_engine_src / "utils" / "utils.c",
 )

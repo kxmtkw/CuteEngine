@@ -11,10 +11,9 @@
 #include "CuteInstr.h"
 
 
-#include "container/container.h"
+#include "object/container.h"
 #include "context.h"
 #include "error/error.h"
-#include "object/object.h"
 #include "utils/utils.h"
 
 
