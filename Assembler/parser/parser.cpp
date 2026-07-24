@@ -123,6 +123,16 @@ ctParser::parseExpr() {
 		std::unique_ptr<ctSlotNode> slot = std::make_unique<ctSlotNode>();
 		slot->index = std::stoul(val);
 		return slot;
+	}  else if (mStream->expectToken("-")) {
+		
+		if (!mStream->expectTokenType(ctTokenType::Int, val)) {
+			// failure
+		}
+
+		std::unique_ptr<ctIntNode> num = std::make_unique<ctIntNode>();
+		val.insert(val.begin(), '-');
+		num->val = val;
+		return num;
 	}
 
 	return nullptr;

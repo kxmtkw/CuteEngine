@@ -59,6 +59,7 @@ typedef enum {
     instrBitXor      = 0x74,
     instrBitShl      = 0x75,
     instrBitShr      = 0x76, 
+	instrBitShrA     = 0x77, 
 
     instrCmpI        = 0x80,
     instrCmpU        = 0x81,

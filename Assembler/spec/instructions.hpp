@@ -62,6 +62,7 @@ static const std::map<std::string, ctInstruction> ctInstrMap = {
     {"bnot",        {instrBitNot}},
     {"bshl",        {instrBitShl}},
     {"bshr",        {instrBitShr}},
+	{"bshra",       {instrBitShrA}},
 
     {"cmpi",        {instrCmpI}},
     {"cmpu",        {instrCmpU}},

@@ -148,6 +148,7 @@ void ct_exec(ctContext* ctx) {
         [instrBitXor] = &&opBitXor,
         [instrBitShl] = &&opBitShl,
         [instrBitShr] = &&opBitShr,
+		[instrBitShrA] = &&opBitShrA,
         [instrCmpI] = &&opCmpI,
         [instrCmpU] = &&opCmpU,
         [instrCmpF] = &&opCmpF,
@@ -382,6 +383,10 @@ opBitShl:
 
 opBitShr: 
 	INSTR_BINARYOP(ctAtomType_UInt, as_uint, >>); 
+	goto next;
+
+opBitShrA: 
+	INSTR_BINARYOP(ctAtomType_Int, as_int, >>); 
 	goto next;
 
 opCmpI: 
