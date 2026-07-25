@@ -48,16 +48,8 @@ ct_ctx_storeAtom(ctx, r1, (ctAtom){.as_bool = ctx->cmp_diff OP 0 ? 1 : 0}, ctAto
 
 
 #define INSTR_JMP() \
-ct_loadBytes(instrs, &ctx->ip, 4, &i32); \
-ctx->ip += i32; \
-if (ctx->ip >= ctx->image->header.instruction_count) { \
-ctx->error = (ctError) {.code=ctErrorCode_Engine}; \
-ct_utils_format(ctx->error.msg, sizeof(ctx->error.msg), "Out of range ip: 0x%08lX", ctx->ip); ct_ctx_throwError(ctx, ctx->error); };
-
-
-#define INSTR_JMPABS() \
-ct_loadBytes(instrs, &ctx->ip, 4, &u32); \
-ctx->ip = u32; \
+ct_loadBytes(instrs, &ctx->ip, 8, &u64); \
+ctx->ip = u64; \
 if (ctx->ip >= ctx->image->header.instruction_count) { \
 ctx->error = (ctError) {.code=ctErrorCode_Engine}; \
 ct_utils_format(ctx->error.msg, sizeof(ctx->error.msg), "Out of range ip: 0x%08lX", ctx->ip); ct_ctx_throwError(ctx, ctx->error); };
@@ -175,11 +167,12 @@ void ct_exec(ctContext* ctx) {
         [instrGreater] = &&opGreater,
         [instrGreaterEq] = &&opGreaterEq,
         [instrJmp] = &&opJmp,
-        [instrJmpIf] = &&opJmpIf,
-        [instrJmpIfNot] = &&opJmpIfNot,
-        [instrJmpAbs] = &&opJmpAbs,
-        [instrJmpAbsIf] = &&opJmpAbsIf,
-        [instrJmpAbsIfNot] = &&opJmpAbsIfNot,
+        [instrJmpEq] = &&opJmpEq,
+        [instrJmpNe] = &&opJmpNe,
+        [instrJmpGt] = &&opJmpGt,
+        [instrJmpGe] = &&opJmpGe,
+        [instrJmpLt] = &&opJmpLt,
+		[instrJmpLe] = &&opJmpLe,
         [instrCall] = &&opCall,
         [instrReturn] = &&opReturn,
         [instrReturnVal] = &&opReturnVal,
@@ -195,6 +188,7 @@ void ct_exec(ctContext* ctx) {
     int32_t i32;
     uint32_t u32;
     float f32;
+	uint64_t u64;
     ctAtom a1, a2, a3;
     ctAtomType t1, t2, t3;
     ctTypedAtom typed_atom;
@@ -425,35 +419,33 @@ opJmp:
 	INSTR_JMP(); 
 	goto next;
 
-opJmpIf:
-    r1 = instrs[ctx->ip++];
-    ct_ctx_loadAtom(ctx, r1, &a1, &t1);
-    if (a1.as_bool) { INSTR_JMP(); goto next; }
+opJmpEq:
+    if (ctx->cmp_diff == 0) { INSTR_JMP(); goto next; }
     ctx->ip += 4;
     goto next;
 
-opJmpIfNot:
-    r1 = instrs[ctx->ip++];
-    ct_ctx_loadAtom(ctx, r1, &a1, &t1);
-    if (!a1.as_bool) { INSTR_JMP(); goto next; }
+opJmpNe:
+    if (ctx->cmp_diff != 0) { INSTR_JMP(); goto next; }
     ctx->ip += 4;
     goto next;
 
-opJmpAbs: 
-	INSTR_JMPABS(); 
-	goto next;
-
-opJmpAbsIf:
-    r1 = instrs[ctx->ip++];
-    ct_ctx_loadAtom(ctx, r1, &a1, &t1);
-    if (a1.as_bool) { INSTR_JMPABS(); goto next; }
+opJmpGt:
+    if (ctx->cmp_diff > 0) { INSTR_JMP(); goto next; }
     ctx->ip += 4;
     goto next;
 
-opJmpAbsIfNot:
-    r1 = instrs[ctx->ip++];
-    ct_ctx_loadAtom(ctx, r1, &a1, &t1);
-    if (!a1.as_bool) { INSTR_JMPABS(); goto next; }
+opJmpGe:
+    if (ctx->cmp_diff >= 0) { INSTR_JMP(); goto next; }
+    ctx->ip += 4;
+    goto next;
+
+opJmpLt:
+    if (ctx->cmp_diff < 0) { INSTR_JMP(); goto next; }
+    ctx->ip += 4;
+    goto next;
+
+opJmpLe:
+    if (ctx->cmp_diff <= 0) { INSTR_JMP(); goto next; }
     ctx->ip += 4;
     goto next;
 
