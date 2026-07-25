@@ -7,12 +7,9 @@
 
 
 typedef enum {
-	ctAtomType_NoneType  = 0x0,
-	ctAtomType_Int       = 0x1,
-	ctAtomType_UInt      = 0x2,
-	ctAtomType_Float     = 0x3,
-	ctAtomType_Bool      = 0x4,
-	ctAtomType_Object    = 0x5
+	ctAtomType_NoneType   = 0x0,
+	ctAtomType_Primitive  = 0x1,
+	ctAtomType_Object     = 0x2
 } ctAtomType;
 
 
@@ -25,8 +22,8 @@ typedef union {
 	uint64_t             raw;
 	int64_t              as_int;
 	uint64_t             as_uint;
-	uint64_t             as_bool;
 	double               as_float;
+	uint64_t             as_bool;
 	struct _ctObject*    as_object;
 } ctAtom;
 
@@ -36,14 +33,5 @@ typedef struct {
 	ctAtom         atom;
 } ctTypedAtom;
 
-
-static const char* ct_atom_stringforms[] = {
-	[ctAtomType_NoneType]  = "none",
-	[ctAtomType_Int]       = "int",
-	[ctAtomType_UInt]      = "uint",
-	[ctAtomType_Float]     = "float",
-	[ctAtomType_Bool]      = "bool",
-	[ctAtomType_Object]    = "object"
-};
 
 #endif // CUTE_ATOM_H

@@ -44,7 +44,7 @@ ctx->cmp_diff = (double)a1.FIELD - (double)a2.FIELD;
 
 #define INSTR_CMP_RESOLVER(OP) \
 r1 = instrs[ctx->ip++]; \
-ct_ctx_storeAtom(ctx, r1, (ctAtom){.as_bool = ctx->cmp_diff OP 0 ? 1 : 0}, ctAtomType_Bool); \
+ct_ctx_storeAtom(ctx, r1, (ctAtom){.as_bool = ctx->cmp_diff OP 0 ? 1 : 0}, ctAtomType_Primitive); \
 
 
 #define INSTR_JMP() \
@@ -66,7 +66,7 @@ ct_utils_format(ctx->error.msg, sizeof(ctx->error.msg), "Out of range ip: 0x%08l
 #define CHECK_IF_OBJECT(TYPE) \
 if (TYPE != ctAtomType_Object) { \
 	ctx->error.code = ctErrorCode_Type; \
-	ct_utils_format(ctx->error.msg, sizeof(ctx->error.msg), "Expected container, got %s.", ct_atom_stringforms[TYPE]); \
+	ct_utils_format(ctx->error.msg, sizeof(ctx->error.msg), "Expected container, got primitive."); \
 	ct_ctx_throwError(ctx, ctx->error); \
 	return; \
 }; \
@@ -79,26 +79,45 @@ ct_loadBytes(ctInstructionSize* instrs, uint64_t* ip, uint32_t n, void* dest) {
 
 
 static inline void 
-out(ctAtom atom, ctAtomTypeSize type) {
+out(uint8_t fmt, ctAtom atom, ctAtomTypeSize type) {
 
-	const char* name = ct_atom_stringforms[type];
+	static const char* ct_atom_stringforms[] = {
+		[0]    = "none",
+		[1]    = "int",
+		[2]    = "uint",
+		[3]    = "float",
+		[4]    = "bool",
+		[5]    = "object"
+	};
 
-	switch (type) {
+	switch (fmt) {
 		
-		case ctAtomType_NoneType:
-			printf("[ %s ]\n", name); break;
-		case ctAtomType_Int:
-			printf("[ %s %ld ]\n", name, atom.as_int); break;
-		case ctAtomType_UInt:
-			printf("[ %s %lu ]\n", name, atom.as_uint); break;
-		case ctAtomType_Float:
-			printf("[ %s %f ]\n", name, atom.as_float); break;
-		case ctAtomType_Bool:
-			printf("[ %s %u ]\n", name, atom.as_bool ? 1 : 0); break;
-		case ctAtomType_Object:
-			printf("[ %s %p ]\n", name, atom.as_object); break;
+		case 0:
+			printf("[ %s ]\n", ct_atom_stringforms[fmt]); break;
+		case 1:
+			printf("[ %s %ld ]\n", ct_atom_stringforms[fmt], atom.as_int); break;
+		case 2:
+			printf("[ %s %lu ]\n", ct_atom_stringforms[fmt], atom.as_uint); break;
+		case 3:
+			printf("[ %s %f ]\n", ct_atom_stringforms[fmt], atom.as_float); break;
+		case 4:
+			printf("[ %s %u ]\n", ct_atom_stringforms[fmt], atom.as_bool ? 1 : 0); break;
+		case 5:
+			printf("[ %s %p ]\n", ct_atom_stringforms[fmt], atom.as_object); break;
+		case 6:
+			printf("[ %s %p ]\n", ct_atom_stringforms[fmt], atom.as_object); break;
+		case 7:
+			printf("[ ");
+			for (int i = 63; i >= 0; i--) {
+				printf("%d", (int)((atom.raw >> i) & 1));
+				if (i % 8 == 0 && i != 0) printf(" ");
+			}
+			printf(" ]\n");
+			break;
+		case 8:
+			printf(" [ 0x%016lX ]\n", (uint64_t)atom.raw);
 		default:
-			printf("[ unknown ]\n");
+			printf("[ unknown format ]\n");
 	}
 }
 
@@ -109,13 +128,10 @@ void ct_exec(ctContext* ctx) {
         [instrNull] = &&opNull,
         [instrHalt] = &&opHalt,
         [instrOut] = &&opOut,
-        [instrOutBits] = &&opOutBits,
         [instrMov] = &&opMov,
         [instrSetI] = &&opSetI,
         [instrSetU] = &&opSetU,
         [instrSetF] = &&opSetF,
-        [instrSetB] = &&opSetB,
-        [instrSetN] = &&opSetN,
         [instrAddI] = &&opAddI,
         [instrSubI] = &&opSubI,
         [instrMulI] = &&opMulI,
@@ -196,18 +212,9 @@ opHalt:
 
 opOut:
     r1 = instrs[ctx->ip++];
-    ct_ctx_loadAtom(ctx, r1, &a1, &t1);
-    out(a1, t1);
-    goto next;
-
-opOutBits:
-    r1 = instrs[ctx->ip++];
-    ct_ctx_loadAtom(ctx, r1, &a1, &t1);
-    for (int i = 63; i >= 0; i--) {
-        printf("%d", (int)((a1.raw >> i) & 1));
-        if (i % 8 == 0 && i != 0) printf(" ");
-    }
-    printf(" [ 0x%016lX ]\n", (uint64_t)a1.raw);
+	r2 = instrs[ctx->ip++];
+    ct_ctx_loadAtom(ctx, r2, &a1, &t1);
+    out(r1, a1, t1);
     goto next;
 
 opMov:
@@ -219,186 +226,175 @@ opMov:
 opSetI:
     r1 = instrs[ctx->ip++];
     ct_loadBytes(instrs, &ctx->ip, 4, &i32);
-    ct_ctx_storeAtom(ctx, r1, (ctAtom){.as_int=i32}, ctAtomType_Int);
+    ct_ctx_storeAtom(ctx, r1, (ctAtom){.as_int=i32}, ctAtomType_Primitive);
     goto next;
 
 opSetU:
     r1 = instrs[ctx->ip++];
     ct_loadBytes(instrs, &ctx->ip, 4, &u32);
-    ct_ctx_storeAtom(ctx, r1, (ctAtom){.as_uint=u32}, ctAtomType_UInt);
+    ct_ctx_storeAtom(ctx, r1, (ctAtom){.as_uint=u32}, ctAtomType_Primitive);
     goto next;
 
 opSetF:
     r1 = instrs[ctx->ip++];
     ct_loadBytes(instrs, &ctx->ip, 4, &f32);
-    ct_ctx_storeAtom(ctx, r1, (ctAtom){.as_float=i32}, ctAtomType_Float);
-    goto next;
-
-opSetB:
-    r1 = instrs[ctx->ip++];
-    ct_loadBytes(instrs, &ctx->ip, 4, &u32);
-    ct_ctx_storeAtom(ctx, r1, (ctAtom){.as_bool=u32}, ctAtomType_Bool);
-    goto next;
-
-opSetN:
-    r1 = instrs[ctx->ip++];
-    ct_ctx_storeAtom(ctx, r1, (ctAtom){.as_uint=0}, ctAtomType_NoneType);
+    ct_ctx_storeAtom(ctx, r1, (ctAtom){.as_float=i32}, ctAtomType_Primitive);
     goto next;
 
 opAddI: 
-	INSTR_BINARYOP(ctAtomType_Int, as_int, +); 
+	INSTR_BINARYOP(ctAtomType_Primitive, as_int, +); 
 	goto next;
 
 opSubI: 
-	INSTR_BINARYOP(ctAtomType_Int, as_int, -); 
+	INSTR_BINARYOP(ctAtomType_Primitive, as_int, -); 
 	goto next;
 
 opMulI: 
-	INSTR_BINARYOP(ctAtomType_Int, as_int, *); 
+	INSTR_BINARYOP(ctAtomType_Primitive, as_int, *); 
 	goto next;
 
 opDivI: 
-	INSTR_BINARYOP(ctAtomType_Int, as_int, /); 
+	INSTR_BINARYOP(ctAtomType_Primitive, as_int, /); 
 	goto next;
 
 opModI: 
-	INSTR_BINARYOP(ctAtomType_Int, as_int, %); 
+	INSTR_BINARYOP(ctAtomType_Primitive, as_int, %); 
 	goto next;
 
 opNegI: 
-	INSTR_UNARYOP(ctAtomType_Int, as_int, -); 
+	INSTR_UNARYOP(ctAtomType_Primitive, as_int, -); 
 	goto next;
 
 opIncI:
 	r1 = instrs[ctx->ip++];
 	ct_ctx_loadAtom(ctx, r1, &a1, &t1);
 	a1.as_int++;
-	ct_ctx_storeAtom(ctx, r1, a1, ctAtomType_Int);
+	ct_ctx_storeAtom(ctx, r1, a1, ctAtomType_Primitive);
 	goto next;
 
 opDecI: 
 	r1 = instrs[ctx->ip++];
 	ct_ctx_loadAtom(ctx, r1, &a1, &t1);
 	a1.as_int--;
-	ct_ctx_storeAtom(ctx, r1, a1, ctAtomType_Int);
+	ct_ctx_storeAtom(ctx, r1, a1, ctAtomType_Primitive);
 	goto next;
 
 opAbsI: 
-	INSTR_UNARYOP(ctAtomType_Int, as_int, labs); 
+	INSTR_UNARYOP(ctAtomType_Primitive, as_int, labs); 
 	goto next;
 
 opAddU: 
-	INSTR_BINARYOP(ctAtomType_UInt, as_uint, +); 
+	INSTR_BINARYOP(ctAtomType_Primitive, as_uint, +); 
 	goto next;
 
 opSubU: 
-	INSTR_BINARYOP(ctAtomType_UInt, as_uint, -); 
+	INSTR_BINARYOP(ctAtomType_Primitive, as_uint, -); 
 	goto next;
 
 opMulU: 
-	INSTR_BINARYOP(ctAtomType_UInt, as_uint, *); 
+	INSTR_BINARYOP(ctAtomType_Primitive, as_uint, *); 
 	goto next;
 
 opDivU: 
-	INSTR_BINARYOP(ctAtomType_UInt, as_uint, /); 
+	INSTR_BINARYOP(ctAtomType_Primitive, as_uint, /); 
 	goto next;
 
 opModU: 
-	INSTR_BINARYOP(ctAtomType_UInt, as_uint, %); 
+	INSTR_BINARYOP(ctAtomType_Primitive, as_uint, %); 
 	goto next;
 
 opIncU: 
 	r1 = instrs[ctx->ip++];
 	ct_ctx_loadAtom(ctx, r1, &a1, &t1);
 	a1.as_uint++;
-	ct_ctx_storeAtom(ctx, r1, a1, ctAtomType_UInt);
+	ct_ctx_storeAtom(ctx, r1, a1, ctAtomType_Primitive);
 	goto next;
 
 opDecU: 
 	r1 = instrs[ctx->ip++];
 	ct_ctx_loadAtom(ctx, r1, &a1, &t1);
 	a1.as_uint--;
-	ct_ctx_storeAtom(ctx, r1, a1, ctAtomType_UInt);
+	ct_ctx_storeAtom(ctx, r1, a1, ctAtomType_Primitive);
 	goto next;
 
 opAddF: 
-	INSTR_BINARYOP(ctAtomType_Float, as_float, +); 
+	INSTR_BINARYOP(ctAtomType_Primitive, as_float, +); 
 	goto next;
 
 opSubF: 
-	INSTR_BINARYOP(ctAtomType_Float, as_float, -); 
+	INSTR_BINARYOP(ctAtomType_Primitive, as_float, -); 
 	goto next;
 
 opMulF: 
-	INSTR_BINARYOP(ctAtomType_Float, as_float, *); 
+	INSTR_BINARYOP(ctAtomType_Primitive, as_float, *); 
 	goto next;
 
 opDivF: 
-	INSTR_BINARYOP(ctAtomType_Float, as_float, /); 
+	INSTR_BINARYOP(ctAtomType_Primitive, as_float, /); 
 	goto next;
 
 opNegF:
-	INSTR_UNARYOP(ctAtomType_Float, as_float, -); 
+	INSTR_UNARYOP(ctAtomType_Primitive, as_float, -); 
 	goto next;
 
 opAbsF: 
-	INSTR_UNARYOP(ctAtomType_Float, as_float, fabs); 
+	INSTR_UNARYOP(ctAtomType_Primitive, as_float, fabs); 
 	goto next;
 
 opLogicAnd: 
-	INSTR_BINARYOP(ctAtomType_Bool, as_bool, &&); 
+	INSTR_BINARYOP(ctAtomType_Primitive, as_bool, &&); 
 	goto next;
 
 opLogicOr: 
-	INSTR_BINARYOP(ctAtomType_Bool, as_bool, ||); 
+	INSTR_BINARYOP(ctAtomType_Primitive, as_bool, ||); 
 	goto next;
 
 opLogicNot: 	
-	INSTR_UNARYOP(ctAtomType_Bool, as_bool, !); 
+	INSTR_UNARYOP(ctAtomType_Primitive, as_bool, !); 
 	goto next;
 
 opLogicXor: 
-	INSTR_BINARYOP(ctAtomType_Bool, as_bool, ^); 
+	INSTR_BINARYOP(ctAtomType_Primitive, as_bool, ^); 
 	goto next;
 
 opBitAnd: 
-	INSTR_BINARYOP(ctAtomType_UInt, as_uint, &); 
+	INSTR_BINARYOP(ctAtomType_Primitive, as_uint, &); 
 	goto next;
 
 opBitOr: 
-	INSTR_BINARYOP(ctAtomType_UInt, as_uint, |); 
+	INSTR_BINARYOP(ctAtomType_Primitive, as_uint, |); 
 	goto next;
 
 opBitNot: 
-	INSTR_UNARYOP(ctAtomType_UInt, as_uint, ~); 
+	INSTR_UNARYOP(ctAtomType_Primitive, as_uint, ~); 
 	goto next;
 
 opBitXor: 
-	INSTR_BINARYOP(ctAtomType_UInt, as_uint, ^); 
+	INSTR_BINARYOP(ctAtomType_Primitive, as_uint, ^); 
 	goto next;
 
 opBitShl: 
-	INSTR_BINARYOP(ctAtomType_UInt, as_uint, <<); 
+	INSTR_BINARYOP(ctAtomType_Primitive, as_uint, <<); 
 	goto next;
 
 opBitShr: 
-	INSTR_BINARYOP(ctAtomType_UInt, as_uint, >>); 
+	INSTR_BINARYOP(ctAtomType_Primitive, as_uint, >>); 
 	goto next;
 
 opBitShrA: 
-	INSTR_BINARYOP(ctAtomType_Int, as_int, >>); 
+	INSTR_BINARYOP(ctAtomType_Primitive, as_int, >>); 
 	goto next;
 
 opCmpI: 
-	INSTR_CMP(ctAtomType_Int, as_int); 
+	INSTR_CMP(ctAtomType_Primitive, as_int); 
 	goto next;
 
 opCmpU: 
-	INSTR_CMP(ctAtomType_UInt, as_uint); 
+	INSTR_CMP(ctAtomType_Primitive, as_uint); 
 	goto next;
 
 opCmpF: 
-	INSTR_CMP(ctAtomType_Float, as_float); 
+	INSTR_CMP(ctAtomType_Primitive, as_float); 
 	goto next;
 
 opEq: 
@@ -539,7 +535,7 @@ opConSize:
     r2 = instrs[ctx->ip++];
     ct_ctx_loadAtom(ctx, r2, &a1, &t1);
 	CHECK_IF_OBJECT(t1);
-    ct_ctx_storeAtom(ctx, r1, (ctAtom){.as_uint = ct_container_size(ctx->objects, a1.as_object)}, ctAtomType_UInt);
+    ct_ctx_storeAtom(ctx, r1, (ctAtom){.as_uint = ct_container_size(ctx->objects, a1.as_object)}, ctAtomType_Primitive);
     goto next;
 
 

@@ -12,16 +12,12 @@ typedef enum {
 
     instrNull    = 0x00,
     instrHalt    = 0x01,
-
-    instrOut     = 0x10,
-    instrOutBits = 0x11,
+    instrOut     = 0x02,
     
     instrMov     = 0x20,
     instrSetI    = 0x21,
     instrSetU    = 0x22,
     instrSetF    = 0x23,
-    instrSetB    = 0x24,
-    instrSetN    = 0x25,
 
     instrAddI    = 0x30,
     instrSubI    = 0x31,

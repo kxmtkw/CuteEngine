@@ -17,15 +17,12 @@ static const std::map<std::string, ctInstruction> ctInstrMap = {
     {"null",        {instrNull}},
 
     {"out",         {instrOut}},
-    {"outb",        {instrOutBits}},
 
     {"mov",         {instrMov}},
 
     {"seti",        {instrSetI}},
     {"setu",        {instrSetU}},
     {"setf",        {instrSetF}},
-    {"setb",        {instrSetB}},
-    {"setn",        {instrSetN}},
 
     {"addi",        {instrAddI}},
     {"subi",        {instrSubI}},
