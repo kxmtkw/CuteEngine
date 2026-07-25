@@ -273,16 +273,12 @@ opNegI:
 
 opIncI:
 	r1 = instrs[ctx->ip++];
-	ct_ctx_loadAtom(ctx, r1, &a1, &t1);
-	a1.as_int++;
-	ct_ctx_storeAtom(ctx, r1, a1, ctAtomType_Primitive);
+	ct_ctx_incAtom(ctx, r1);
 	NEXT();
 
 opDecI: 
 	r1 = instrs[ctx->ip++];
-	ct_ctx_loadAtom(ctx, r1, &a1, &t1);
-	a1.as_int--;
-	ct_ctx_storeAtom(ctx, r1, a1, ctAtomType_Primitive);
+	ct_ctx_decAtom(ctx, r1);
 	NEXT();
 
 opAbsI: 
@@ -311,16 +307,12 @@ opModU:
 
 opIncU: 
 	r1 = instrs[ctx->ip++];
-	ct_ctx_loadAtom(ctx, r1, &a1, &t1);
-	a1.as_uint++;
-	ct_ctx_storeAtom(ctx, r1, a1, ctAtomType_Primitive);
+	ct_ctx_incAtom(ctx, r1);
 	NEXT();
 
 opDecU: 
 	r1 = instrs[ctx->ip++];
-	ct_ctx_loadAtom(ctx, r1, &a1, &t1);
-	a1.as_uint--;
-	ct_ctx_storeAtom(ctx, r1, a1, ctAtomType_Primitive);
+	ct_ctx_decAtom(ctx, r1);
 	NEXT();
 
 opAddF: 
