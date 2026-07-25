@@ -48,8 +48,8 @@ ct_ctx_storeAtom(ctx, r1, (ctAtom){.as_bool = ctx->cmp_diff OP 0 ? 1 : 0}, ctAto
 
 
 #define INSTR_JMP() \
-ct_loadBytes(instrs, &ctx->ip, 8, &u64); \
-ctx->ip = u64; \
+ct_loadBytes(instrs, &ctx->ip, 4, &i32); \
+ctx->ip += i32; \
 if (ctx->ip >= ctx->image->header.instruction_count) { \
 ctx->error = (ctError) {.code=ctErrorCode_Engine}; \
 ct_utils_format(ctx->error.msg, sizeof(ctx->error.msg), "Out of range ip: 0x%08lX", ctx->ip); ct_ctx_throwError(ctx, ctx->error); };
@@ -62,6 +62,18 @@ if (TYPE != ctAtomType_Object) { \
 	ct_ctx_throwError(ctx, ctx->error); \
 	return; \
 }; \
+
+
+#ifndef CUTE_CONF_DEBUG
+
+#define NEXT() if (ctx->running) {goto *dispatch_table[instrs[ctx->ip++]];};
+
+#else 
+
+#define NEXT() if (ctx->running) {CUTE_LOG("trace", "ip: 0x%08lX | instr: 0x%02X | ctx: %p\n", ctx->ip, instrs[ctx->ip], ctx); goto *dispatch_table[instrs[ctx->ip++]];};;
+
+#endif // CUTE_CONF_DEBUG
+
 
 static inline void
 ct_loadBytes(ctInstructionSize* instrs, uint64_t* ip, uint32_t n, void* dest) {
@@ -193,10 +205,10 @@ void ct_exec(ctContext* ctx) {
     ctAtomType t1, t2, t3;
     ctTypedAtom typed_atom;
 
-    goto next;
+    NEXT();
 
 opNull:
-    goto next;
+    NEXT();
 
 opHalt:
     r1 = instrs[ctx->ip++];
@@ -209,245 +221,245 @@ opOut:
 	r2 = instrs[ctx->ip++];
     ct_ctx_loadAtom(ctx, r2, &a1, &t1);
     out(r1, a1, t1);
-    goto next;
+    NEXT();
 
 opMov:
     r1 = instrs[ctx->ip++];
     r2 = instrs[ctx->ip++];
     ct_ctx_moveAtom(ctx, r2, r1);
-    goto next;
+    NEXT();
 
 opSetI:
     r1 = instrs[ctx->ip++];
     ct_loadBytes(instrs, &ctx->ip, 4, &i32);
     ct_ctx_storeAtom(ctx, r1, (ctAtom){.as_int=i32}, ctAtomType_Primitive);
-    goto next;
+    NEXT();
 
 opSetU:
     r1 = instrs[ctx->ip++];
     ct_loadBytes(instrs, &ctx->ip, 4, &u32);
     ct_ctx_storeAtom(ctx, r1, (ctAtom){.as_uint=u32}, ctAtomType_Primitive);
-    goto next;
+    NEXT();
 
 opSetF:
     r1 = instrs[ctx->ip++];
     ct_loadBytes(instrs, &ctx->ip, 4, &f32);
     ct_ctx_storeAtom(ctx, r1, (ctAtom){.as_float=i32}, ctAtomType_Primitive);
-    goto next;
+    NEXT();
 
 opAddI: 
 	INSTR_BINARYOP(ctAtomType_Primitive, as_int, +); 
-	goto next;
+	NEXT();
 
 opSubI: 
 	INSTR_BINARYOP(ctAtomType_Primitive, as_int, -); 
-	goto next;
+	NEXT();
 
 opMulI: 
 	INSTR_BINARYOP(ctAtomType_Primitive, as_int, *); 
-	goto next;
+	NEXT();
 
 opDivI: 
 	INSTR_BINARYOP(ctAtomType_Primitive, as_int, /); 
-	goto next;
+	NEXT();
 
 opModI: 
 	INSTR_BINARYOP(ctAtomType_Primitive, as_int, %); 
-	goto next;
+	NEXT();
 
 opNegI: 
 	INSTR_UNARYOP(ctAtomType_Primitive, as_int, -); 
-	goto next;
+	NEXT();
 
 opIncI:
 	r1 = instrs[ctx->ip++];
 	ct_ctx_loadAtom(ctx, r1, &a1, &t1);
 	a1.as_int++;
 	ct_ctx_storeAtom(ctx, r1, a1, ctAtomType_Primitive);
-	goto next;
+	NEXT();
 
 opDecI: 
 	r1 = instrs[ctx->ip++];
 	ct_ctx_loadAtom(ctx, r1, &a1, &t1);
 	a1.as_int--;
 	ct_ctx_storeAtom(ctx, r1, a1, ctAtomType_Primitive);
-	goto next;
+	NEXT();
 
 opAbsI: 
 	INSTR_UNARYOP(ctAtomType_Primitive, as_int, labs); 
-	goto next;
+	NEXT();
 
 opAddU: 
 	INSTR_BINARYOP(ctAtomType_Primitive, as_uint, +); 
-	goto next;
+	NEXT();
 
 opSubU: 
 	INSTR_BINARYOP(ctAtomType_Primitive, as_uint, -); 
-	goto next;
+	NEXT();
 
 opMulU: 
 	INSTR_BINARYOP(ctAtomType_Primitive, as_uint, *); 
-	goto next;
+	NEXT();
 
 opDivU: 
 	INSTR_BINARYOP(ctAtomType_Primitive, as_uint, /); 
-	goto next;
+	NEXT();
 
 opModU: 
 	INSTR_BINARYOP(ctAtomType_Primitive, as_uint, %); 
-	goto next;
+	NEXT();
 
 opIncU: 
 	r1 = instrs[ctx->ip++];
 	ct_ctx_loadAtom(ctx, r1, &a1, &t1);
 	a1.as_uint++;
 	ct_ctx_storeAtom(ctx, r1, a1, ctAtomType_Primitive);
-	goto next;
+	NEXT();
 
 opDecU: 
 	r1 = instrs[ctx->ip++];
 	ct_ctx_loadAtom(ctx, r1, &a1, &t1);
 	a1.as_uint--;
 	ct_ctx_storeAtom(ctx, r1, a1, ctAtomType_Primitive);
-	goto next;
+	NEXT();
 
 opAddF: 
 	INSTR_BINARYOP(ctAtomType_Primitive, as_float, +); 
-	goto next;
+	NEXT();
 
 opSubF: 
 	INSTR_BINARYOP(ctAtomType_Primitive, as_float, -); 
-	goto next;
+	NEXT();
 
 opMulF: 
 	INSTR_BINARYOP(ctAtomType_Primitive, as_float, *); 
-	goto next;
+	NEXT();
 
 opDivF: 
 	INSTR_BINARYOP(ctAtomType_Primitive, as_float, /); 
-	goto next;
+	NEXT();
 
 opNegF:
 	INSTR_UNARYOP(ctAtomType_Primitive, as_float, -); 
-	goto next;
+	NEXT();
 
 opAbsF: 
 	INSTR_UNARYOP(ctAtomType_Primitive, as_float, fabs); 
-	goto next;
+	NEXT();
 
 opLogicAnd: 
 	INSTR_BINARYOP(ctAtomType_Primitive, as_bool, &&); 
-	goto next;
+	NEXT();
 
 opLogicOr: 
 	INSTR_BINARYOP(ctAtomType_Primitive, as_bool, ||); 
-	goto next;
+	NEXT();
 
 opLogicNot: 	
 	INSTR_UNARYOP(ctAtomType_Primitive, as_bool, !); 
-	goto next;
+	NEXT();
 
 opLogicXor: 
 	INSTR_BINARYOP(ctAtomType_Primitive, as_bool, ^); 
-	goto next;
+	NEXT();
 
 opBitAnd: 
 	INSTR_BINARYOP(ctAtomType_Primitive, as_uint, &); 
-	goto next;
+	NEXT();
 
 opBitOr: 
 	INSTR_BINARYOP(ctAtomType_Primitive, as_uint, |); 
-	goto next;
+	NEXT();
 
 opBitNot: 
 	INSTR_UNARYOP(ctAtomType_Primitive, as_uint, ~); 
-	goto next;
+	NEXT();
 
 opBitXor: 
 	INSTR_BINARYOP(ctAtomType_Primitive, as_uint, ^); 
-	goto next;
+	NEXT();
 
 opBitShl: 
 	INSTR_BINARYOP(ctAtomType_Primitive, as_uint, <<); 
-	goto next;
+	NEXT();
 
 opBitShr: 
 	INSTR_BINARYOP(ctAtomType_Primitive, as_uint, >>); 
-	goto next;
+	NEXT();
 
 opBitShrA: 
 	INSTR_BINARYOP(ctAtomType_Primitive, as_int, >>); 
-	goto next;
+	NEXT();
 
 opCmpI: 
 	INSTR_CMP(ctAtomType_Primitive, as_int); 
-	goto next;
+	NEXT();
 
 opCmpU: 
 	INSTR_CMP(ctAtomType_Primitive, as_uint); 
-	goto next;
+	NEXT();
 
 opCmpF: 
 	INSTR_CMP(ctAtomType_Primitive, as_float); 
-	goto next;
+	NEXT();
 
 opEq: 
 	INSTR_CMP_RESOLVER(==);
-	goto next;
+	NEXT();
 
 opNotEq: 
 	INSTR_CMP_RESOLVER(!=);
-	goto next;
+	NEXT();
 
 opLess: 
 	INSTR_CMP_RESOLVER(<);
-	goto next;
+	NEXT();
 
 opLessEq: 
 	INSTR_CMP_RESOLVER(<=);
-	goto next;
+	NEXT();
 
 opGreater: 
 	INSTR_CMP_RESOLVER(>);
-	goto next;
+	NEXT();
 
 opGreaterEq: 
 	INSTR_CMP_RESOLVER(>=);
-	goto next;
+	NEXT();
 
 opJmp: 
 	INSTR_JMP(); 
-	goto next;
+	NEXT();
 
 opJmpEq:
-    if (ctx->cmp_diff == 0) { INSTR_JMP(); goto next; }
+    if (ctx->cmp_diff == 0) { INSTR_JMP(); NEXT(); }
     ctx->ip += 4;
-    goto next;
+    NEXT();
 
 opJmpNe:
-    if (ctx->cmp_diff != 0) { INSTR_JMP(); goto next; }
+    if (ctx->cmp_diff != 0) { INSTR_JMP(); NEXT(); }
     ctx->ip += 4;
-    goto next;
+    NEXT();
 
 opJmpGt:
-    if (ctx->cmp_diff > 0) { INSTR_JMP(); goto next; }
+    if (ctx->cmp_diff > 0) { INSTR_JMP(); NEXT(); }
     ctx->ip += 4;
-    goto next;
+    NEXT();
 
 opJmpGe:
-    if (ctx->cmp_diff >= 0) { INSTR_JMP(); goto next; }
+    if (ctx->cmp_diff >= 0) { INSTR_JMP(); NEXT(); }
     ctx->ip += 4;
-    goto next;
+    NEXT();
 
 opJmpLt:
-    if (ctx->cmp_diff < 0) { INSTR_JMP(); goto next; }
+    if (ctx->cmp_diff < 0) { INSTR_JMP(); NEXT(); }
     ctx->ip += 4;
-    goto next;
+    NEXT();
 
 opJmpLe:
-    if (ctx->cmp_diff <= 0) { INSTR_JMP(); goto next; }
+    if (ctx->cmp_diff <= 0) { INSTR_JMP(); NEXT(); }
     ctx->ip += 4;
-    goto next;
+    NEXT();
 
 opCall:
     r1 = instrs[ctx->ip++];
@@ -455,17 +467,17 @@ opCall:
     r3 = instrs[ctx->ip++];
     ct_ctx_loadAtom(ctx, r1, &a1, &t1);
     ct_ctx_callProcedure(ctx, a1.as_uint, r2, r3);
-    goto next;
+    NEXT();
 
 opReturn:
     ct_ctx_returnProcedure(ctx, (ctAtom){.as_uint=0}, ctAtomType_NoneType);
-    goto next;
+    NEXT();
 
 opReturnVal:
     r1 = instrs[ctx->ip++];
     ct_ctx_loadAtom(ctx, r1, &a1, &t1);
     ct_ctx_returnProcedure(ctx, a1, t1);
-    goto next;
+    NEXT();
 
 opModCall:
     r1 = instrs[ctx->ip++];
@@ -477,7 +489,7 @@ opModCall:
 	ct_ctx_loadAtom(ctx, r2, &a2, &t2);
 	ct_ctx_loadAtom(ctx, r3, &a3, &t3);
     ct_ctx_modcall(ctx, a1.as_uint, a2.as_uint, a3.as_uint, r4, r5);
-    goto next;
+    NEXT();
 
 opConNew:
     r1 = instrs[ctx->ip++];
@@ -489,7 +501,7 @@ opConNew:
         return;
 	}
     ct_ctx_storeAtom(ctx, r1, a2, ctAtomType_Object);
-    goto next;
+    NEXT();
 
 
 opConGet:
@@ -505,7 +517,7 @@ opConGet:
         return;
 	}
     ct_ctx_storeAtom(ctx, r1, typed_atom.atom, typed_atom.type);
-    goto next;
+    NEXT();
 
 opConSet:
     r1 = instrs[ctx->ip++];
@@ -520,7 +532,7 @@ opConSet:
 		ct_ctx_throwError(ctx, ctx->error);
         return;
 	}
-    goto next;
+    NEXT();
 
 opConSize:
     r1 = instrs[ctx->ip++];
@@ -528,7 +540,7 @@ opConSize:
     ct_ctx_loadAtom(ctx, r2, &a1, &t1);
 	CHECK_IF_OBJECT(t1);
     ct_ctx_storeAtom(ctx, r1, (ctAtom){.as_uint = ct_container_size(ctx->objects, a1.as_object)}, ctAtomType_Primitive);
-    goto next;
+    NEXT();
 
 
 opConCopy:
@@ -542,12 +554,5 @@ opConCopy:
         return;
 	}
     ct_ctx_storeAtom(ctx, r1, a1, ctAtomType_Object);
-    goto next;
-
-next:
-    if (ctx->running) {
-		CUTE_LOG("trace", "ip: 0x%08lX | instr: 0x%02X | ctx: %p\n", ctx->ip, instrs[ctx->ip], ctx); 
-        goto *dispatch_table[instrs[ctx->ip++]];
-    }
-
+    NEXT();
 }
