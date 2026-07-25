@@ -33,14 +33,14 @@ ct_ctx_delStack(ctCallStack* s) {
     s->capacity = 0;
 }
 
-static inline void
-ct_ctx_pushFrame(ctCallStack* s, ctCallFrame frame) {		
-    s->frames[s->size++] = frame;
+static inline ctCallFrame*
+ct_ctx_getFrame(ctCallStack* s) {		
+    return &s->frames[s->size++];
 }
 
-static inline ctCallFrame 
+static inline ctCallFrame* 
 ct_ctx_popFrame(ctCallStack* s) {
-    return s->frames[--s->size];
+    return &s->frames[--s->size];
 }
 
 static inline ctCallFrame* 
@@ -119,25 +119,26 @@ ct_ctx_callProcedure(ctContext* ctx, uint32_t procedure_id, uint8_t arg_start_sl
 		return;
 	};
 
-	ctCallFrame frame;
-	frame.procedure_id = procedure_id;
-	frame.object_field_count = 0;
-	frame.return_ip = ctx->ip;
-	frame.return_value_slot = return_slot;
-	frame.args_count = arg_count;
-	memset(frame.file.types, 0, CUTE_CONF_SLOT_COUNT);
+	ctCallFrame* frame = ct_ctx_getFrame(&ctx->callstack);
+
+	frame->procedure_id = procedure_id;
+	frame->object_field_count = 0;
+	frame->return_ip = ctx->ip;
+	frame->return_value_slot = return_slot;
+	frame->args_count = arg_count;
+	memset(frame->file.types, 0, CUTE_CONF_SLOT_COUNT);
 
 	for (size_t i = 0; i < arg_count; i++) {
-		frame.file.atoms[i] = ctx->current_frame->file.atoms[arg_start_slot + i];
-		frame.file.types[i] = ctx->current_frame->file.types[arg_start_slot + i];
+		frame->file.atoms[i] = ctx->current_frame->file.atoms[arg_start_slot + i];
+		frame->file.types[i] = ctx->current_frame->file.types[arg_start_slot + i];
 
-		if (frame.file.types[i] == ctAtomType_Object) {
-			ct_objects_incRef(ctx->objects, frame.file.atoms[i].as_object);
-			frame.object_field_count++;
+		if (frame->file.types[i] == ctAtomType_Object) {
+			ct_objects_incRef(ctx->objects, frame->file.atoms[i].as_object);
+			frame->object_field_count++;
 		}
 	};
 	
-	ct_ctx_pushFrame(&ctx->callstack, frame);
+	
 
 	ctx->ip = proc.bytecode_index;
 	ctx->current_frame = ct_ctx_peekFrame(&ctx->callstack);
@@ -153,19 +154,20 @@ ct_ctx_callProcedure(ctContext* ctx, uint32_t procedure_id, uint8_t arg_start_sl
 void
 ct_ctx_returnProcedure(ctContext* ctx, ctAtom returned_atom, ctAtomType returned_atom_type) {
 
-	ctCallFrame frame = ct_ctx_popFrame(&ctx->callstack);
+	ctCallFrame* frame = ct_ctx_popFrame(&ctx->callstack);
 	ctx->current_frame = ct_ctx_peekFrame(&ctx->callstack);
-	ctx->ip = frame.return_ip;
-	ct_ctx_storeAtom(ctx, frame.return_value_slot, returned_atom, returned_atom_type);
+	
+	ctx->ip = frame->return_ip;
+	ct_ctx_storeAtom(ctx, frame->return_value_slot, returned_atom, returned_atom_type);
 
-	for (size_t i = 0; i < CUTE_CONF_SLOT_COUNT && frame.object_field_count; i++) {
-		if (frame.file.types[i] == ctAtomType_Object) {
-			ct_objects_decRef(ctx->objects, frame.file.atoms[i].as_object);
-			frame.object_field_count--;
+	for (size_t i = 0; i < CUTE_CONF_SLOT_COUNT && frame->object_field_count; i++) {
+		if (frame->file.types[i] == ctAtomType_Object) {
+			ct_objects_decRef(ctx->objects, frame->file.atoms[i].as_object);
+			frame->object_field_count--;
 		}
 	};
 
-	CUTE_LOG("context", "Returned from procedure(%u) with return value: 0x%lx\n", frame.procedure_id, returned_atom.raw);
+	CUTE_LOG("context", "Returned from procedure(%u) with return value: 0x%lx\n", frame->procedure_id, returned_atom.raw);
 }
 
 
