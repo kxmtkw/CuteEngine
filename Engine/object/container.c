@@ -61,7 +61,7 @@ ct_container_get(ctObjectManager* manager, ctObject* obj, uint32_t index, ctErro
 
 	if (index >= container->size) {
 		CUTE_ERROR(err, ctErrorCode_OutOfBounds, "Can not access container slot #%u (>= %u)", index, container->size);
-		return (ctTypedAtom){ctAtomType_NoneType, (ctAtom){0}};
+		return (ctTypedAtom){ctAtomType_Primitive, (ctAtom){0}};
 	}
 
 	return (ctTypedAtom){container->types[index], container->atoms[index]};

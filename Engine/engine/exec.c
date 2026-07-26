@@ -495,7 +495,7 @@ opCall:
     NEXT();
 
 opReturn:
-    ct_ctx_returnProcedure(ctx, (ctAtom){.as_uint=0}, ctAtomType_NoneType);
+    ct_ctx_returnProcedure(ctx, (ctAtom){.as_uint=0}, ctAtomType_Primitive);
     NEXT();
 
 opReturnVal:

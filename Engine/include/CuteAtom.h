@@ -7,9 +7,8 @@
 
 
 typedef enum {
-	ctAtomType_NoneType   = 0x0,
-	ctAtomType_Primitive  = 0x1,
-	ctAtomType_Object     = 0x2
+	ctAtomType_Primitive  = 0x0,
+	ctAtomType_Object     = 0x1
 } ctAtomType;
 
 
