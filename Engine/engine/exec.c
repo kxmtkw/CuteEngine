@@ -64,17 +64,6 @@ if (TYPE != ctAtomType_Object) { \
 }; \
 
 
-#ifndef CUTE_CONF_DEBUG
-
-#define NEXT() if (ctx->running) {goto *dispatch_table[instrs[ctx->ip++]];};
-
-#else 
-
-#define NEXT() if (ctx->running) {CUTE_LOG("trace", "ip: 0x%08lX | instr: 0x%02X | ctx: %p\n", ctx->ip, instrs[ctx->ip], ctx); goto *dispatch_table[instrs[ctx->ip++]];};;
-
-#endif // CUTE_CONF_DEBUG
-
-
 static inline void
 ct_loadBytes(ctInstructionSize* instrs, uint64_t* ip, uint32_t n, void* dest) {
 	memcpy(dest, &instrs[*ip], n);
@@ -105,7 +94,7 @@ ct_decAtom(ctContext* ctx, uint8_t slot) {
 
 
 static inline void 
-out(uint8_t fmt, ctAtom atom, ctAtomTypeSize type) {
+ct_out(uint8_t fmt, ctAtom atom, ctAtomTypeSize type) {
 
 	static const char* ct_atom_stringforms[] = {
 		[0]    = "none",
@@ -146,6 +135,19 @@ out(uint8_t fmt, ctAtom atom, ctAtomTypeSize type) {
 			printf("[ unknown format ]\n");
 	}
 }
+
+#ifndef CUTE_CONF_DEBUG
+
+#define NEXT() if (ctx->running) {goto *dispatch_table[instrs[ctx->ip++]];};
+
+#else 
+
+#define NEXT() if (ctx->running) { \
+	CUTE_LOG("trace", "ip: 0x%08lX | instr: 0x%02X | ctx: %p\n", ctx->ip, instrs[ctx->ip], ctx); goto *dispatch_table[instrs[ctx->ip++]]; \
+};
+
+#endif // CUTE_CONF_DEBUG
+
 
 void ct_exec(ctContext* ctx) {
     ctInstructionSize* instrs = ctx->image->instruction_pool;
@@ -222,10 +224,10 @@ void ct_exec(ctContext* ctx) {
     int32_t i32;
     uint32_t u32;
     float f32;
-	uint64_t u64;
     ctAtom a1, a2, a3;
     ctAtomType t1, t2, t3;
     ctTypedAtom typed_atom;
+	
 
     NEXT();
 
@@ -242,7 +244,7 @@ opOut:
     r1 = instrs[ctx->ip++];
 	r2 = instrs[ctx->ip++];
     ct_ctx_loadAtom(ctx, r2, &a1, &t1);
-    out(r1, a1, t1);
+    ct_out(r1, a1, t1);
     NEXT();
 
 opMov:
