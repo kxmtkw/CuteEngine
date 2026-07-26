@@ -150,7 +150,7 @@ ct_out(uint8_t fmt, ctAtom atom, ctAtomTypeSize type) {
 
 
 void ct_exec(ctContext* ctx) {
-    ctInstructionSize* instrs = ctx->image->instruction_pool;
+
 
     static void* dispatch_table[] = {
         [instrNull] = &&opNull,
@@ -220,6 +220,16 @@ void ct_exec(ctContext* ctx) {
         [instrConCopy] = &&opConCopy,
     };
 
+
+	for (uint32_t i = 0; i < sizeof(dispatch_table)/sizeof(dispatch_table[0]); i++) {
+		if (dispatch_table[i] == NULL) {
+			dispatch_table[i] = &&opIllegalInstruction;
+		}
+	}
+
+
+	ctInstructionSize* instrs = ctx->image->instruction_pool;
+
     uint8_t r1, r2, r3, r4, r5;
     int32_t i32;
     uint32_t u32;
@@ -228,7 +238,6 @@ void ct_exec(ctContext* ctx) {
     ctAtomType t1, t2, t3;
     ctTypedAtom typed_atom;
 	
-
     NEXT();
 
 opNull:
@@ -571,4 +580,14 @@ opConCopy:
 	}
     ct_ctx_storeAtom(ctx, r1, a1, ctAtomType_Object);
     NEXT();
+
+opIllegalInstruction:
+	CUTE_ERROR(
+		(&ctx->error),
+		ctErrorCode_Engine,
+		"Illegal instruction: 0x%x",
+		instrs[--ctx->ip]
+	);
+	ct_ctx_throwError(ctx, ctx->error);
+	return;
 }
