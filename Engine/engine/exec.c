@@ -138,8 +138,7 @@ ct_out(uint8_t fmt, ctAtom atom, ctAtomTypeSize type) {
 
 void ct_exec(ctContext* ctx) {
 
-
-    static void* dispatch_table[] = {
+    static void* dispatch_table[256] = {
         [instrNull] = &&opNull,
         [instrHalt] = &&opHalt,
         [instrOut] = &&opOut,
