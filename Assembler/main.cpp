@@ -1,38 +1,16 @@
-#include <fstream>
-#include <sstream>
-
-#include "codegen/codegen.hpp"
-#include "spec/nodes.hpp"
-#include "parser/parser.hpp"
-#include "tokenizer/tokenizer.hpp"
-#include "tokenizer/tokens.hpp"
+#include <iostream>
+#include "CuteAssembler.hpp"
 
 
+int main(int argc, char** argv) {
 
-int main() {
-	
-	std::ifstream file("dev/test.cta");
-	std::stringstream ss;
-	ss << file.rdbuf();
-	std::string content = ss.str();
-
-	ctTokenizer tokenizer;
-	auto stream = tokenizer.tokenize(content);
-
-	while (stream.peek().type != ctTokenType::EndOfFile) {
-		ctToken token = stream.next();
-		std::cout << "[ " << tokenTypeToString(token.type) << " " << stream.getValue(token) << " ]\n";
+	if (argc < 2) {
+		std::cout << "Usage: %s <image_file>\n";
+		return 2;
 	}
-	stream.reset();
 
-	ctParser parser;
-	auto program = parser.parse(&stream);
-
-	ctNodePrinter printer;
-	program->accept(printer);
-
-	ctCodeGen gen;
-	gen.generate(*program, "dev/out");
+	ctAssembler assembler;
+	assembler.assemble(argv[1]);
 
 	return 0;
 }

@@ -43,9 +43,10 @@ cuteasm.source = Source(
 	cute_asm_src / "tokenizer/tokenizer.cpp",
 	cute_asm_src / "tokenizer/stream.cpp",
 	cute_asm_src / "parser/parser.cpp",
-	cute_asm_src / "codegen/codegen.cpp"
+	cute_asm_src / "codegen/codegen.cpp",
+	cute_asm_src / "core/core.cpp"
 )
 
-cuteasm.headers.private = cute_asm_src
+cuteasm.headers.private = cute_asm_src, cute_asm_src / "include"
 cuteasm.arguments = "-Wall",  "-Wextra",  "-g"
 cuteasm.link(CuteEngine)
