@@ -278,13 +278,6 @@ opSubI:
 	NEXT();
 
 opMulI:
-	r1 = instrs[ctx->ip++];
-	r2 = instrs[ctx->ip++];
-	r3 = instrs[ctx->ip++];
-	ct_ctx_loadAtom(ctx, r2, &a1, &t1);
-	ct_ctx_loadAtom(ctx, r3, &a2, &t2);
-	ct_ctx_storeAtom(ctx, r1, (ctAtom){.as_int = a1.as_int * a2.as_int},
-					ctAtomType_Primitive);
 	INSTR_BINARYOP(ctAtomType_Primitive, as_int, *); 
 	NEXT();
 
