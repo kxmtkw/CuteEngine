@@ -96,43 +96,30 @@ ct_decAtom(ctContext* ctx, uint8_t slot) {
 static inline void 
 ct_out(uint8_t fmt, ctAtom atom, ctAtomTypeSize type) {
 
-	static const char* ct_atom_stringforms[] = {
-		[0]    = "none",
-		[1]    = "int",
-		[2]    = "uint",
-		[3]    = "float",
-		[4]    = "bool",
-		[5]    = "object"
-	};
-
 	switch (fmt) {
 		
 		case 0:
-			printf("[ %s ]\n", ct_atom_stringforms[fmt]); break;
-		case 1:
-			printf("[ %s %ld ]\n", ct_atom_stringforms[fmt], atom.as_int); break;
-		case 2:
-			printf("[ %s %lu ]\n", ct_atom_stringforms[fmt], atom.as_uint); break;
-		case 3:
-			printf("[ %s %f ]\n", ct_atom_stringforms[fmt], atom.as_float); break;
-		case 4:
-			printf("[ %s %u ]\n", ct_atom_stringforms[fmt], atom.as_bool ? 1 : 0); break;
-		case 5:
-			printf("[ %s %p ]\n", ct_atom_stringforms[fmt], atom.as_object); break;
-		case 6:
-			printf("[ %s %p ]\n", ct_atom_stringforms[fmt], atom.as_object); break;
-		case 7:
-			printf("[ ");
+			printf("[ binary ");
 			for (int i = 63; i >= 0; i--) {
 				printf("%d", (int)((atom.raw >> i) & 1));
 				if (i % 8 == 0 && i != 0) printf(" ");
 			}
 			printf(" ]\n");
 			break;
-		case 8:
-			printf(" [ 0x%016lX ]\n", (uint64_t)atom.raw);
+		case 1:
+			printf("[ hexadecimal 0x%016lX ]\n", (uint64_t)atom.raw); break;
+		case 2:
+			printf("[ int %ld ]\n", atom.as_int); break;
+		case 3:
+			printf("[ uint %lu ]\n", atom.as_uint); break;
+		case 4:
+			printf("[ float %f ]\n", atom.as_float); break;
+		case 5:
+			printf("[ bool %s ]\n", atom.as_bool ? "true" : "false"); break;
+		case 6:
+			printf("[ object %p ]\n", atom.as_object); break;
 		default:
-			printf("[ unknown format ]\n");
+			printf("[ hexadecimal 0x%016lX (unk-format %u) ]\n", (uint64_t)atom.raw, fmt);
 	}
 }
 
