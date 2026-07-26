@@ -82,6 +82,28 @@ ct_loadBytes(ctInstructionSize* instrs, uint64_t* ip, uint32_t n, void* dest) {
 }
 
 
+static inline void
+ct_incAtom(ctContext* ctx, uint8_t slot) {	
+	if (ctx->current_frame->file.types[slot] == ctAtomType_Object) {
+		ct_objects_decRef(ctx->objects, ctx->current_frame->file.atoms[slot].as_object);
+		ctx->current_frame->object_field_count--;
+	};
+	ctx->current_frame->file.atoms[slot].as_uint++;
+	ctx->current_frame->file.types[slot] = ctAtomType_Primitive;
+};
+
+
+static inline void
+ct_decAtom(ctContext* ctx, uint8_t slot) {	
+	if (ctx->current_frame->file.types[slot] == ctAtomType_Object) {
+		ct_objects_decRef(ctx->objects, ctx->current_frame->file.atoms[slot].as_object);
+		ctx->current_frame->object_field_count--;
+	};
+	ctx->current_frame->file.atoms[slot].as_uint--;
+	ctx->current_frame->file.types[slot] = ctAtomType_Primitive;
+};
+
+
 static inline void 
 out(uint8_t fmt, ctAtom atom, ctAtomTypeSize type) {
 
@@ -255,7 +277,14 @@ opSubI:
 	INSTR_BINARYOP(ctAtomType_Primitive, as_int, -); 
 	NEXT();
 
-opMulI: 
+opMulI:
+	r1 = instrs[ctx->ip++];
+	r2 = instrs[ctx->ip++];
+	r3 = instrs[ctx->ip++];
+	ct_ctx_loadAtom(ctx, r2, &a1, &t1);
+	ct_ctx_loadAtom(ctx, r3, &a2, &t2);
+	ct_ctx_storeAtom(ctx, r1, (ctAtom){.as_int = a1.as_int * a2.as_int},
+					ctAtomType_Primitive);
 	INSTR_BINARYOP(ctAtomType_Primitive, as_int, *); 
 	NEXT();
 
@@ -273,12 +302,12 @@ opNegI:
 
 opIncI:
 	r1 = instrs[ctx->ip++];
-	ct_ctx_incAtom(ctx, r1);
+	ct_incAtom(ctx, r1);
 	NEXT();
 
 opDecI: 
 	r1 = instrs[ctx->ip++];
-	ct_ctx_decAtom(ctx, r1);
+	ct_decAtom(ctx, r1);
 	NEXT();
 
 opAbsI: 
@@ -307,12 +336,12 @@ opModU:
 
 opIncU: 
 	r1 = instrs[ctx->ip++];
-	ct_ctx_incAtom(ctx, r1);
+	ct_incAtom(ctx, r1);
 	NEXT();
 
 opDecU: 
 	r1 = instrs[ctx->ip++];
-	ct_ctx_decAtom(ctx, r1);
+	ct_decAtom(ctx, r1);
 	NEXT();
 
 opAddF: 

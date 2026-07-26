@@ -92,7 +92,7 @@ ct_ctx_loadAtom(ctContext* ctx, uint8_t slot, ctAtom* atom, ctAtomType* type) {
 	*type = ctx->current_frame->file.types[slot];
 };
 
-
+// Move an atom from one slot to another.
 static inline void
 ct_ctx_moveAtom(ctContext* ctx, uint8_t src_slot, uint8_t dest_slot) {
 
@@ -110,27 +110,6 @@ ct_ctx_moveAtom(ctContext* ctx, uint8_t src_slot, uint8_t dest_slot) {
 	};
 };
 
-
-static inline void
-ct_ctx_incAtom(ctContext* ctx, uint8_t slot) {	
-	if (ctx->current_frame->file.types[slot] == ctAtomType_Object) {
-		ct_objects_decRef(ctx->objects, ctx->current_frame->file.atoms[slot].as_object);
-		ctx->current_frame->object_field_count--;
-	};
-	ctx->current_frame->file.atoms[slot].as_uint++;
-	ctx->current_frame->file.types[slot] = ctAtomType_Primitive;
-};
-
-
-static inline void
-ct_ctx_decAtom(ctContext* ctx, uint8_t slot) {	
-	if (ctx->current_frame->file.types[slot] == ctAtomType_Object) {
-		ct_objects_decRef(ctx->objects, ctx->current_frame->file.atoms[slot].as_object);
-		ctx->current_frame->object_field_count--;
-	};
-	ctx->current_frame->file.atoms[slot].as_uint--;
-	ctx->current_frame->file.types[slot] = ctAtomType_Primitive;
-};
 
 // Throw an internal error
 void
