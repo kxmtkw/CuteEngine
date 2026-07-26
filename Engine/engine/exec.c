@@ -277,7 +277,7 @@ opSetU:
 opSetF:
     r1 = instrs[ctx->ip++];
     ct_loadBytes(instrs, &ctx->ip, 4, &f32);
-    ct_ctx_storeAtom(ctx, r1, (ctAtom){.as_float=i32}, ctAtomType_Primitive);
+    ct_ctx_storeAtom(ctx, r1, (ctAtom){.as_float=f32}, ctAtomType_Primitive);
     NEXT();
 
 opAddI: 
