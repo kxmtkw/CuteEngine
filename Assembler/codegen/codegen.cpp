@@ -6,6 +6,9 @@
 #include "spec/nodes.hpp"
 #include "codegen.hpp"
 
+extern "C" {
+#include "CuteInstr.h"
+}
 
 void ctCodeGen::visit(ctProgramNode& node) {
 

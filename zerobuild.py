@@ -7,7 +7,7 @@ build.directory = ".build"
 # Cute Engine
 
 CuteEngine = StaticLibrary()
-
+CuteEngine.compiler = "gcc"
 cute_engine_src = Path("Engine")
 
 CuteEngine.source = Source(
@@ -24,22 +24,19 @@ CuteEngine.headers.public = cute_engine_src / "include"
 CuteEngine.headers.private = cute_engine_src
 CuteEngine.arguments = "-Wall",  "-Wextra",  "-g"
 
-# Engine Entry Point
-
 cute = Executable()
-cute.source = Source("main/main.c")
+cute.source = Source("main/engine.c")
 cute.arguments = "-Wall",  "-Wextra",  "-g"
 cute.link(CuteEngine)
 
 # Assembler
 
-cuteasm = Executable()
-cuteasm.compiler = "g++"
+CuteAssembler = StaticLibrary()
+CuteAssembler.compiler = "g++"
 
 cute_asm_src = Path("Assembler")
 
-cuteasm.source = Source(
-	cute_asm_src / "main.cpp",
+CuteAssembler.source = Source(
 	cute_asm_src / "tokenizer/tokenizer.cpp",
 	cute_asm_src / "tokenizer/stream.cpp",
 	cute_asm_src / "parser/parser.cpp",
@@ -47,6 +44,15 @@ cuteasm.source = Source(
 	cute_asm_src / "core/core.cpp"
 )
 
-cuteasm.headers.private = cute_asm_src, cute_asm_src / "include"
+CuteAssembler.headers.private = cute_asm_src
+CuteAssembler.headers.public = cute_asm_src / "include"
+CuteAssembler.link(CuteEngine)
+
+
+cuteasm = Executable()
+cuteasm.source = Source("main/assembler.cpp")
 cuteasm.arguments = "-Wall",  "-Wextra",  "-g"
+cuteasm.link(CuteAssembler)
 cuteasm.link(CuteEngine)
+cuteasm.compiler = CuteAssembler.compiler
+

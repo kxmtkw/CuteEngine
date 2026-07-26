@@ -2,17 +2,9 @@
 #ifndef CUTE_ASSEMBLER_HPP
 #define CUTE_ASSEMBLER_HPP
 
-
-#include "codegen/codegen.hpp"
-#include "parser/parser.hpp"
-#include "tokenizer/tokenizer.hpp"
-
+#include <string>
 
 class ctAssembler {
-
-	ctTokenizer mTokenizer;
-	ctParser mParser;
-	ctCodeGen mGenerator;
 
 	public:
 

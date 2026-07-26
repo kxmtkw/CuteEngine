@@ -29,8 +29,12 @@ void ctAssembler::assemble(std::string filepath) {
 
 void ctAssembler::assembleString(std::string source, std::string outfile) {
 
-	auto stream = mTokenizer.tokenize(source);
-	auto program = mParser.parse(&stream);
-	mGenerator.generate(*program, outfile);
-	
+	ctTokenizer tokenizer;
+	ctParser parser;
+	ctCodeGen generator;
+
+	auto stream = tokenizer.tokenize(source);
+	auto program = parser.parse(&stream);
+	generator.generate(*program, outfile);
+
 }
