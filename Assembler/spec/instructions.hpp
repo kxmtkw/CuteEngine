@@ -24,6 +24,12 @@ static const std::map<std::string, ctInstruction> ctInstrMap = {
     {"setu",        {instrSetU}},
     {"setf",        {instrSetF}},
 
+
+	{"i2f",        {instrCastI2F}},
+    {"f2i",        {instrCastF2I}},
+    {"u2f",        {instrCastU2F}},
+	{"f2u",        {instrCastF2U}},
+
     {"addi",        {instrAddI}},
     {"subi",        {instrSubI}},
     {"muli",        {instrMulI}},
