@@ -157,6 +157,10 @@ void ct_exec(ctContext* ctx) {
         [instrHalt] = &&opHalt,
         [instrOut] = &&opOut,
         [instrMov] = &&opMov,
+		[instrCastI2F] = &&opCastI2F,
+		[instrCastF2I] = &&opCastF2I,
+		[instrCastU2F] = &&opCastU2F,
+		[instrCastF2U] = &&opCastF2U,
         [instrSetI] = &&opSetI,
         [instrSetU] = &&opSetU,
         [instrSetF] = &&opSetF,
@@ -261,6 +265,58 @@ opMov:
     r2 = instrs[ctx->ip++];
     ct_ctx_moveAtom(ctx, r2, r1);
     NEXT();
+
+opCastI2F:
+	r1 = instrs[ctx->ip++];
+	r2 = instrs[ctx->ip++];
+	ct_ctx_loadAtom(ctx, r2, &a1, &t1);
+	ct_ctx_storeAtom(ctx, r1, (ctAtom){.as_float=a1.as_int}, ctAtomType_Primitive);
+	NEXT();
+
+opCastF2I:
+	r1 = instrs[ctx->ip++];
+	r2 = instrs[ctx->ip++];
+	ct_ctx_loadAtom(ctx, r2, &a1, &t1);
+
+	if (!isfinite(a1.as_float) || a1.as_float > INT64_MAX || a1.as_float < INT64_MIN) {
+		CUTE_ERROR(
+			(&ctx->error),
+			ctErrorCode_Overflow,
+			"Unable to cast %f to int",
+			a1.as_float, a1.raw
+		);
+		ct_ctx_throwError(ctx, ctx->error);
+		return;
+	};
+
+	ct_ctx_storeAtom(ctx, r1, (ctAtom){.as_int=a1.as_float}, ctAtomType_Primitive);
+	NEXT();
+
+opCastU2F:
+	r1 = instrs[ctx->ip++];
+	r2 = instrs[ctx->ip++];
+	ct_ctx_loadAtom(ctx, r2, &a1, &t1);
+	ct_ctx_storeAtom(ctx, r1, (ctAtom){.as_float=a1.as_uint}, ctAtomType_Primitive);
+	NEXT();
+
+opCastF2U:
+	r1 = instrs[ctx->ip++];
+	r2 = instrs[ctx->ip++];
+	ct_ctx_loadAtom(ctx, r2, &a1, &t1);
+
+	if (!isfinite(a1.as_float) || a1.as_float > UINT64_MAX || a1.as_float < 0) {
+		CUTE_ERROR(
+			(&ctx->error),
+			ctErrorCode_Overflow,
+			"Unable to cast %f to uint",
+			a1.as_float, a1.raw
+		);
+		ct_ctx_throwError(ctx, ctx->error);
+		return;
+	};
+
+	ct_ctx_storeAtom(ctx, r1, (ctAtom){.as_int=a1.as_float}, ctAtomType_Primitive);
+	NEXT();
 
 opSetI:
     r1 = instrs[ctx->ip++];

@@ -19,6 +19,11 @@ typedef enum {
     instrSetU    = 0x22,
     instrSetF    = 0x23,
 
+	instrCastI2F    = 0x2A,
+	instrCastF2I    = 0x2B,
+	instrCastU2F    = 0x2C,
+	instrCastF2U    = 0x2D,
+
     instrAddI    = 0x30,
     instrSubI    = 0x31,
     instrMulI    = 0x32,
