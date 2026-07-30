@@ -11,16 +11,6 @@
 #include "object.h"
 
 
-struct _ctObjectManager {
-	ctObjectBucket**    buckets;
-	uint32_t            bucket_count;
-	uint32_t            bucket_capacity;
-	ctObjectBucket**    empty_buckets;
-	uint32_t            empty_bucket_count;
-	uint32_t            empty_bucket_capacity;
-	ctError             error;
-};
-typedef struct _ctObjectManager ctObjectManager;
 
 
 ctObjectManager*

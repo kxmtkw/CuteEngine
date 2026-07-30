@@ -1,36 +1,35 @@
-
-#ifndef CUTE_ATOM_H
-#define CUTE_ATOM_H
+#ifndef CT_ATOM_H
+#define CT_ATOM_H
 
 #include <stdbool.h>
 #include <stdint.h>
 
 
 typedef enum {
-	ctAtomType_Primitive  = 0x0,
-	ctAtomType_Object     = 0x1
-} ctAtomType;
+	CT_ATOM_PRIMITIVE = 0x0,
+	CT_ATOM_OBJECT    = 0x1
+} CtAtomType;
 
 
-typedef uint8_t ctAtomTypeSize;
+typedef uint8_t CtAtomTypeSize;
 
-struct _ctObject;
+struct CtObject;
+typedef struct CtObject CtObject;
 
-// Main atom definition. Its just 64 bits.
 typedef union {
 	uint64_t             raw;
 	int64_t              as_int;
 	uint64_t             as_uint;
 	double               as_float;
 	uint64_t             as_bool;
-	struct _ctObject*    as_object;
-} ctAtom;
+	struct CtObject*     as_object;
+} CtAtom;
 
 
 typedef struct {
-	ctAtomTypeSize type;
-	ctAtom         atom;
-} ctTypedAtom;
+	CtAtomTypeSize type;
+	CtAtom         atom;
+} CtTypedAtom;
 
 
-#endif // CUTE_ATOM_H
+#endif // CT_ATOM_H

@@ -9,10 +9,10 @@
 
 
 typedef struct {
-	ctObject            __object__;
+	CtObject            __object__;
 	uint32_t            sub_objects;
 	uint32_t            size;
-	ctAtom*             atoms;
+	CtAtom*             atoms;
 	ctAtomTypeSize*     types;
 } ctContainer;
 

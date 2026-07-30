@@ -1,21 +1,22 @@
 
-#ifndef CUTE_CONFIG_H
-#define CUTE_CONFIG_H
+#ifndef CT_CONFIG_H
+#define CT_CONFIG_H
 
-#define CUTE_CONF_CALLSTACK_SIZE 1000
-#define CUTE_CONF_SLOT_COUNT 256
-#define CUTE_CONF_CON_BUCKET_SIZE 64
+#define CT_CONF_CALLSTACK_SIZE 1000
+#define CT_CONF_SLOT_COUNT 256
+#define CT_CONF_CON_BUCKET_SIZE 64
 
 
-#define CUTE_CONF_DEBUG
+//#define CT_CONF_DEBUG
 
-#ifdef CUTE_CONF_DEBUG
 
-#define CUTE_CONF_LOG_FILTER(DOMAIN) true
+#ifdef CT_CONF_DEBUG
 
-#define CUTE_LOG(DOMAIN, ...) \
+#define CT_CONF_LOG_FILTER(DOMAIN) true
+
+#define CT_LOG(DOMAIN, ...) \
     do { \
-		if (CUTE_CONF_LOG_FILTER(DOMAIN)) {\
+		if (CT_CONF_LOG_FILTER(DOMAIN)) {\
 			printf("[LOG] (%s) ", DOMAIN); \
 			printf(__VA_ARGS__); \
 		} \
@@ -23,8 +24,9 @@
 
 #else
 
-#define CUTE_LOG(DOMAIN, ...) do {} while (0)
+#define CT_LOG(DOMAIN, ...) do {} while (0)
 
-#endif // CUTE_CONF_DEBUG
+#endif // CT_CONF_DEBUG
 
-#endif // CUTE_CONFIG_H
+
+#endif // CT_CONFIG_H

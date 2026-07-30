@@ -7,142 +7,140 @@
 extern "C" {
 #endif
 
-// Main Cute Instruction Set
+
+// Main Cute Instruction Set.
 typedef enum {
 
-    instrNull    = 0x00,
-    instrHalt    = 0x01,
-    instrOut     = 0x02,
+    CT_INSTR_NULL         = 0x00,
+    CT_INSTR_HALT         = 0x01,
+    CT_INSTR_OUT          = 0x02,
     
-    instrMov     = 0x20,
-    instrSetI    = 0x21,
-    instrSetU    = 0x22,
-    instrSetF    = 0x23,
+    CT_INSTR_MOV          = 0x20,
+    CT_INSTR_SETI         = 0x21,
+    CT_INSTR_SETU         = 0x22,
+    CT_INSTR_SETF         = 0x23,
 
-	instrCastI2F    = 0x2A,
-	instrCastF2I    = 0x2B,
-	instrCastU2F    = 0x2C,
-	instrCastF2U    = 0x2D,
+    CT_INSTR_CAST_I2F     = 0x2A,
+    CT_INSTR_CAST_F2I     = 0x2B,
+    CT_INSTR_CAST_U2F     = 0x2C,
+    CT_INSTR_CAST_F2U     = 0x2D,
 
-    instrAddI    = 0x30,
-    instrSubI    = 0x31,
-    instrMulI    = 0x32,
-    instrDivI    = 0x33,
-    instrModI    = 0x34,
-    instrNegI    = 0x35,
-    instrAbsI    = 0x36,
-    instrIncI    = 0x37,
-    instrDecI    = 0x38,
+    CT_INSTR_ADDI         = 0x30,
+    CT_INSTR_SUBI         = 0x31,
+    CT_INSTR_MULI         = 0x32,
+    CT_INSTR_DIVI         = 0x33,
+    CT_INSTR_MODI         = 0x34,
+    CT_INSTR_NEGI         = 0x35,
+    CT_INSTR_ABSI         = 0x36,
+    CT_INSTR_INCI         = 0x37,
+    CT_INSTR_DECI         = 0x38,
 
-    instrAddU    = 0x40,
-    instrSubU    = 0x41,
-    instrMulU    = 0x42,
-    instrDivU    = 0x43,
-    instrModU    = 0x44,
-    instrIncU    = 0x45,
-    instrDecU    = 0x46,
+    CT_INSTR_ADDU         = 0x40,
+    CT_INSTR_SUBU         = 0x41,
+    CT_INSTR_MULU         = 0x42,
+    CT_INSTR_DIVU         = 0x43,
+    CT_INSTR_MODU         = 0x44,
+    CT_INSTR_INCU         = 0x45,
+    CT_INSTR_DECU         = 0x46,
 
-    instrAddF    = 0x50,
-    instrSubF    = 0x51,
-    instrMulF    = 0x52,
-    instrDivF    = 0x53,
-    instrNegF    = 0x54,
-    instrAbsF    = 0x55,    
+    CT_INSTR_ADDF         = 0x50,
+    CT_INSTR_SUBF         = 0x51,
+    CT_INSTR_MULF         = 0x52,
+    CT_INSTR_DIVF         = 0x53,
+    CT_INSTR_NEGF         = 0x54,
+    CT_INSTR_ABSF         = 0x55,    
 
-    instrLogicAnd    = 0x60,
-    instrLogicOr     = 0x61,
-    instrLogicNot    = 0x62,
-    instrLogicXor    = 0x63,
+    CT_INSTR_LOGIC_AND    = 0x60,
+    CT_INSTR_LOGIC_OR     = 0x61,
+    CT_INSTR_LOGIC_NOT    = 0x62,
+    CT_INSTR_LOGIC_XOR    = 0x63,
 
-    instrBitAnd      = 0x70,
-    instrBitOr       = 0x71,
-    instrBitNot      = 0x73,
-    instrBitXor      = 0x74,
-    instrBitShl      = 0x75,
-    instrBitShr      = 0x76, 
-	instrBitShrA     = 0x77, 
+    CT_INSTR_BIT_AND      = 0x70,
+    CT_INSTR_BIT_OR       = 0x71,
+    CT_INSTR_BIT_NOT      = 0x73,
+    CT_INSTR_BIT_XOR      = 0x74,
+    CT_INSTR_BIT_SHL      = 0x75,
+    CT_INSTR_BIT_SHR      = 0x76, 
+    CT_INSTR_BIT_SHRA     = 0x77, 
 
-    instrCmpI        = 0x80,
-    instrCmpU        = 0x81,
-    instrCmpF        = 0x82,
+    CT_INSTR_CMPI         = 0x80,
+    CT_INSTR_CMPU         = 0x81,
+    CT_INSTR_CMPF         = 0x82,
 
-    instrEq          = 0x90,
-    instrNotEq       = 0x91,
-    instrLess        = 0x92,
-    instrLessEq      = 0x93,
-    instrGreater     = 0x94,
-    instrGreaterEq   = 0x95,
+    CT_INSTR_EQ           = 0x90,
+    CT_INSTR_NOT_EQ       = 0x91,
+    CT_INSTR_LESS         = 0x92,
+    CT_INSTR_LESS_EQ      = 0x93,
+    CT_INSTR_GREATER      = 0x94,
+    CT_INSTR_GREATER_EQ   = 0x95,
 
-    instrJmp      = 0xA0,
-    instrJmpEq    = 0xA1,
-    instrJmpNe    = 0xA2,
-    instrJmpGt    = 0xA3,
-    instrJmpGe    = 0xA4,
-    instrJmpLt    = 0xA5,
-	instrJmpLe    = 0xA6,
+    CT_INSTR_JMP          = 0xA0,
+    CT_INSTR_JMP_EQ       = 0xA1,
+    CT_INSTR_JMP_NE       = 0xA2,
+    CT_INSTR_JMP_GT       = 0xA3,
+    CT_INSTR_JMP_GE       = 0xA4,
+    CT_INSTR_JMP_LT       = 0xA5,
+    CT_INSTR_JMP_LE       = 0xA6,
 
-    instrCall        = 0xB0,
-    instrReturn      = 0xB1,
-    instrReturnVal   = 0xB2,
-    instrModCall     = 0xBA,
+    CT_INSTR_CALL         = 0xB0,
+    CT_INSTR_RETURN       = 0xB1,
+    CT_INSTR_RETURN_VAL   = 0xB2,
+    CT_INSTR_MOD_CALL     = 0xBA,
 
-    instrConNew         = 0xC0,
-    instrConGet         = 0xC1,
-    instrConSet         = 0xC2,
-    instrConSize        = 0xC3,
-    instrConCopy        = 0xC4,
+    CT_INSTR_CON_NEW      = 0xC0,
+    CT_INSTR_CON_GET      = 0xC1,
+    CT_INSTR_CON_SET      = 0xC2,
+    CT_INSTR_CON_SIZE     = 0xC3,
+    CT_INSTR_CON_COPY     = 0xC4,
 
-} ctInstruction;
+} CtInstr;
 
-typedef uint8_t ctInstructionSize;
+// All instructions should be able to fit inside this. Allows for 256 different instructions
+typedef uint8_t CtInstructionSize;
 
-
-// Cute Image Defintions
-
-static const uint32_t ctMagicId = 0x12345678; 
+static const uint32_t CtMagicId = 0x12345678; 
 
 typedef struct {
-    uint32_t magic_id;
-    uint32_t procedure_count;
-    uint32_t instruction_count;
-    uint32_t procedure_table_offset;
-    uint32_t instruction_pool_offset; 
-} ctImageHeader;
+	uint32_t magic_id;
+	uint32_t procedure_count;
+	uint32_t instruction_count;
+	uint32_t procedure_table_offset;
+	uint32_t instruction_pool_offset; 
+} CtImageHeader;
 
 
 typedef struct {
-    uint32_t id;
-    uint32_t bytecode_index;
-    uint32_t arg_count;
+	uint32_t bytecode_index;
+	uint32_t arg_count;
 } ctImageProcedure;
 
 
 typedef struct {
-    ctImageHeader      header;
-    ctImageProcedure* procedure_table;
-    ctInstructionSize* instruction_pool;
-} ctImage;
+	CtImageHeader       header;
+	ctImageProcedure*   procedure_table;
+	CtInstructionSize*  instruction_pool;
+} CtImage;
 
 
 typedef enum {
-    ctImageCode_Success,
-    ctImageCode_FileNotFound,
-    ctImageCode_ReadWriteFailure,
-    ctImageCode_InvalidImage
-} ctImageCode;
+	CT_IMAGE_STATUS_SUCCESS,
+	CT_IMAGE_STATUS_FILE_NOT_FOUND,
+	CT_IMAGE_STATUS_READ_WRITE_FAILURE,
+	CT_IMAGE_CORRUPTED_FILE
+} CtImageStatus;
 
 
 // Write an already initialized image to a file
-ctImageCode 
-ct_image_write(ctImage *img, const char *filepath);
+CtImageStatus
+ct_image_write(CtImage *img, const char *filepath);
 
 // Set an image from a file
-ctImageCode 
-ct_image_read(ctImage *img, const char *filepath);
+CtImageStatus
+ct_image_read(CtImage *img, const char *filepath);
 
 // Free the image's resources.
 void 
-ct_image_free(ctImage *img);
+ct_image_free(CtImage *img);
 
 #ifdef __cplusplus
 }

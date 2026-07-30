@@ -1,4 +1,3 @@
-
 #ifndef OBJECT_OBJECT_H
 #define OBJECT_OBJECT_H
 
@@ -6,75 +5,84 @@
 #include "error/error.h"
 #include <stdint.h>
 
-struct _ctObjectManager;
-typedef struct _ctObjectManager ctObjectManager;
+struct CtObjectManager;
+typedef struct CtObjectManager CtObjectManager;
 
-typedef void (*ctObjectDelete)(struct _ctObjectManager*, struct _ctObject*);
+typedef void (*ctObjectDelete)(struct CtObjectManager*, struct CtObject*);
 
-struct _ctObject {
+struct CtObject {
 	uint32_t            bucket_id;
 	uint32_t            bucket_index;
 	uint32_t            ref_count;
 	uint32_t            obj_size;
-	uint64_t            obj_type;
+	uint32_t            obj_type;
 	ctObjectDelete      obj_del_func;
 }; 
-typedef struct _ctObject ctObject;
-
 
 typedef struct {
 	uint32_t  id;
 	uint64_t  bitmask;
-	ctObject* objects[64];
-} ctObjectBucket;
+	CtObject* objects[64];
+} CtObjectBucket;
+
+
+struct CtObjectManager {
+	CtObjectBucket**    buckets;
+	uint32_t            bucket_count;
+	uint32_t            bucket_capacity;
+	CtObjectBucket**    empty_buckets;
+	uint32_t            empty_bucket_count;
+	uint32_t            empty_bucket_capacity;
+	ctError             error;
+};
 
 
 // Startup the object manager. Pushes the first object bucket as well.
-ctObjectManager*
-ct_objects_init();
+CtObjectManager*
+ct_objects_init(void);
 
 // End the Object manager and all its resources. Sets the pointer to NULL for convenience.
 void
-ct_objects_end(ctObjectManager** manager_ptr);
+ct_objects_end(CtObjectManager** manager_ptr);
 
 // Check if the object manager failed.
 bool
-ct_objects_checkError(ctObjectManager* manager_ptr, ctError* error);
+ct_objects_check_error(CtObjectManager* manager_ptr);
 
 // Allocate a new empty bucket and pushes it to the stack. Returns it's id.
 uint32_t
-ct_objects_newBucket(ctObjectManager* manager);
+ct_objects_new_bucket(CtObjectManager* manager);
 
 // Push a bucket to the empty stack. THe bucket SHOULD be empty (not filled) before it is pushed.
 void
-ct_objects_pushEmptyBucket(ctObjectManager* manager, ctObjectBucket* bucket);
+ct_objects_push_empty_bucket(CtObjectManager* manager, CtObjectBucket* bucket);
 
 // Pop an empty bucket from the stack. If the bucket is full after the allocation, do not push it back.
-ctObjectBucket*
-ct_objects_popEmptyBucket(ctObjectManager* manager);
+CtObjectBucket*
+ct_objects_pop_empty_bucket(CtObjectManager* manager);
 
 // Allocate a new object.
-ctObject*
-ct_objects_newObject(ctObjectManager* manager, uint32_t obj_size, uint64_t obj_type, ctObjectDelete del_func);
+CtObject*
+ct_objects_new_object(CtObjectManager* manager, uint32_t obj_size, uint64_t obj_type, ctObjectDelete del_func);
 
 // Delete an object, sub objects are NOT considered. The deleter if it exists, is also called.
 void
-ct_objects_delObject(ctObjectManager* manager, ctObject* obj);
+ct_objects_del_object(CtObjectManager* manager, CtObject* obj);
 
 // Increase the refcount of the object.
 static inline void
-ct_objects_incRef(ctObjectManager* manager, ctObject* obj) {
+ct_objects_inc_ref(CtObjectManager* manager, CtObject* obj) {
 	obj->ref_count++;
-	CUTE_LOG("objects", "Object (%u.%u) [%p] referenced. References: %u\n", obj->bucket_id, obj->bucket_index, obj, obj->ref_count);
+	CT_LOG("objects", "Object (%u.%u) [%p] referenced. References: %u\n", obj->bucket_id, obj->bucket_index, obj, obj->ref_count);
 }
 
 // Decrease the ref count of an object. Returns true if the object is deleted.
 static inline bool
-ct_objects_decRef(ctObjectManager* manager, ctObject* obj) {
+ct_objects_dec_ref(CtObjectManager* manager, CtObject* obj) {
 	obj->ref_count--;
-	CUTE_LOG("objects", "Object (%u.%u) [%p] dereferenced. References: %u\n", obj->bucket_id, obj->bucket_index, obj, obj->ref_count);
+	CT_LOG("objects", "Object (%u.%u) [%p] dereferenced. References: %u\n", obj->bucket_id, obj->bucket_index, obj, obj->ref_count);
 	if (obj->ref_count == 0) {
-		ct_objects_delObject(manager, obj);
+		ct_objects_del_object(manager, obj);
 		return true;
 	}
 	return false;
