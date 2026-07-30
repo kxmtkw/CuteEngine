@@ -180,7 +180,7 @@ ct_objects_new_object(CtObjectManager* manager, uint32_t obj_size, uint64_t obj_
 
 
 void
-ct_objects_delObject(CtObjectManager* manager, CtObject* obj) {
+ct_objects_del_object(CtObjectManager* manager, CtObject* obj) {
 
 	
 	CtObjectBucket* bucket = manager->buckets[obj->bucket_id];

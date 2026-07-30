@@ -2,13 +2,16 @@
 #ifndef PARSER_NODES_HPP
 #define PARSER_NODES_HPP
 
-#include "CuteInstr.h"
+extern "C" {
+	#include "common/instructions.h"
+}
+
 #include <cstdint>
 #include <iostream>
-#include <map>
 #include <memory>
 #include <string>
 #include <vector>
+
 struct ctNode;
 
 struct ctProgramNode;
@@ -104,7 +107,7 @@ struct ctLabelNode : public ctStatementNode {
 
 struct ctOpNode : public ctStatementNode {
 
-	ctInstruction opcode;
+	CtInstr opcode;
 	std::vector<std::unique_ptr<ctExpressionNode>> operands;
 
     NodeType getType() const override { return NodeType::Op; }

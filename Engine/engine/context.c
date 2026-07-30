@@ -153,7 +153,7 @@ ct_ctx_call_procedure(CtContext* ctx, uint32_t procedure_id, uint8_t arg_start_s
 
 
 void
-ct_ctx_returnProcedure(CtContext* ctx, CtAtom returned_atom, CtAtomType returned_atom_type) {
+ct_ctx_return_procedure(CtContext* ctx, CtAtom returned_atom, CtAtomType returned_atom_type) {
 
 	ctCallFrame* frame = ct_ctx_popFrame(&ctx->callstack);
 	ctx->current_frame = ct_ctx_peekFrame(&ctx->callstack);

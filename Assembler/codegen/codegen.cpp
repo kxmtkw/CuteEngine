@@ -8,8 +8,9 @@
 #include "codegen.hpp"
 
 extern "C" {
-#include "CuteInstr.h"
+	#include "common/instructions.h"
 }
+
 
 static inline
 int resolveJump(unsigned int label, unsigned int ref) {
@@ -29,8 +30,7 @@ void ctCodeGen::visit(ctProgramNode& node) {
 
 void ctCodeGen::visit(ctProcedureNode& node) {
 
-	ctImageProcedure proc;
-	proc.id = node.id;
+	CtImageProcedure proc;
 	proc.arg_count = node.arg_count;
 	proc.bytecode_index = mInstructions.size();
 
@@ -39,8 +39,8 @@ void ctCodeGen::visit(ctProcedureNode& node) {
 		stmt->accept(*this);
 	}
 
-	if (proc.id >= mProcedures.size()) {
-		mProcedures.resize(proc.id + 1);
+	if (node.id >= mProcedures.size()) {
+		mProcedures.resize(node.id + 1);
 	}
 
 	for (auto label: mUnresolvedLabels) {
@@ -48,11 +48,11 @@ void ctCodeGen::visit(ctProcedureNode& node) {
 		unsigned int current_position = label.first;
 		int offset = resolveJump(label_position, current_position + 4);
 
-		ctInstructionSize* ptr = mInstructions.data() + current_position;
+		CtInstrSize* ptr = mInstructions.data() + current_position;
 		std::memcpy(ptr, &offset, sizeof(offset));
 	}
 
-	mProcedures[proc.id] = proc;
+	mProcedures[node.id] = proc;
 }
 
 
@@ -81,7 +81,7 @@ void ctCodeGen::visit(ctWordNode& node) {
 		unsigned int label_position = mLabelPositions[node.val];
 		unsigned int current_position = mInstructions.size() + 4;
 		
-		ctInstructionSize* ptr = mInstructions.data() + mInstructions.size();
+		CtInstrSize* ptr = mInstructions.data() + mInstructions.size();
 		mInstructions.resize(mInstructions.size() + 4);
 
 		int offset = resolveJump(label_position, current_position);
@@ -101,14 +101,14 @@ void ctCodeGen::visit(ctSlotNode& node) {
 
 
 void ctCodeGen::visit(ctIntNode& node) {
-	ctInstructionSize* ptr = mInstructions.data() + mInstructions.size();
+	CtInstrSize* ptr = mInstructions.data() + mInstructions.size();
 	mInstructions.resize(mInstructions.size() + 4);
 	uint32_t i32 = std::stoi(node.val);
 	std::memcpy(ptr, &i32, 4);
 }
 
 void ctCodeGen::visit(ctFloatNode& node) {
-	ctInstructionSize* ptr = mInstructions.data() + mInstructions.size();
+	CtInstrSize* ptr = mInstructions.data() + mInstructions.size();
 	mInstructions.resize(mInstructions.size() + 4);
 	float f32 = std::stof(node.val);
 	std::memcpy(ptr, &f32, 4);

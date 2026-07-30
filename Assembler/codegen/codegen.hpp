@@ -4,18 +4,20 @@
 
 
 #include "spec/nodes.hpp"
-#include <memory>
+#include <map>
 #include <vector>
 
+
 extern "C" {
-	#include "CuteInstr.h"
+	#include "common/instructions.h"
+	#include "image/image.h"
 }
 
 class ctCodeGen: ctNodeVisitor {
 
-	ctImage mImage;
-	std::vector<ctImageProcedure> mProcedures;
-	std::vector<ctInstructionSize> mInstructions;
+	CtImage mImage;
+	std::vector<CtImageProcedure> mProcedures;
+	std::vector<CtInstrSize> mInstructions;
 	std::map<std::string, unsigned int> mLabelPositions;
 	std::map<unsigned int, std::string> mUnresolvedLabels;
 

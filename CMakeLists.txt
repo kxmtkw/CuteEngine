@@ -24,8 +24,8 @@ add_library(CuteEngine STATIC
     "${CUTE_ENGINE_SRC}/engine/engine.c"
     "${CUTE_ENGINE_SRC}/engine/exec.c"
     "${CUTE_ENGINE_SRC}/engine/context.c"
-    "${CUTE_ENGINE_SRC}/object/object.c"
-    "${CUTE_ENGINE_SRC}/object/container.c"
+    "${CUTE_ENGINE_SRC}/objects/manager.c"
+    "${CUTE_ENGINE_SRC}/container/container.c"
     "${CUTE_ENGINE_SRC}/image/image.c"
     "${CUTE_ENGINE_SRC}/utils/utils.c"
 )
