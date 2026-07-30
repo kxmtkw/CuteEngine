@@ -11,6 +11,9 @@
 struct CtObjectManager;
 typedef struct CtObjectManager CtObjectManager;
 
+struct CtObjectBucket;
+typedef struct CtObjectBucket CtObjectBucket;
+
 typedef void (*CtObjectDelete)(struct CtObjectManager*, struct CtObject*);
 
 struct CtObject {
@@ -20,22 +23,21 @@ struct CtObject {
 	uint32_t            obj_size;
 	uint32_t            obj_type;
 	CtObjectDelete      obj_del_func;
+	CtObjectBucket*     bucket;
 }; 
 
-typedef struct {
-	uint32_t  id;
-	uint64_t  bitmask;
-	CtObject* objects[64];
+typedef struct CtObjectBucket {
+	uint32_t                id;
+	uint64_t                bitmask;
+	CtObject*               objects[64];
+	struct CtObjectBucket*  next_bucket;
 } CtObjectBucket;
 
 
 struct CtObjectManager {
-	CtObjectBucket**    buckets;
+	CtObjectBucket*     buckets_list;
 	uint32_t            bucket_count;
-	uint32_t            bucket_capacity;
-	CtObjectBucket**    empty_buckets;
-	uint32_t            empty_bucket_count;
-	uint32_t            empty_bucket_capacity;
+	CtObjectBucket*     empty_buckets_list;
 	ctError             error;
 };
 

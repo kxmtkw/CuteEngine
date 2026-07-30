@@ -16,13 +16,10 @@ ct_objects_init() {
 
 	CtObjectManager* manager = malloc(sizeof(CtObjectManager));
 	
-	manager->buckets = NULL;
+	manager->buckets_list = NULL;
 	manager->bucket_count = 0;
-	manager->bucket_capacity = 0;
 	
-	manager->empty_buckets = NULL;
-	manager->empty_bucket_count = 0;
-	manager->empty_bucket_capacity = 0;
+	manager->empty_buckets_list = NULL;
 
 	ct_objects_new_bucket(manager);
 
@@ -37,22 +34,22 @@ ct_objects_end(CtObjectManager** manager_ptr) {
 
 	CT_LOG("objects", "Starting cleanup.\n");
 
-	for (uint32_t i = 0; i < manager->bucket_count; i++) {
-		CtObjectBucket* bucket = manager->buckets[i];
+	CtObjectBucket* current_bucket = manager->buckets_list;
 
-		for (uint32_t j = 0; j < sizeof(bucket->objects)/sizeof(bucket->objects[0]); j++) {
-			if (ct_utils_is_bit_set(bucket->bitmask, j)) {
-				free(bucket->objects[j]);
+	while (current_bucket != NULL) {
+		
+		for (uint32_t j = 0; j < sizeof(current_bucket->objects)/sizeof(current_bucket->objects[0]); j++) {
+			if (ct_utils_is_bit_set(current_bucket->bitmask, j)) {
+				free(current_bucket->objects[j]);
 			}
 		}
-		free(bucket);
+
+		CtObjectBucket* bucket_to_free = current_bucket;
+		current_bucket = current_bucket->next_bucket;
+
+		free(bucket_to_free);
 	}
-
-	free(manager->buckets);
-	manager->buckets = NULL;
-	manager->bucket_capacity = 0;
-	manager->bucket_count = 0;
-
+	
 	free(manager);
 	manager_ptr = NULL;
 
@@ -69,11 +66,6 @@ ct_objects_check_error(CtObjectManager* manager) {
 uint32_t
 ct_objects_new_bucket(CtObjectManager* manager) {
 	
-	if (manager->bucket_count == manager->bucket_capacity) {
-		manager->bucket_capacity = manager->bucket_capacity == 0 ? 1 : manager->bucket_capacity * 2;
-		manager->buckets = realloc(manager->buckets, sizeof(CtObjectBucket*) * manager->bucket_capacity);
-	}
-
 	CtObjectBucket* bucket = malloc(sizeof(CtObjectBucket));
 
 	if (bucket == NULL) {
@@ -82,11 +74,13 @@ ct_objects_new_bucket(CtObjectManager* manager) {
 	}
 
 	bucket->id = manager->bucket_count;
-	memset(bucket->objects, 0, sizeof(bucket->objects));
-
-	manager->buckets[manager->bucket_count] = bucket;
 	manager->bucket_count++;
 
+	memset(bucket->objects, 0, sizeof(bucket->objects));
+
+	bucket->next_bucket = manager->buckets_list;
+	manager->buckets_list = bucket;
+	
 	ct_objects_push_empty_bucket(manager, bucket);
 
 	CT_LOG("objects", "New bucket (%u) [%p] allocated. Pushed it to empty buckets stack.\n", bucket->id, bucket);
@@ -98,21 +92,22 @@ ct_objects_new_bucket(CtObjectManager* manager) {
 void
 ct_objects_push_empty_bucket(CtObjectManager* manager, CtObjectBucket* bucket) {
 	
-	if (manager->empty_bucket_count == manager->empty_bucket_capacity) {
-		manager->empty_bucket_capacity = manager->empty_bucket_capacity == 0 ? 1 : manager->empty_bucket_capacity * 2;
-		manager->empty_buckets = realloc(manager->empty_buckets, sizeof(CtObjectBucket*) * manager->empty_bucket_capacity);
-	}
+	bucket->next_bucket = manager->empty_buckets_list;
+	manager->empty_buckets_list = bucket;
 
-	manager->empty_buckets[manager->empty_bucket_count++] = bucket;
 };
 
 
 CtObjectBucket*
 ct_objects_pop_empty_bucket(CtObjectManager* manager) {
-	if (manager->empty_bucket_count == 0) {
-		return NULL;
-	};
-	return manager->empty_buckets[--manager->empty_bucket_count];
+
+	CtObjectBucket* bucket = manager->empty_buckets_list;
+
+	if (bucket == NULL) return NULL;
+	
+	manager->empty_buckets_list = bucket->next_bucket;
+
+	return bucket;
 };
 
 
@@ -152,8 +147,7 @@ ct_objects_new_object(CtObjectManager* manager, uint32_t obj_size, uint64_t obj_
 		break;
 	};
 
-
-	// Allocating atoms
+	// allocating the object
 	CtObject* obj = malloc(obj_size);
 
 	if (obj == NULL) {
@@ -167,6 +161,7 @@ ct_objects_new_object(CtObjectManager* manager, uint32_t obj_size, uint64_t obj_
 	
 	obj->bucket_id = assigned_bucket->id;
 	obj->bucket_index = assigned_obj_slot;
+	obj->bucket = assigned_bucket;
 	obj->ref_count = 0;
 	obj->obj_type = obj_type;
 	obj->obj_size = obj_size;
@@ -183,7 +178,7 @@ void
 ct_objects_del_object(CtObjectManager* manager, CtObject* obj) {
 
 	
-	CtObjectBucket* bucket = manager->buckets[obj->bucket_id];
+	CtObjectBucket* bucket = obj->bucket;
 
 	if (bucket->bitmask == 0xFFFFFFFFFFFFFFFF) {
 		ct_objects_push_empty_bucket(manager, bucket);
