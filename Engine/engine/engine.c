@@ -111,9 +111,14 @@ ct_engine_run_context(CtEngine* engine, CtContext* ctx) {
 void
 cute_run(int argc, char** argv) {
 
+	if (argc <= 1) {
+		printf("usage: cute <image>\n");
+		exit(2);
+	}
+
 	CtEngine engine;
 	ct_engine_init(&engine);
-	ct_engine_load(&engine, argv[0]);
+	ct_engine_load(&engine, argv[1]);
 
 	
 	ct_engine_run_context(
