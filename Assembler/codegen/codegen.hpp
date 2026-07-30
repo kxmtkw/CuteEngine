@@ -16,11 +16,14 @@ class ctCodeGen: ctNodeVisitor {
 	ctImage mImage;
 	std::vector<ctImageProcedure> mProcedures;
 	std::vector<ctInstructionSize> mInstructions;
+	std::map<std::string, unsigned int> mLabelPositions;
+	std::map<unsigned int, std::string> mUnresolvedLabels;
 
 public:
 
 	void visit(ctProgramNode& node);
 	void visit(ctProcedureNode& node);
+	void visit(ctLabelNode& node);
 	void visit(ctOpNode& node);
 	void visit(ctWordNode& node);
 	void visit(ctSlotNode& node);

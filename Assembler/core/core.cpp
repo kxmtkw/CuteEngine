@@ -5,6 +5,7 @@
 
 #include "codegen/codegen.hpp"
 #include "parser/parser.hpp"
+#include "spec/nodes.hpp"
 #include "tokenizer/tokenizer.hpp"
 
 #include "CuteAssembler.hpp"
@@ -35,6 +36,8 @@ void ctAssembler::assembleString(std::string source, std::string outfile) {
 
 	auto stream = tokenizer.tokenize(source);
 	auto program = parser.parse(&stream);
+	auto printer = ctNodePrinter();
+	program->accept(printer);
 	generator.generate(*program, outfile);
 
 }

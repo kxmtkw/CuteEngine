@@ -1,14 +1,21 @@
 
 
-#include <cstdint>
+#include <concepts>
 #include <cstring>
 #include <memory>
+#include <sys/types.h>
 #include "spec/nodes.hpp"
 #include "codegen.hpp"
 
 extern "C" {
 #include "CuteInstr.h"
 }
+
+static inline
+int resolveJump(unsigned int label, unsigned int ref) {
+	return label - ref;
+}
+
 
 void ctCodeGen::visit(ctProgramNode& node) {
 
@@ -36,8 +43,25 @@ void ctCodeGen::visit(ctProcedureNode& node) {
 		mProcedures.resize(proc.id + 1);
 	}
 
+	for (auto label: mUnresolvedLabels) {
+		unsigned int label_position = mLabelPositions[label.second];
+		unsigned int current_position = label.first;
+		int offset = resolveJump(label_position, current_position + 4);
+
+		ctInstructionSize* ptr = mInstructions.data() + current_position;
+		std::memcpy(ptr, &offset, sizeof(offset));
+	}
+
 	mProcedures[proc.id] = proc;
 }
+
+
+void ctCodeGen::visit(ctLabelNode& node) {
+
+	node.position = mInstructions.size();
+	mLabelPositions[node.name] = node.position;
+
+};
 
 
 void ctCodeGen::visit(ctOpNode& node) {
@@ -51,6 +75,22 @@ void ctCodeGen::visit(ctOpNode& node) {
 
 
 void ctCodeGen::visit(ctWordNode& node) {
+
+	if (mLabelPositions.contains(node.val)) {
+		
+		unsigned int label_position = mLabelPositions[node.val];
+		unsigned int current_position = mInstructions.size() + 4;
+		
+		ctInstructionSize* ptr = mInstructions.data() + mInstructions.size();
+		mInstructions.resize(mInstructions.size() + 4);
+
+		int offset = resolveJump(label_position, current_position);
+		std::memcpy(ptr, &offset, 4);
+
+	} else {
+		mUnresolvedLabels[mInstructions.size()] = node.val;
+		mInstructions.resize(mInstructions.size() + 4);
+	}
 
 };
 

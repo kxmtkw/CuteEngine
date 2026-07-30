@@ -18,6 +18,7 @@ struct ctObjectNode;
 
 struct ctStatementNode;
 	struct ctOpNode;
+	struct ctLabelNode;
 
 struct ctExpressionNode;
 	struct ctWordNode;
@@ -30,6 +31,7 @@ enum class NodeType {
 	Program,
 	Procedure,
 	Op,
+	Label,
 	Word,
 	Slot,
 	Int,
@@ -42,6 +44,7 @@ struct ctNodeVisitor {
     virtual void visit(ctProgramNode& node) = 0;
     virtual void visit(ctProcedureNode& node) = 0;
     virtual void visit(ctOpNode& node) = 0;
+	virtual void visit(ctLabelNode& node) = 0;
     virtual void visit(ctWordNode& node) = 0;
     virtual void visit(ctSlotNode& node) = 0;
     virtual void visit(ctIntNode& node) = 0;
@@ -87,6 +90,16 @@ struct ctProcedureNode : public ctObjectNode {
 
 struct ctStatementNode : public ctNode {
 
+};
+
+struct ctLabelNode : public ctStatementNode {
+
+	std::string name;
+	bool resolved = false;
+	unsigned long long position;
+
+    NodeType getType() const override { return NodeType::Label; }
+    void accept(ctNodeVisitor& visitor) override { visitor.visit(*this); }
 };
 
 struct ctOpNode : public ctStatementNode {
@@ -172,6 +185,11 @@ class ctNodePrinter : public ctNodeVisitor {
 				if (stmt) stmt->accept(*this);
 			}
 			indent_level--;
+		}
+
+		void visit(ctLabelNode& node) override {
+			printIndent();
+			std::cout << "LabelNode [Name: " << node.name << "]\n";
 		}
 	
 		void visit(ctOpNode& node) override {
