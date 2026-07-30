@@ -95,7 +95,7 @@ ct_decAtom(CtContext* ctx, uint8_t slot) {
 
 
 static inline void 
-_ct_out(uint8_t fmt, CtAtom atom, CtAtomTypeSize type) {
+_ct_out(uint8_t fmt, CtAtom atom) {
 
 	switch (fmt) {
 		
@@ -254,7 +254,7 @@ HANDLER_OUT:
 	r1 = instrs[ctx->ip++];
 	r2 = instrs[ctx->ip++];
 	ct_ctx_load_atom(ctx, r2, &a1, &t1);
-	_ct_out(r1, a1, t1);
+	_ct_out(r1, a1);
 	NEXT();
 
 HANDLER_MOV:
