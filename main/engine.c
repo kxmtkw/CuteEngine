@@ -1,17 +1,7 @@
-#include <stdio.h>
-#include "CuteEngine.h"
+#include "Cute.h"
 
 int
 main(int argc, char** argv) {
-	
-	if (argc < 2) {
-		printf("Usage: %s <image_file>\n", argv[0]);
-		return 2;
-	}
-
-	ctEngine* engine = ct_engine_init();
-	ct_engine_load(engine, argv[1]);
-	ct_engine_run(engine);
-	ct_engine_end(engine);
-	return 1;
+	cute_run(argc, argv);
+	return 0;
 }

@@ -1,12 +1,14 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "CuteInstr.h"
+#include "common/instructions.h"
+
+#include "image/image.h"
 
 
 
 void 
-ct_image_free(ctImage* img)
+ct_image_free(CtImage* img)
 {
 	img->header.instruction_count = 0;
 	img->header.procedure_count = 0;
@@ -21,53 +23,53 @@ ct_image_free(ctImage* img)
 };
 
 
-ctImageCode 
-ct_image_write(ctImage *img, const char *filepath) {
+CtImageStatus 
+ct_image_write(CtImage *img, const char *filepath) {
 
 	FILE *fp = fopen(filepath, "wb");
-	if (!fp) {return ctImageCode_FileNotFound;}
+	if (!fp) {return CT_IMAGE_STATUS_FILE_NOT_FOUND;}
 
-	img->header.magic_id = ctMagicId;
+	img->header.magic_id = ct_magic_id;
 
 	u_int32_t items_written;
 
-	items_written = fwrite(&img->header, sizeof(ctImageHeader), 1, fp);
-	if (items_written != 1) {return ctImageCode_ReadWriteFailure;}
+	items_written = fwrite(&img->header, sizeof(CtImageHeader), 1, fp);
+	if (items_written != 1) {return CT_IMAGE_STATUS_READ_WRITE_FAILURE;}
 
-	items_written = fwrite(img->procedure_table, sizeof(ctImageProcedure), img->header.procedure_count, fp);
-	if (items_written != img->header.procedure_count) {return ctImageCode_ReadWriteFailure;}
+	items_written = fwrite(img->procedure_table, sizeof(CtImageProcedure), img->header.procedure_count, fp);
+	if (items_written != img->header.procedure_count) {return CT_IMAGE_STATUS_READ_WRITE_FAILURE;}
 
-	items_written = fwrite(img->instruction_pool, sizeof(ctInstructionSize), img->header.instruction_count, fp);
-	if (items_written != img->header.instruction_count) {return ctImageCode_ReadWriteFailure;}
+	items_written = fwrite(img->instruction_pool, sizeof(CtInstrSize), img->header.instruction_count, fp);
+	if (items_written != img->header.instruction_count) {return CT_IMAGE_STATUS_READ_WRITE_FAILURE;}
 
 	fclose(fp);
-	return ctImageCode_Success;
+	return CT_IMAGE_STATUS_SUCCESS;
 }
 
 
-ctImageCode 
-ct_image_read(ctImage *img, const char *filepath) {
+CtImageStatus 
+ct_image_read(CtImage *img, const char *filepath) {
 
 	FILE *fp = fopen(filepath, "rb");
-	if (!fp) {return ctImageCode_FileNotFound;}
+	if (!fp) {return CT_IMAGE_STATUS_FILE_NOT_FOUND;}
 
 	uint32_t items_read;
 
-	items_read = fread(&img->header, sizeof(ctImageHeader), 1, fp);
-	if (items_read != 1) {return ctImageCode_ReadWriteFailure;}
+	items_read = fread(&img->header, sizeof(CtImageHeader), 1, fp);
+	if (items_read != 1) {return CT_IMAGE_STATUS_READ_WRITE_FAILURE;}
 
-	if (img->header.magic_id != ctMagicId) {
-		return ctImageCode_InvalidImage;
+	if (img->header.magic_id != ct_magic_id) {
+		return CT_IMAGE_CORRUPTED_FILE;
 	}
 
-	img->procedure_table = malloc(sizeof(ctImageProcedure) * img->header.procedure_count);
-	items_read = fread(img->procedure_table, sizeof(ctImageProcedure), img->header.procedure_count, fp);
-	if (items_read != img->header.procedure_count) {return ctImageCode_ReadWriteFailure;}
+	img->procedure_table = malloc(sizeof(CtImageProcedure) * img->header.procedure_count);
+	items_read = fread(img->procedure_table, sizeof(CtImageProcedure), img->header.procedure_count, fp);
+	if (items_read != img->header.procedure_count) {return CT_IMAGE_STATUS_READ_WRITE_FAILURE;}
 
-	img->instruction_pool = malloc(sizeof(ctInstructionSize) * img->header.instruction_count);
-	items_read = fread(img->instruction_pool, sizeof(ctInstructionSize), img->header.instruction_count, fp);
-	if (items_read != img->header.instruction_count) {return ctImageCode_ReadWriteFailure;}
+	img->instruction_pool = malloc(sizeof(CtInstrSize) * img->header.instruction_count);
+	items_read = fread(img->instruction_pool, sizeof(CtInstrSize), img->header.instruction_count, fp);
+	if (items_read != img->header.instruction_count) {return CT_IMAGE_STATUS_READ_WRITE_FAILURE;}
 	
 	fclose(fp);
-	return ctImageCode_Success;
+	return CT_IMAGE_STATUS_SUCCESS;
 };

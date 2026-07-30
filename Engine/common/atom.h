@@ -1,5 +1,5 @@
-#ifndef CT_ATOM_H
-#define CT_ATOM_H
+#ifndef CUTE_ATOM_H
+#define CUTE_ATOM_H
 
 #include <stdbool.h>
 #include <stdint.h>
@@ -32,4 +32,4 @@ typedef struct {
 } CtTypedAtom;
 
 
-#endif // CT_ATOM_H
+#endif // CUTE_ATOM_H

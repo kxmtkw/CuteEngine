@@ -1,23 +1,22 @@
-#ifndef ENGINE_ENGINE_H
-#define ENGINE_ENGINE_H
+#ifndef CUTE_ENGINE_H
+#define CUTE_ENGINE_H
 
 #include <stdint.h>
 
-#include "CuteInstr.h"
+#include "image/image.h"
 
 #include "context.h"
 
 
-struct CtEngine {
-	CtImage*            image;
+typedef struct {
+	CtImage             image;
 	uint8_t             exit_code;
-};
+} CtEngine;
 
-typedef struct CtEngine CtEngine;
 
 // Intialize the engine
-CtEngine*
-ct_engine_init(void);
+void
+ct_engine_init(CtEngine* engine);
 
 // End the engine and free all resources
 void
@@ -36,4 +35,4 @@ void
 ct_engine_exec(CtEngine* engine, CtContext* ctx);
 
 
-#endif // ENGINE_ENGINE_H
+#endif // CUTE_ENGINE_H

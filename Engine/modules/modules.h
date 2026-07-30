@@ -2,15 +2,8 @@
 #ifndef ENGINE_MODULES_H
 #define ENGINE_MODULES_H
 
-#include "CuteAtom.h"
-#include "CuteModules.h"
-
-#include <stdint.h>
-#include <string.h>
-#include "error/error.h"
 #include "modules/modulespec.h"
 
-#include "utils/utils.h"
 
 
 

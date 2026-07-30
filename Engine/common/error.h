@@ -5,9 +5,6 @@
 #include <stdint.h>
 #include <stdio.h>
 
-#include "CuteAtom.h"
-#include "CuteConfig.h"
-#include "CuteInstr.h"
 
 typedef enum {
 
@@ -56,12 +53,13 @@ ct_error_print(ctError err) {
 	printf("[%s] %s\n", ct_error_stringforms[err.code], err.msg);
 }
 
-#define CUTE_ERROR(ERR, CODE, MSG, ...) \
+#define CT_ERROR(ERR, CODE, MSG, ...) \
 ERR->code = CODE; \
 ct_utils_format( \
 	ERR->msg,  \
 	sizeof(ERR->msg), \
 	MSG, __VA_ARGS__ \
 ); \
+
 
 #endif // ENGINE_ERROR_H

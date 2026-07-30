@@ -1,24 +1,25 @@
 #ifndef ENGINE_MODULESPEC_H
 #define ENGINE_MODULESPEC_H
 
-#include "CuteAtom.h"
-#include "object/object.h"
-#include "error/error.h"
 #include <stdint.h>
-#include <string.h>
+
+#include "common/atom.h"
+#include "objects/manager.h"
+#include "common/error.h"
+
 
 
 typedef struct {
-	const ctAtom*     atoms;
-	const ctAtomTypeSize* types;
+	const CtAtom*     atoms;
+	const CtAtomTypeSize* types;
 	const uint32_t    count;
-	ctObjectManager* container_manager;
+	CtObjectManager* container_manager;
 } ctModuleArguments;
 
 
 typedef struct {
-	ctAtom         returned_atom;
-	ctAtomTypeSize returned_atom_type;
+	CtAtom         returned_atom;
+	CtAtomTypeSize returned_atom_type;
 	bool           success;
 	ctError        error;
 } ctModuleResult;

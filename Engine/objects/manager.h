@@ -1,14 +1,17 @@
-#ifndef OBJECT_OBJECT_H
-#define OBJECT_OBJECT_H
+#ifndef CUTE_OBJECTS_H
+#define CUTE_OBJECTS_H
 
-#include "CuteConfig.h"
-#include "error/error.h"
 #include <stdint.h>
+
+#include "common/atom.h"
+#include "common/config.h"
+#include "common/error.h"
+
 
 struct CtObjectManager;
 typedef struct CtObjectManager CtObjectManager;
 
-typedef void (*ctObjectDelete)(struct CtObjectManager*, struct CtObject*);
+typedef void (*CtObjectDelete)(struct CtObjectManager*, struct CtObject*);
 
 struct CtObject {
 	uint32_t            bucket_id;
@@ -16,7 +19,7 @@ struct CtObject {
 	uint32_t            ref_count;
 	uint32_t            obj_size;
 	uint32_t            obj_type;
-	ctObjectDelete      obj_del_func;
+	CtObjectDelete      obj_del_func;
 }; 
 
 typedef struct {
@@ -63,7 +66,7 @@ ct_objects_pop_empty_bucket(CtObjectManager* manager);
 
 // Allocate a new object.
 CtObject*
-ct_objects_new_object(CtObjectManager* manager, uint32_t obj_size, uint64_t obj_type, ctObjectDelete del_func);
+ct_objects_new_object(CtObjectManager* manager, uint32_t obj_size, uint64_t obj_type, CtObjectDelete del_func);
 
 // Delete an object, sub objects are NOT considered. The deleter if it exists, is also called.
 void
@@ -89,4 +92,4 @@ ct_objects_dec_ref(CtObjectManager* manager, CtObject* obj) {
 }
 
 
-#endif // OBJECT_OBJECT_H
+#endif // CUTE_OBJECTS_H

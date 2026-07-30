@@ -1,74 +1,56 @@
-
 #include <stdint.h>
-#include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
-#include "CuteAtom.h"
-#include "CuteInstr.h"
-#include "CuteEngine.h"
 
-#include "object/object.h"
-#include "modules/modules.h"
-#include "modules/modulespec.h"
-#include "context.h"
-#include "error/error.h"
+#include "Cute.h"
+
+#include "common/atom.h"
+#include "common/config.h"
+#include "common/error.h"
+
+#include "image/image.h"
+#include "objects/manager.h"
 #include "utils/utils.h"
 
+#include "engine/context.h"
+#include "engine/engine.h"
 
 
-struct _ctEngine {
-	ctImage*            image;
-	ctObjectManager*    object_manager;
-	uint8_t             exit_code;
-};
-
-typedef struct _ctEngine ctEngine;
-
-
-ctEngine*
-ct_engine_init() {
-	CUTE_LOG("engine", "vroom vroom\n");
-	ctEngine* engine = (ctEngine*) malloc(sizeof(ctEngine));
-	engine->image = NULL;
-	engine->object_manager = ct_objects_init();
+void
+ct_engine_init(CtEngine* engine) {
+	CT_LOG("engine", "vroom vroom\n");
 	engine->exit_code = 0;
-	return engine;
 }
 
 
-// End the engine and free all resources
 void
-ct_engine_end(ctEngine* engine) {
+ct_engine_end(CtEngine* engine) {
 
-	ct_objects_end(&engine->object_manager);
-
-	if (engine->image->header.magic_id == ctMagicId) {
-		CUTE_LOG("engine", "Freeing image resources.\n");
-		ct_image_free(engine->image);
+	if (engine->image.header.magic_id == ct_magic_id) {
+		CT_LOG("engine", "Freeing image resources.\n");
+		ct_image_free(&engine->image);
 	}
 
-	CUTE_LOG("engine", "Ending engine.\n");
+	CT_LOG("engine", "Ending engine.\n");
 	exit(engine->exit_code);
 }
 
-// Load an image file. For now, only one image can be loaded.
-void
-ct_engine_load(ctEngine* engine, const char* filepath) {
-	
-	CUTE_LOG("engine", "Loading image file: %s\n", filepath);
 
-	engine->image = (ctImage*) malloc(sizeof(ctImage));
-	ctImageCode code = ct_image_read(engine->image, filepath);
+void
+ct_engine_load(CtEngine* engine, const char* filepath) {
+	
+	CT_LOG("engine", "Loading image file: %s\n", filepath);
+
+	CtImageStatus code = ct_image_read(&engine->image, filepath);
 
 	ctError error;
 
 	switch (code) {
 
-		case ctImageCode_Success:
-			CUTE_LOG("engine", "Image loaded successfully.\n");
+		case CT_IMAGE_STATUS_SUCCESS:
+			CT_LOG("engine", "Image loaded successfully.\n");
 			break;
 
-		case ctImageCode_FileNotFound:
+		case CT_IMAGE_STATUS_FILE_NOT_FOUND:
 			error.code = ctErrorCode_Engine;
 			ct_utils_format(
 				error.msg,
@@ -77,7 +59,7 @@ ct_engine_load(ctEngine* engine, const char* filepath) {
 			);
 			break;
 
-		case ctImageCode_ReadWriteFailure:
+		case CT_IMAGE_STATUS_READ_WRITE_FAILURE:
 			error.code = ctErrorCode_Engine;
 			ct_utils_format(
 				error.msg,
@@ -86,7 +68,7 @@ ct_engine_load(ctEngine* engine, const char* filepath) {
 			);
 			break;
 
-		case ctImageCode_InvalidImage:
+		case CT_IMAGE_CORRUPTED_FILE:
 			error.code = ctErrorCode_Engine;
 			ct_utils_format(
 				error.msg,
@@ -105,7 +87,7 @@ ct_engine_load(ctEngine* engine, const char* filepath) {
 			break;
 	}
 
-	if (code != ctImageCode_Success) {
+	if (code != CT_IMAGE_STATUS_SUCCESS) {
 		ct_error_print(error);
 		engine->exit_code = 1;
 		ct_engine_end(engine);
@@ -113,19 +95,9 @@ ct_engine_load(ctEngine* engine, const char* filepath) {
 	}
 }
 
-// Make a new context
-ctContext*
-ct_engine_newCtx(ctEngine* engine, uint32_t procedure_id) {
-	return ct_ctx_new(engine->image, engine->object_manager, procedure_id);
-}
 
 void
-ct_engine_delCtx(ctEngine* engine, ctContext* ctx) {
-	ct_ctx_del(ctx);
-}
-
-void
-ct_engine_runCtx(ctEngine* engine, ctContext* ctx) {
+ct_engine_run_context(CtEngine* engine, CtContext* ctx) {
 
 	ct_engine_exec(engine, ctx);
 	
@@ -136,13 +108,19 @@ ct_engine_runCtx(ctEngine* engine, ctContext* ctx) {
 	engine->exit_code = ctx->exit_code;
 }
 
-
 void
-ct_engine_run(ctEngine* engine) {
+cute_run(int argc, char** argv) {
 
-	ctContext* ctx = ct_ctx_new(engine->image, engine->object_manager, 0);
+	CtEngine engine;
+	ct_engine_init(&engine);
+	ct_engine_load(&engine, argv[0]);
 
-	ct_engine_runCtx(engine, ctx);
+	
+	ct_engine_run_context(
+		&engine,
+		ct_ctx_new(&engine.image, ct_objects_init(), 0)
+	);
 
-	ct_ctx_del(ctx);
+	ct_engine_end(&engine);
+
 }

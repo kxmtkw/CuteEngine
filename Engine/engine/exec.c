@@ -4,99 +4,98 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/types.h>
 
-#include "CuteAtom.h"
-#include "CuteConfig.h"
-#include "CuteInstr.h"
+#include "common/atom.h"
+#include "common/config.h"
+#include "common/instructions.h"
+#include "common/error.h"
 
 
 #include "engine.h"
 #include "context.h"
 
-#include "object/container.h"
-#include "error/error.h"
+#include "container/container.h"
 #include "utils/utils.h"
 
 
 
-#define INSTR_BINARYOP(TYPE, FIELD, OP) \
+#define CT_INSTR_BINARYOP(TYPE, FIELD, OP) \
 r1 = instrs[ctx->ip++]; \
 r2 = instrs[ctx->ip++]; \
 r3 = instrs[ctx->ip++]; \
-ct_ctx_loadAtom(ctx, r2, &a1, &t1); \
-ct_ctx_loadAtom(ctx, r3, &a2, &t2); \
-ct_ctx_storeAtom(ctx, r1, (ctAtom){.FIELD = a1.FIELD OP a2.FIELD}, TYPE);
+ct_ctx_load_atom(ctx, r2, &a1, &t1); \
+ct_ctx_load_atom(ctx, r3, &a2, &t2); \
+ct_ctx_store_atom(ctx, r1, (CtAtom){.FIELD = a1.FIELD OP a2.FIELD}, TYPE);
 
 
-#define INSTR_UNARYOP(TYPE, FIELD, OP) \
+#define CT_INSTR_UNARYOP(TYPE, FIELD, OP) \
 r1 = instrs[ctx->ip++]; \
 r2 = instrs[ctx->ip++]; \
-ct_ctx_loadAtom(ctx, r2, &a1, &t1); \
-ct_ctx_storeAtom(ctx, r1, (ctAtom){.FIELD = OP (a1.FIELD)}, TYPE);
+ct_ctx_load_atom(ctx, r2, &a1, &t1); \
+ct_ctx_store_atom(ctx, r1, (CtAtom){.FIELD = OP (a1.FIELD)}, TYPE);
 
 
-#define INSTR_CMP(TYPE, FIELD) \
+#define CT_INSTR_CMP(TYPE, FIELD) \
 r1 = instrs[ctx->ip++]; \
 r2 = instrs[ctx->ip++]; \
-ct_ctx_loadAtom(ctx, r1, &a1, &t1); \
-ct_ctx_loadAtom(ctx, r2, &a2, &t2); \
+ct_ctx_load_atom(ctx, r1, &a1, &t1); \
+ct_ctx_load_atom(ctx, r2, &a2, &t2); \
 ctx->cmp_diff = (double)a1.FIELD - (double)a2.FIELD; 
 
 
-#define INSTR_CMP_RESOLVER(OP) \
+#define CT_INSTR_CMP_RESOLVER(OP) \
 r1 = instrs[ctx->ip++]; \
-ct_ctx_storeAtom(ctx, r1, (ctAtom){.as_bool = ctx->cmp_diff OP 0 ? 1 : 0}, ctAtomType_Primitive); \
+ct_ctx_store_atom(ctx, r1, (CtAtom){.as_bool = ctx->cmp_diff OP 0 ? 1 : 0}, CT_ATOM_PRIMITIVE); \
 
 
-#define INSTR_JMP() \
-ct_loadBytes(instrs, &ctx->ip, 4, &i32); \
+#define CT_INSTR_JMP() \
+_ct_load_bytes(instrs, &ctx->ip, 4, &i32); \
 ctx->ip += i32; \
-if (ctx->ip >= engine->image->header.instruction_count) { \
+if (ctx->ip >= engine->image.header.instruction_count) { \
 ctx->error = (ctError) {.code=ctErrorCode_Engine}; \
-ct_utils_format(ctx->error.msg, sizeof(ctx->error.msg), "Out of range ip: 0x%08lX", ctx->ip); ct_ctx_throwError(ctx, ctx->error); };
+ct_utils_format(ctx->error.msg, sizeof(ctx->error.msg), "Out of range ip: 0x%08lX", ctx->ip); ct_ctx_throw_error(ctx, ctx->error); };
 
 
-#define CHECK_IF_OBJECT(TYPE) \
-if (TYPE != ctAtomType_Object) { \
+#define CT_CHECK_IF_OBJECT(TYPE) \
+if (TYPE != CT_ATOM_OBJECT) { \
 	ctx->error.code = ctErrorCode_Type; \
 	ct_utils_format(ctx->error.msg, sizeof(ctx->error.msg), "Expected container, got primitive."); \
-	ct_ctx_throwError(ctx, ctx->error); \
+	ct_ctx_throw_error(ctx, ctx->error); \
 	return; \
 }; \
 
 
 static inline void
-ct_loadBytes(ctInstructionSize* instrs, uint64_t* ip, uint32_t n, void* dest) {
+_ct_load_bytes(CtInstrSize* instrs, uint64_t* ip, uint32_t n, void* dest) {
 	memcpy(dest, &instrs[*ip], n);
 	*ip += n;
 }
 
 
 static inline void
-ct_incAtom(ctContext* ctx, uint8_t slot) {	
-	if (ctx->current_frame->file.types[slot] == ctAtomType_Object) {
-		ct_objects_decRef(ctx->objects, ctx->current_frame->file.atoms[slot].as_object);
+_ct_inc_atom(CtContext* ctx, uint8_t slot) {	
+	if (ctx->current_frame->file.types[slot] == CT_ATOM_OBJECT) {
+		ct_objects_dec_ref(ctx->objects, ctx->current_frame->file.atoms[slot].as_object);
 		ctx->current_frame->object_field_count--;
 	};
 	ctx->current_frame->file.atoms[slot].as_uint++;
-	ctx->current_frame->file.types[slot] = ctAtomType_Primitive;
+	ctx->current_frame->file.types[slot] = CT_ATOM_PRIMITIVE;
 };
 
 
 static inline void
-ct_decAtom(ctContext* ctx, uint8_t slot) {	
-	if (ctx->current_frame->file.types[slot] == ctAtomType_Object) {
-		ct_objects_decRef(ctx->objects, ctx->current_frame->file.atoms[slot].as_object);
+ct_decAtom(CtContext* ctx, uint8_t slot) {	
+	if (ctx->current_frame->file.types[slot] == CT_ATOM_OBJECT) {
+		ct_objects_dec_ref(ctx->objects, ctx->current_frame->file.atoms[slot].as_object);
 		ctx->current_frame->object_field_count--;
 	};
 	ctx->current_frame->file.atoms[slot].as_uint--;
-	ctx->current_frame->file.types[slot] = ctAtomType_Primitive;
+	ctx->current_frame->file.types[slot] = CT_ATOM_PRIMITIVE;
 };
 
 
 static inline void 
-ct_out(uint8_t fmt, ctAtom atom, ctAtomTypeSize type) {
+_ct_out(uint8_t fmt, CtAtom atom, CtAtomTypeSize type) {
 
 	switch (fmt) {
 		
@@ -138,500 +137,508 @@ ct_out(uint8_t fmt, ctAtom atom, ctAtomTypeSize type) {
 #endif // CUTE_CONF_DEBUG
 
 void
-ct_engine_exec(ctEngine* engine, ctContext* ctx) {
+ct_engine_exec(CtEngine* engine, CtContext* ctx) {
 
-    static void* dispatch_table[256] = {
-        [instrNull] = &&opNull,
-        [instrHalt] = &&opHalt,
-        [instrOut] = &&opOut,
-        [instrMov] = &&opMov,
-		[instrCastI2F] = &&opCastI2F,
-		[instrCastF2I] = &&opCastF2I,
-		[instrCastU2F] = &&opCastU2F,
-		[instrCastF2U] = &&opCastF2U,
-        [instrSetI] = &&opSetI,
-        [instrSetU] = &&opSetU,
-        [instrSetF] = &&opSetF,
-        [instrAddI] = &&opAddI,
-        [instrSubI] = &&opSubI,
-        [instrMulI] = &&opMulI,
-        [instrDivI] = &&opDivI,
-        [instrModI] = &&opModI,
-        [instrNegI] = &&opNegI,
-        [instrAbsI] = &&opAbsI,
-		[instrIncI] = &&opIncI,
-        [instrDecI] = &&opDecI,
-        [instrAddU] = &&opAddU,
-        [instrSubU] = &&opSubU,
-        [instrMulU] = &&opMulU,
-        [instrDivU] = &&opDivU,
-        [instrModU] = &&opModU,
-		[instrIncU] = &&opIncU,
-        [instrDecU] = &&opDecU,
-        [instrAddF] = &&opAddF,
-        [instrSubF] = &&opSubF,
-        [instrMulF] = &&opMulF,
-        [instrDivF] = &&opDivF,
-        [instrNegF] = &&opNegF,
-        [instrAbsF] = &&opAbsF,
-        [instrLogicAnd] = &&opLogicAnd,
-        [instrLogicOr] = &&opLogicOr,
-        [instrLogicNot] = &&opLogicNot,
-        [instrLogicXor] = &&opLogicXor,
-        [instrBitAnd] = &&opBitAnd,
-        [instrBitOr] = &&opBitOr,
-        [instrBitNot] = &&opBitNot,
-        [instrBitXor] = &&opBitXor,
-        [instrBitShl] = &&opBitShl,
-        [instrBitShr] = &&opBitShr,
-		[instrBitShrA] = &&opBitShrA,
-        [instrCmpI] = &&opCmpI,
-        [instrCmpU] = &&opCmpU,
-        [instrCmpF] = &&opCmpF,
-        [instrEq] = &&opEq,
-        [instrNotEq] = &&opNotEq,
-        [instrLess] = &&opLess,
-        [instrLessEq] = &&opLessEq,
-        [instrGreater] = &&opGreater,
-        [instrGreaterEq] = &&opGreaterEq,
-        [instrJmp] = &&opJmp,
-        [instrJmpEq] = &&opJmpEq,
-        [instrJmpNe] = &&opJmpNe,
-        [instrJmpGt] = &&opJmpGt,
-        [instrJmpGe] = &&opJmpGe,
-        [instrJmpLt] = &&opJmpLt,
-		[instrJmpLe] = &&opJmpLe,
-        [instrCall] = &&opCall,
-        [instrReturn] = &&opReturn,
-        [instrReturnVal] = &&opReturnVal,
-		[instrModCall] = &&opModCall,
-        [instrConNew] = &&opConNew,
-        [instrConGet] = &&opConGet,
-        [instrConSet] = &&opConSet,
-        [instrConSize] = &&opConSize,
-        [instrConCopy] = &&opConCopy,
-    };
+	static void* dispatch_table[256] = {
+		[CT_INSTR_NULL]       = &&HANDLER_NULL,
+		[CT_INSTR_HALT]       = &&HANDLER_HALT,
+		[CT_INSTR_OUT]        = &&HANDLER_OUT,
 
+		[CT_INSTR_MOV]        = &&HANDLER_MOV,
+		[CT_INSTR_SETI]       = &&HANDLER_SETI,
+		[CT_INSTR_SETU]       = &&HANDLER_SETU,
+		[CT_INSTR_SETF]       = &&HANDLER_SETF,
+
+		[CT_INSTR_CAST_I2F]    = &&HANDLER_CAST_I2F,
+		[CT_INSTR_CAST_F2I]    = &&HANDLER_CAST_F2I,
+		[CT_INSTR_CAST_U2F]    = &&HANDLER_CAST_U2F,
+		[CT_INSTR_CAST_F2U]    = &&HANDLER_CAST_F2U,
+
+		[CT_INSTR_ADDI]       = &&HANDLER_ADDI,
+		[CT_INSTR_SUBI]       = &&HANDLER_SUBI,
+		[CT_INSTR_MULI]       = &&HANDLER_MULI,
+		[CT_INSTR_DIVI]       = &&HANDLER_DIVI,
+		[CT_INSTR_MODI]       = &&HANDLER_MODI,
+		[CT_INSTR_NEGI]       = &&HANDLER_NEGI,
+		[CT_INSTR_ABSI]       = &&HANDLER_ABSI,
+		[CT_INSTR_INCI]       = &&HANDLER_INCI,
+		[CT_INSTR_DECI]       = &&HANDLER_DECI,
+
+		[CT_INSTR_ADDU]       = &&HANDLER_ADDU,
+		[CT_INSTR_SUBU]       = &&HANDLER_SUBU,
+		[CT_INSTR_MULU]       = &&HANDLER_MULU,
+		[CT_INSTR_DIVU]       = &&HANDLER_DIVU,
+		[CT_INSTR_MODU]       = &&HANDLER_MODU,
+		[CT_INSTR_INCU]       = &&HANDLER_INCU,
+		[CT_INSTR_DECU]       = &&HANDLER_DECU,
+
+		[CT_INSTR_ADDF]       = &&HANDLER_ADDF,
+		[CT_INSTR_SUBF]       = &&HANDLER_SUBF,
+		[CT_INSTR_MULF]       = &&HANDLER_MULF,
+		[CT_INSTR_DIVF]       = &&HANDLER_DIVF,
+		[CT_INSTR_NEGF]       = &&HANDLER_NEGF,
+		[CT_INSTR_ABSF]       = &&HANDLER_ABSF,
+
+		[CT_INSTR_LOGIC_AND]  = &&HANDLER_LOGIC_AND,
+		[CT_INSTR_LOGIC_OR]   = &&HANDLER_LOGIC_OR,
+		[CT_INSTR_LOGIC_NOT]  = &&HANDLER_LOGIC_NOT,
+		[CT_INSTR_LOGIC_XOR]  = &&HANDLER_LOGIC_XOR,
+
+		[CT_INSTR_BIT_AND]    = &&HANDLER_BIT_AND,
+		[CT_INSTR_BIT_OR]     = &&HANDLER_BIT_OR,
+		[CT_INSTR_BIT_NOT]    = &&HANDLER_BIT_NOT,
+		[CT_INSTR_BIT_XOR]    = &&HANDLER_BIT_XOR,
+		[CT_INSTR_BIT_SHL]    = &&HANDLER_BIT_SHL,
+		[CT_INSTR_BIT_SHR]    = &&HANDLER_BIT_SHR,
+		[CT_INSTR_BIT_SHRA]   = &&HANDLER_BIT_SHRA,
+
+		[CT_INSTR_CMPI]       = &&HANDLER_CMPI,
+		[CT_INSTR_CMPU]       = &&HANDLER_CMPU,
+		[CT_INSTR_CMPF]       = &&HANDLER_CMPF,
+
+		[CT_INSTR_EQ]         = &&HANDLER_EQ,
+		[CT_INSTR_NOT_EQ]     = &&HANDLER_NOT_EQ,
+		[CT_INSTR_LESS]       = &&HANDLER_LESS,
+		[CT_INSTR_LESS_EQ]    = &&HANDLER_LESS_EQ,
+		[CT_INSTR_GREATER]    = &&HANDLER_GREATER,
+		[CT_INSTR_GREATER_EQ] = &&HANDLER_GREATER_EQ,
+
+		[CT_INSTR_JMP]        = &&HANDLER_JMP,
+		[CT_INSTR_JMP_EQ]     = &&HANDLER_JMP_EQ,
+		[CT_INSTR_JMP_NE]     = &&HANDLER_JMP_NE,
+		[CT_INSTR_JMP_GT]     = &&HANDLER_JMP_GT,
+		[CT_INSTR_JMP_GE]     = &&HANDLER_JMP_GE,
+		[CT_INSTR_JMP_LT]     = &&HANDLER_JMP_LT,
+		[CT_INSTR_JMP_LE]     = &&HANDLER_JMP_LE,
+
+		[CT_INSTR_CALL]       = &&HANDLER_CALL,
+		[CT_INSTR_RETURN]     = &&HANDLER_RETURN,
+		[CT_INSTR_RETURN_VAL] = &&HANDLER_RETURN_VAL,
+		[CT_INSTR_MOD_CALL]   = &&HANDLER_MOD_CALL,
+
+		[CT_INSTR_CON_NEW]    = &&HANDLER_CON_NEW,
+		[CT_INSTR_CON_GET]    = &&HANDLER_CON_GET,
+		[CT_INSTR_CON_SET]    = &&HANDLER_CON_SET,
+		[CT_INSTR_CON_SIZE]   = &&HANDLER_CON_SIZE,
+		[CT_INSTR_CON_COPY]   = &&HANDLER_CON_COPY,
+	};
 
 	for (uint32_t i = 0; i < sizeof(dispatch_table)/sizeof(dispatch_table[0]); i++) {
 		if (dispatch_table[i] == NULL) {
-			dispatch_table[i] = &&opIllegalInstruction;
+			dispatch_table[i] = &&HANDLER_ILLEGAL_INSTRUCTION;
 		}
 	}
 
+	CtInstrSize* instrs = engine->image.instruction_pool;
 
-	ctInstructionSize* instrs = engine->image->instruction_pool;
-
-    uint8_t r1, r2, r3, r4, r5;
-    int32_t i32;
-    uint32_t u32;
-    float f32;
-    ctAtom a1, a2, a3;
-    ctAtomType t1, t2, t3;
-    ctTypedAtom typed_atom;
+	uint8_t r1, r2, r3, r4, r5;
+	int32_t i32;
+	uint32_t u32;
+	float f32;
+	CtAtom a1, a2, a3;
+	CtAtomType t1, t2, t3;
+	CtTypedAtom typed_atom;
 	
-    NEXT();
-
-opNull:
-    NEXT();
-
-opHalt:
-    r1 = instrs[ctx->ip++];
-    ct_ctx_loadAtom(ctx, r1, &a1, &t1);
-    ctx->exit_code = a1.as_uint;
-    return;
-
-opOut:
-    r1 = instrs[ctx->ip++];
-	r2 = instrs[ctx->ip++];
-    ct_ctx_loadAtom(ctx, r2, &a1, &t1);
-    ct_out(r1, a1, t1);
-    NEXT();
-
-opMov:
-    r1 = instrs[ctx->ip++];
-    r2 = instrs[ctx->ip++];
-    ct_ctx_moveAtom(ctx, r2, r1);
-    NEXT();
-
-opCastI2F:
-	r1 = instrs[ctx->ip++];
-	r2 = instrs[ctx->ip++];
-	ct_ctx_loadAtom(ctx, r2, &a1, &t1);
-	ct_ctx_storeAtom(ctx, r1, (ctAtom){.as_float=a1.as_int}, ctAtomType_Primitive);
 	NEXT();
 
-opCastF2I:
+HANDLER_NULL:
+	NEXT();
+
+HANDLER_HALT:
+	r1 = instrs[ctx->ip++];
+	ct_ctx_load_atom(ctx, r1, &a1, &t1);
+	ctx->exit_code = a1.as_uint;
+	return;
+
+HANDLER_OUT:
 	r1 = instrs[ctx->ip++];
 	r2 = instrs[ctx->ip++];
-	ct_ctx_loadAtom(ctx, r2, &a1, &t1);
+	ct_ctx_load_atom(ctx, r2, &a1, &t1);
+	_ct_out(r1, a1, t1);
+	NEXT();
+
+HANDLER_MOV:
+	r1 = instrs[ctx->ip++];
+	r2 = instrs[ctx->ip++];
+	ct_ctx_move_atom(ctx, r2, r1);
+	NEXT();
+
+HANDLER_CAST_I2F:
+	r1 = instrs[ctx->ip++];
+	r2 = instrs[ctx->ip++];
+	ct_ctx_load_atom(ctx, r2, &a1, &t1);
+	ct_ctx_store_atom(ctx, r1, (CtAtom){.as_float=a1.as_int}, CT_ATOM_PRIMITIVE);
+	NEXT();
+
+HANDLER_CAST_F2I:
+	r1 = instrs[ctx->ip++];
+	r2 = instrs[ctx->ip++];
+	ct_ctx_load_atom(ctx, r2, &a1, &t1);
 
 	if (!isfinite(a1.as_float) || a1.as_float > INT64_MAX || a1.as_float < INT64_MIN) {
-		CUTE_ERROR(
+		CT_ERROR(
 			(&ctx->error),
 			ctErrorCode_Overflow,
 			"Unable to cast %f to int",
 			a1.as_float, a1.raw
 		);
-		ct_ctx_throwError(ctx, ctx->error);
+		ct_ctx_throw_error(ctx, ctx->error);
 		return;
 	};
 
-	ct_ctx_storeAtom(ctx, r1, (ctAtom){.as_int=a1.as_float}, ctAtomType_Primitive);
+	ct_ctx_store_atom(ctx, r1, (CtAtom){.as_int=a1.as_float}, CT_ATOM_PRIMITIVE);
 	NEXT();
 
-opCastU2F:
+HANDLER_CAST_U2F:
 	r1 = instrs[ctx->ip++];
 	r2 = instrs[ctx->ip++];
-	ct_ctx_loadAtom(ctx, r2, &a1, &t1);
-	ct_ctx_storeAtom(ctx, r1, (ctAtom){.as_float=a1.as_uint}, ctAtomType_Primitive);
+	ct_ctx_load_atom(ctx, r2, &a1, &t1);
+	ct_ctx_store_atom(ctx, r1, (CtAtom){.as_float=a1.as_uint}, CT_ATOM_PRIMITIVE);
 	NEXT();
 
-opCastF2U:
+HANDLER_CAST_F2U:
 	r1 = instrs[ctx->ip++];
 	r2 = instrs[ctx->ip++];
-	ct_ctx_loadAtom(ctx, r2, &a1, &t1);
+	ct_ctx_load_atom(ctx, r2, &a1, &t1);
 
 	if (!isfinite(a1.as_float) || a1.as_float > UINT64_MAX || a1.as_float < 0) {
-		CUTE_ERROR(
+		CT_ERROR(
 			(&ctx->error),
 			ctErrorCode_Overflow,
 			"Unable to cast %f to uint",
 			a1.as_float, a1.raw
 		);
-		ct_ctx_throwError(ctx, ctx->error);
+		ct_ctx_throw_error(ctx, ctx->error);
 		return;
 	};
 
-	ct_ctx_storeAtom(ctx, r1, (ctAtom){.as_int=a1.as_float}, ctAtomType_Primitive);
+	ct_ctx_store_atom(ctx, r1, (CtAtom){.as_int=a1.as_float}, CT_ATOM_PRIMITIVE);
 	NEXT();
 
-opSetI:
-    r1 = instrs[ctx->ip++];
-    ct_loadBytes(instrs, &ctx->ip, 4, &i32);
-    ct_ctx_storeAtom(ctx, r1, (ctAtom){.as_int=i32}, ctAtomType_Primitive);
-    NEXT();
-
-opSetU:
-    r1 = instrs[ctx->ip++];
-    ct_loadBytes(instrs, &ctx->ip, 4, &u32);
-    ct_ctx_storeAtom(ctx, r1, (ctAtom){.as_uint=u32}, ctAtomType_Primitive);
-    NEXT();
-
-opSetF:
-    r1 = instrs[ctx->ip++];
-    ct_loadBytes(instrs, &ctx->ip, 4, &f32);
-    ct_ctx_storeAtom(ctx, r1, (ctAtom){.as_float=f32}, ctAtomType_Primitive);
-    NEXT();
-
-opAddI: 
-	INSTR_BINARYOP(ctAtomType_Primitive, as_int, +); 
-	NEXT();
-
-opSubI: 
-	INSTR_BINARYOP(ctAtomType_Primitive, as_int, -); 
-	NEXT();
-
-opMulI:
-	INSTR_BINARYOP(ctAtomType_Primitive, as_int, *); 
-	NEXT();
-
-opDivI: 
-	INSTR_BINARYOP(ctAtomType_Primitive, as_int, /); 
-	NEXT();
-
-opModI: 
-	INSTR_BINARYOP(ctAtomType_Primitive, as_int, %); 
-	NEXT();
-
-opNegI: 
-	INSTR_UNARYOP(ctAtomType_Primitive, as_int, -); 
-	NEXT();
-
-opIncI:
+HANDLER_SETI:
 	r1 = instrs[ctx->ip++];
-	ct_incAtom(ctx, r1);
+	_ct_load_bytes(instrs, &ctx->ip, 4, &i32);
+	ct_ctx_store_atom(ctx, r1, (CtAtom){.as_int=i32}, CT_ATOM_PRIMITIVE);
 	NEXT();
 
-opDecI: 
+HANDLER_SETU:
 	r1 = instrs[ctx->ip++];
-	ct_decAtom(ctx, r1);
+	_ct_load_bytes(instrs, &ctx->ip, 4, &u32);
+	ct_ctx_store_atom(ctx, r1, (CtAtom){.as_uint=u32}, CT_ATOM_PRIMITIVE);
 	NEXT();
 
-opAbsI: 
-	INSTR_UNARYOP(ctAtomType_Primitive, as_int, labs); 
-	NEXT();
-
-opAddU: 
-	INSTR_BINARYOP(ctAtomType_Primitive, as_uint, +); 
-	NEXT();
-
-opSubU: 
-	INSTR_BINARYOP(ctAtomType_Primitive, as_uint, -); 
-	NEXT();
-
-opMulU: 
-	INSTR_BINARYOP(ctAtomType_Primitive, as_uint, *); 
-	NEXT();
-
-opDivU: 
-	INSTR_BINARYOP(ctAtomType_Primitive, as_uint, /); 
-	NEXT();
-
-opModU: 
-	INSTR_BINARYOP(ctAtomType_Primitive, as_uint, %); 
-	NEXT();
-
-opIncU: 
+HANDLER_SETF:
 	r1 = instrs[ctx->ip++];
-	ct_incAtom(ctx, r1);
+	_ct_load_bytes(instrs, &ctx->ip, 4, &f32);
+	ct_ctx_store_atom(ctx, r1, (CtAtom){.as_float=f32}, CT_ATOM_PRIMITIVE);
 	NEXT();
 
-opDecU: 
+HANDLER_ADDI: 
+	CT_INSTR_BINARYOP(CT_ATOM_PRIMITIVE, as_int, +); 
+	NEXT();
+
+HANDLER_SUBI: 
+	CT_INSTR_BINARYOP(CT_ATOM_PRIMITIVE, as_int, -); 
+	NEXT();
+
+HANDLER_MULI:
+	CT_INSTR_BINARYOP(CT_ATOM_PRIMITIVE, as_int, *); 
+	NEXT();
+
+HANDLER_DIVI: 
+	CT_INSTR_BINARYOP(CT_ATOM_PRIMITIVE, as_int, /); 
+	NEXT();
+
+HANDLER_MODI: 
+	CT_INSTR_BINARYOP(CT_ATOM_PRIMITIVE, as_int, %); 
+	NEXT();
+
+HANDLER_NEGI: 
+	CT_INSTR_UNARYOP(CT_ATOM_PRIMITIVE, as_int, -); 
+	NEXT();
+
+HANDLER_INCI:
+	r1 = instrs[ctx->ip++];
+	_ct_inc_atom(ctx, r1);
+	NEXT();
+
+HANDLER_DECI: 
 	r1 = instrs[ctx->ip++];
 	ct_decAtom(ctx, r1);
 	NEXT();
 
-opAddF: 
-	INSTR_BINARYOP(ctAtomType_Primitive, as_float, +); 
+HANDLER_ABSI: 
+	CT_INSTR_UNARYOP(CT_ATOM_PRIMITIVE, as_int, labs); 
 	NEXT();
 
-opSubF: 
-	INSTR_BINARYOP(ctAtomType_Primitive, as_float, -); 
+HANDLER_ADDU: 
+	CT_INSTR_BINARYOP(CT_ATOM_PRIMITIVE, as_uint, +); 
 	NEXT();
 
-opMulF: 
-	INSTR_BINARYOP(ctAtomType_Primitive, as_float, *); 
+HANDLER_SUBU: 
+	CT_INSTR_BINARYOP(CT_ATOM_PRIMITIVE, as_uint, -); 
 	NEXT();
 
-opDivF: 
-	INSTR_BINARYOP(ctAtomType_Primitive, as_float, /); 
+HANDLER_MULU: 
+	CT_INSTR_BINARYOP(CT_ATOM_PRIMITIVE, as_uint, *); 
 	NEXT();
 
-opNegF:
-	INSTR_UNARYOP(ctAtomType_Primitive, as_float, -); 
+HANDLER_DIVU: 
+	CT_INSTR_BINARYOP(CT_ATOM_PRIMITIVE, as_uint, /); 
 	NEXT();
 
-opAbsF: 
-	INSTR_UNARYOP(ctAtomType_Primitive, as_float, fabs); 
+HANDLER_MODU: 
+	CT_INSTR_BINARYOP(CT_ATOM_PRIMITIVE, as_uint, %); 
 	NEXT();
 
-opLogicAnd: 
-	INSTR_BINARYOP(ctAtomType_Primitive, as_bool, &&); 
+HANDLER_INCU: 
+	r1 = instrs[ctx->ip++];
+	_ct_inc_atom(ctx, r1);
 	NEXT();
 
-opLogicOr: 
-	INSTR_BINARYOP(ctAtomType_Primitive, as_bool, ||); 
+HANDLER_DECU: 
+	r1 = instrs[ctx->ip++];
+	ct_decAtom(ctx, r1);
 	NEXT();
 
-opLogicNot: 	
-	INSTR_UNARYOP(ctAtomType_Primitive, as_bool, !); 
+HANDLER_ADDF: 
+	CT_INSTR_BINARYOP(CT_ATOM_PRIMITIVE, as_float, +); 
 	NEXT();
 
-opLogicXor: 
-	INSTR_BINARYOP(ctAtomType_Primitive, as_bool, ^); 
+HANDLER_SUBF: 
+	CT_INSTR_BINARYOP(CT_ATOM_PRIMITIVE, as_float, -); 
 	NEXT();
 
-opBitAnd: 
-	INSTR_BINARYOP(ctAtomType_Primitive, as_uint, &); 
+HANDLER_MULF: 
+	CT_INSTR_BINARYOP(CT_ATOM_PRIMITIVE, as_float, *); 
 	NEXT();
 
-opBitOr: 
-	INSTR_BINARYOP(ctAtomType_Primitive, as_uint, |); 
+HANDLER_DIVF: 
+	CT_INSTR_BINARYOP(CT_ATOM_PRIMITIVE, as_float, /); 
 	NEXT();
 
-opBitNot: 
-	INSTR_UNARYOP(ctAtomType_Primitive, as_uint, ~); 
+HANDLER_NEGF:
+	CT_INSTR_UNARYOP(CT_ATOM_PRIMITIVE, as_float, -); 
 	NEXT();
 
-opBitXor: 
-	INSTR_BINARYOP(ctAtomType_Primitive, as_uint, ^); 
+HANDLER_ABSF: 
+	CT_INSTR_UNARYOP(CT_ATOM_PRIMITIVE, as_float, fabs); 
 	NEXT();
 
-opBitShl: 
-	INSTR_BINARYOP(ctAtomType_Primitive, as_uint, <<); 
+HANDLER_LOGIC_AND: 
+	CT_INSTR_BINARYOP(CT_ATOM_PRIMITIVE, as_bool, &&); 
 	NEXT();
 
-opBitShr: 
-	INSTR_BINARYOP(ctAtomType_Primitive, as_uint, >>); 
+HANDLER_LOGIC_OR: 
+	CT_INSTR_BINARYOP(CT_ATOM_PRIMITIVE, as_bool, ||); 
 	NEXT();
 
-opBitShrA: 
-	INSTR_BINARYOP(ctAtomType_Primitive, as_int, >>); 
+HANDLER_LOGIC_NOT:     
+	CT_INSTR_UNARYOP(CT_ATOM_PRIMITIVE, as_bool, !); 
 	NEXT();
 
-opCmpI: 
-	INSTR_CMP(ctAtomType_Primitive, as_int); 
+HANDLER_LOGIC_XOR: 
+	CT_INSTR_BINARYOP(CT_ATOM_PRIMITIVE, as_bool, ^); 
 	NEXT();
 
-opCmpU: 
-	INSTR_CMP(ctAtomType_Primitive, as_uint); 
+HANDLER_BIT_AND: 
+	CT_INSTR_BINARYOP(CT_ATOM_PRIMITIVE, as_uint, &); 
 	NEXT();
 
-opCmpF: 
-	INSTR_CMP(ctAtomType_Primitive, as_float); 
+HANDLER_BIT_OR: 
+	CT_INSTR_BINARYOP(CT_ATOM_PRIMITIVE, as_uint, |); 
 	NEXT();
 
-opEq: 
-	INSTR_CMP_RESOLVER(==);
+HANDLER_BIT_NOT: 
+	CT_INSTR_UNARYOP(CT_ATOM_PRIMITIVE, as_uint, ~); 
 	NEXT();
 
-opNotEq: 
-	INSTR_CMP_RESOLVER(!=);
+HANDLER_BIT_XOR: 
+	CT_INSTR_BINARYOP(CT_ATOM_PRIMITIVE, as_uint, ^); 
 	NEXT();
 
-opLess: 
-	INSTR_CMP_RESOLVER(<);
+HANDLER_BIT_SHL: 
+	CT_INSTR_BINARYOP(CT_ATOM_PRIMITIVE, as_uint, <<); 
 	NEXT();
 
-opLessEq: 
-	INSTR_CMP_RESOLVER(<=);
+HANDLER_BIT_SHR: 
+	CT_INSTR_BINARYOP(CT_ATOM_PRIMITIVE, as_uint, >>); 
 	NEXT();
 
-opGreater: 
-	INSTR_CMP_RESOLVER(>);
+HANDLER_BIT_SHRA: 
+	CT_INSTR_BINARYOP(CT_ATOM_PRIMITIVE, as_int, >>); 
 	NEXT();
 
-opGreaterEq: 
-	INSTR_CMP_RESOLVER(>=);
+HANDLER_CMPI: 
+	CT_INSTR_CMP(CT_ATOM_PRIMITIVE, as_int); 
 	NEXT();
 
-opJmp: 
-	INSTR_JMP(); 
+HANDLER_CMPU: 
+	CT_INSTR_CMP(CT_ATOM_PRIMITIVE, as_uint); 
 	NEXT();
 
-opJmpEq:
-    if (ctx->cmp_diff == 0) { INSTR_JMP(); NEXT(); }
-    ctx->ip += 4;
-    NEXT();
+HANDLER_CMPF: 
+	CT_INSTR_CMP(CT_ATOM_PRIMITIVE, as_float); 
+	NEXT();
 
-opJmpNe:
-    if (ctx->cmp_diff != 0) { INSTR_JMP(); NEXT(); }
-    ctx->ip += 4;
-    NEXT();
+HANDLER_EQ: 
+	CT_INSTR_CMP_RESOLVER(==);
+	NEXT();
 
-opJmpGt:
-    if (ctx->cmp_diff > 0) { INSTR_JMP(); NEXT(); }
-    ctx->ip += 4;
-    NEXT();
+HANDLER_NOT_EQ: 
+	CT_INSTR_CMP_RESOLVER(!=);
+	NEXT();
 
-opJmpGe:
-    if (ctx->cmp_diff >= 0) { INSTR_JMP(); NEXT(); }
-    ctx->ip += 4;
-    NEXT();
+HANDLER_LESS: 
+	CT_INSTR_CMP_RESOLVER(<);
+	NEXT();
 
-opJmpLt:
-    if (ctx->cmp_diff < 0) { INSTR_JMP(); NEXT(); }
-    ctx->ip += 4;
-    NEXT();
+HANDLER_LESS_EQ: 
+	CT_INSTR_CMP_RESOLVER(<=);
+	NEXT();
 
-opJmpLe:
-    if (ctx->cmp_diff <= 0) { INSTR_JMP(); NEXT(); }
-    ctx->ip += 4;
-    NEXT();
+HANDLER_GREATER: 
+	CT_INSTR_CMP_RESOLVER(>);
+	NEXT();
 
-opCall:
-    r1 = instrs[ctx->ip++];
-    r2 = instrs[ctx->ip++];
-    r3 = instrs[ctx->ip++];
-    ct_ctx_loadAtom(ctx, r1, &a1, &t1);
-    ct_ctx_callProcedure(ctx, a1.as_uint, r2, r3);
-    NEXT();
+HANDLER_GREATER_EQ: 
+	CT_INSTR_CMP_RESOLVER(>=);
+	NEXT();
 
-opReturn:
-    ct_ctx_returnProcedure(ctx, (ctAtom){.as_uint=0}, ctAtomType_Primitive);
-    NEXT();
+HANDLER_JMP: 
+	CT_INSTR_JMP(); 
+	NEXT();
 
-opReturnVal:
-    r1 = instrs[ctx->ip++];
-    ct_ctx_loadAtom(ctx, r1, &a1, &t1);
-    ct_ctx_returnProcedure(ctx, a1, t1);
-    NEXT();
+HANDLER_JMP_EQ:
+	if (ctx->cmp_diff == 0) { CT_INSTR_JMP(); NEXT(); }
+	ctx->ip += 4;
+	NEXT();
 
-opModCall:
-    r1 = instrs[ctx->ip++];
-    r2 = instrs[ctx->ip++];
-    r3 = instrs[ctx->ip++];
-    r4 = instrs[ctx->ip++];
+HANDLER_JMP_NE:
+	if (ctx->cmp_diff != 0) { CT_INSTR_JMP(); NEXT(); }
+	ctx->ip += 4;
+	NEXT();
+
+HANDLER_JMP_GT:
+	if (ctx->cmp_diff > 0) { CT_INSTR_JMP(); NEXT(); }
+	ctx->ip += 4;
+	NEXT();
+
+HANDLER_JMP_GE:
+	if (ctx->cmp_diff >= 0) { CT_INSTR_JMP(); NEXT(); }
+	ctx->ip += 4;
+	NEXT();
+
+HANDLER_JMP_LT:
+	if (ctx->cmp_diff < 0) { CT_INSTR_JMP(); NEXT(); }
+	ctx->ip += 4;
+	NEXT();
+
+HANDLER_JMP_LE:
+	if (ctx->cmp_diff <= 0) { CT_INSTR_JMP(); NEXT(); }
+	ctx->ip += 4;
+	NEXT();
+
+HANDLER_CALL:
+	r1 = instrs[ctx->ip++];
+	r2 = instrs[ctx->ip++];
+	r3 = instrs[ctx->ip++];
+	ct_ctx_load_atom(ctx, r1, &a1, &t1);
+	ct_ctx_call_procedure(ctx, a1.as_uint, r2, r3);
+	NEXT();
+
+HANDLER_RETURN:
+	ct_ctx_return_procedure(ctx, (CtAtom){.as_uint=0}, CT_ATOM_PRIMITIVE);
+	NEXT();
+
+HANDLER_RETURN_VAL:
+	r1 = instrs[ctx->ip++];
+	ct_ctx_load_atom(ctx, r1, &a1, &t1);
+	ct_ctx_return_procedure(ctx, a1, t1);
+	NEXT();
+
+HANDLER_MOD_CALL:
+	r1 = instrs[ctx->ip++];
+	r2 = instrs[ctx->ip++];
+	r3 = instrs[ctx->ip++];
+	r4 = instrs[ctx->ip++];
 	r5 = instrs[ctx->ip++];
-    ct_ctx_loadAtom(ctx, r1, &a1, &t1);
-	ct_ctx_loadAtom(ctx, r2, &a2, &t2);
-	ct_ctx_loadAtom(ctx, r3, &a3, &t3);
-    ct_ctx_modcall(ctx, a1.as_uint, a2.as_uint, a3.as_uint, r4, r5);
-    NEXT();
+	ct_ctx_load_atom(ctx, r1, &a1, &t1);
+	ct_ctx_load_atom(ctx, r2, &a2, &t2);
+	ct_ctx_load_atom(ctx, r3, &a3, &t3);
+	ct_ctx_modcall(ctx, a1.as_uint, a2.as_uint, a3.as_uint, r4, r5);
+	NEXT();
 
-opConNew:
-    r1 = instrs[ctx->ip++];
-    r2 = instrs[ctx->ip++];
-    ct_ctx_loadAtom(ctx, r2, &a1, &t1);
-    a2.as_object = ct_container_new(ctx->objects, a1.as_uint, &ctx->error);
-    if (ctx->error.code) {
-		ct_ctx_throwError(ctx, ctx->error);
-        return;
-	}
-    ct_ctx_storeAtom(ctx, r1, a2, ctAtomType_Object);
-    NEXT();
-
-
-opConGet:
-    r1 = instrs[ctx->ip++];
-    r2 = instrs[ctx->ip++];
-    r3 = instrs[ctx->ip++];
-    ct_ctx_loadAtom(ctx, r2, &a1, &t1);
-    ct_ctx_loadAtom(ctx, r3, &a2, &t2);
-	CHECK_IF_OBJECT(t1);
-    typed_atom = ct_container_get(ctx->objects, a1.as_object, a2.as_uint, &ctx->error);
+HANDLER_CON_NEW:
+	r1 = instrs[ctx->ip++];
+	r2 = instrs[ctx->ip++];
+	ct_ctx_load_atom(ctx, r2, &a1, &t1);
+	a2.as_object = ct_container_new(ctx->objects, a1.as_uint, &ctx->error);
 	if (ctx->error.code) {
-		ct_ctx_throwError(ctx, ctx->error);
-        return;
+		ct_ctx_throw_error(ctx, ctx->error);
+		return;
 	}
-    ct_ctx_storeAtom(ctx, r1, typed_atom.atom, typed_atom.type);
-    NEXT();
+	ct_ctx_store_atom(ctx, r1, a2, CT_ATOM_OBJECT);
+	NEXT();
 
-opConSet:
-    r1 = instrs[ctx->ip++];
-    r2 = instrs[ctx->ip++];
-    r3 = instrs[ctx->ip++];
-    ct_ctx_loadAtom(ctx, r1, &a1, &t1);
-    ct_ctx_loadAtom(ctx, r2, &a2, &t2);
-    ct_ctx_loadAtom(ctx, r3, &a3, &t3);
-	CHECK_IF_OBJECT(t1);
-    ct_container_set(ctx->objects, a1.as_object, a2.as_uint, (ctTypedAtom){t3, a3}, &ctx->error);
-    if (ctx->error.code) {
-		ct_ctx_throwError(ctx, ctx->error);
-        return;
+HANDLER_CON_GET:
+	r1 = instrs[ctx->ip++];
+	r2 = instrs[ctx->ip++];
+	r3 = instrs[ctx->ip++];
+	ct_ctx_load_atom(ctx, r2, &a1, &t1);
+	ct_ctx_load_atom(ctx, r3, &a2, &t2);
+	CT_CHECK_IF_OBJECT(t1);
+	typed_atom = ct_container_get(ctx->objects, a1.as_object, a2.as_uint, &ctx->error);
+	if (ctx->error.code) {
+		ct_ctx_throw_error(ctx, ctx->error);
+		return;
 	}
-    NEXT();
+	ct_ctx_store_atom(ctx, r1, typed_atom.atom, typed_atom.type);
+	NEXT();
 
-opConSize:
-    r1 = instrs[ctx->ip++];
-    r2 = instrs[ctx->ip++];
-    ct_ctx_loadAtom(ctx, r2, &a1, &t1);
-	CHECK_IF_OBJECT(t1);
-    ct_ctx_storeAtom(ctx, r1, (ctAtom){.as_uint = ct_container_size(ctx->objects, a1.as_object)}, ctAtomType_Primitive);
-    NEXT();
-
-
-opConCopy:
-    r1 = instrs[ctx->ip++];
-    r2 = instrs[ctx->ip++];
-    ct_ctx_loadAtom(ctx, r2, &a2, &t2);
-	CHECK_IF_OBJECT(t2);
-    a1.as_object = ct_container_copy(ctx->objects, a2.as_object, &ctx->error);
-    if (ctx->error.code) {
-		ct_ctx_throwError(ctx, ctx->error);
-        return;
+HANDLER_CON_SET:
+	r1 = instrs[ctx->ip++];
+	r2 = instrs[ctx->ip++];
+	r3 = instrs[ctx->ip++];
+	ct_ctx_load_atom(ctx, r1, &a1, &t1);
+	ct_ctx_load_atom(ctx, r2, &a2, &t2);
+	ct_ctx_load_atom(ctx, r3, &a3, &t3);
+	CT_CHECK_IF_OBJECT(t1);
+	ct_container_set(ctx->objects, a1.as_object, a2.as_uint, (CtTypedAtom){t3, a3}, &ctx->error);
+	if (ctx->error.code) {
+		ct_ctx_throw_error(ctx, ctx->error);
+		return;
 	}
-    ct_ctx_storeAtom(ctx, r1, a1, ctAtomType_Object);
-    NEXT();
+	NEXT();
 
-opIllegalInstruction:
-	CUTE_ERROR(
+HANDLER_CON_SIZE:
+	r1 = instrs[ctx->ip++];
+	r2 = instrs[ctx->ip++];
+	ct_ctx_load_atom(ctx, r2, &a1, &t1);
+	CT_CHECK_IF_OBJECT(t1);
+	ct_ctx_store_atom(ctx, r1, (CtAtom){.as_uint = ct_container_size(ctx->objects, a1.as_object)}, CT_ATOM_PRIMITIVE);
+	NEXT();
+
+HANDLER_CON_COPY:
+	r1 = instrs[ctx->ip++];
+	r2 = instrs[ctx->ip++];
+	ct_ctx_load_atom(ctx, r2, &a2, &t2);
+	CT_CHECK_IF_OBJECT(t2);
+	a1.as_object = ct_container_copy(ctx->objects, a2.as_object, &ctx->error);
+	if (ctx->error.code) {
+		ct_ctx_throw_error(ctx, ctx->error);
+		return;
+	}
+	ct_ctx_store_atom(ctx, r1, a1, CT_ATOM_OBJECT);
+	NEXT();
+
+HANDLER_ILLEGAL_INSTRUCTION:
+	CT_ERROR(
 		(&ctx->error),
 		ctErrorCode_Engine,
 		"Illegal instruction: 0x%x",
 		instrs[--ctx->ip]
 	);
-	ct_ctx_throwError(ctx, ctx->error);
+	ct_ctx_throw_error(ctx, ctx->error);
 	return;
 }

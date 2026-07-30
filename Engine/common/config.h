@@ -1,6 +1,5 @@
-
-#ifndef CT_CONFIG_H
-#define CT_CONFIG_H
+#ifndef CUTE_CONFIG_H
+#define CUTE_CONFIG_H
 
 #define CT_CONF_CALLSTACK_SIZE 1000
 #define CT_CONF_SLOT_COUNT 256
@@ -29,4 +28,4 @@
 #endif // CT_CONF_DEBUG
 
 
-#endif // CT_CONFIG_H
+#endif // CUTE_CONFIG_H

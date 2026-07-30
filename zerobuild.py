@@ -14,13 +14,13 @@ CuteEngine.source = Source(
 	cute_engine_src / "engine" / "engine.c",
 	cute_engine_src / "engine" / "exec.c",
 	cute_engine_src / "engine" / "context.c",
-	cute_engine_src / "object" / "object.c",
-	cute_engine_src / "object" / "container.c",
+	cute_engine_src / "objects" / "manager.c",
+	cute_engine_src / "container" / "container.c",
 	cute_engine_src / "image" / "image.c",
 	cute_engine_src / "utils" / "utils.c",
 )
 
-CuteEngine.headers.public = cute_engine_src / "include"
+CuteEngine.headers.public = cute_engine_src / "include", cute_engine_src
 CuteEngine.headers.private = cute_engine_src
 CuteEngine.arguments = "-Wall",  "-Wextra",  "-g"
 

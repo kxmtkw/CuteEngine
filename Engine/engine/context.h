@@ -5,12 +5,13 @@
 
 #include <stdint.h>
 
-#include "CuteAtom.h"
-#include "CuteConfig.h"
-#include "CuteInstr.h"
+#include "common/atom.h"
+#include "common/config.h"
+#include "common/error.h"
 
-#include "object/object.h"
-#include "error/error.h"
+#include "objects/manager.h"
+
+#include "image/image.h"
 
 
 // Array of atoms and their types. For use in call frames
@@ -36,6 +37,7 @@ typedef struct {
 	CtAtomFile   file;
 	ctCallFrame  frames[CT_CONF_CALLSTACK_SIZE];
 	uint32_t     size;
+	uint32_t     capacity;
 } ctCallStack;
 
 
