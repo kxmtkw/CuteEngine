@@ -42,5 +42,8 @@ ct_engine_runCtx(ctEngine* engine, ctContext* ctx);
 void
 ct_engine_run(ctEngine* engine);
 
+void
+ct_engine_exec(ctEngine* engine, ctContext* ctx);
+
 
 #endif // CUTE_ENGINE_H

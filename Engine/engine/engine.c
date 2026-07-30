@@ -11,7 +11,6 @@
 #include "modules/modules.h"
 #include "modules/modulespec.h"
 #include "context.h"
-#include "exec.h"
 #include "error/error.h"
 #include "utils/utils.h"
 
@@ -128,7 +127,7 @@ ct_engine_delCtx(ctEngine* engine, ctContext* ctx) {
 void
 ct_engine_runCtx(ctEngine* engine, ctContext* ctx) {
 
-	ct_exec(ctx);
+	ct_engine_exec(engine, ctx);
 	
 	if (ctx->error.code) {
 		ct_error_print(ctx->error);

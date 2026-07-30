@@ -11,8 +11,10 @@
 #include "CuteInstr.h"
 
 
-#include "object/container.h"
+#include "engine.h"
 #include "context.h"
+
+#include "object/container.h"
 #include "error/error.h"
 #include "utils/utils.h"
 
@@ -50,7 +52,7 @@ ct_ctx_storeAtom(ctx, r1, (ctAtom){.as_bool = ctx->cmp_diff OP 0 ? 1 : 0}, ctAto
 #define INSTR_JMP() \
 ct_loadBytes(instrs, &ctx->ip, 4, &i32); \
 ctx->ip += i32; \
-if (ctx->ip >= ctx->image->header.instruction_count) { \
+if (ctx->ip >= engine->image->header.instruction_count) { \
 ctx->error = (ctError) {.code=ctErrorCode_Engine}; \
 ct_utils_format(ctx->error.msg, sizeof(ctx->error.msg), "Out of range ip: 0x%08lX", ctx->ip); ct_ctx_throwError(ctx, ctx->error); };
 
@@ -135,8 +137,8 @@ ct_out(uint8_t fmt, ctAtom atom, ctAtomTypeSize type) {
 
 #endif // CUTE_CONF_DEBUG
 
-
-void ct_exec(ctContext* ctx) {
+void
+ct_engine_exec(ctEngine* engine, ctContext* ctx) {
 
     static void* dispatch_table[256] = {
         [instrNull] = &&opNull,
@@ -218,7 +220,7 @@ void ct_exec(ctContext* ctx) {
 	}
 
 
-	ctInstructionSize* instrs = ctx->image->instruction_pool;
+	ctInstructionSize* instrs = engine->image->instruction_pool;
 
     uint8_t r1, r2, r3, r4, r5;
     int32_t i32;
