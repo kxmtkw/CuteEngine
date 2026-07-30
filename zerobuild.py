@@ -55,4 +55,3 @@ cuteasm.arguments = "-Wall",  "-Wextra",  "-g"
 cuteasm.link(CuteAssembler)
 cuteasm.link(CuteEngine)
 cuteasm.compiler = CuteAssembler.compiler
-
