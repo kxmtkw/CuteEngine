@@ -50,11 +50,9 @@ CuteAssembler.compiler = "g++"
 cute_asm_src = Path("Assembler")
 
 CuteAssembler.source = Source(
-	cute_asm_src / "tokenizer/tokenizer.cpp",
-	cute_asm_src / "tokenizer/stream.cpp",
-	cute_asm_src / "parser/parser.cpp",
-	cute_asm_src / "codegen/codegen.cpp",
-	cute_asm_src / "core/core.cpp"
+	cute_asm_src / "tokenizer" / "tokenizer.cpp",
+	cute_asm_src / "tokenizer" / "stream.cpp",
+	cute_asm_src / "assembler" / "assembler.cpp"
 )
 
 CuteAssembler.headers.private = cute_asm_src

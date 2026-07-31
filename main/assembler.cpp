@@ -1,5 +1,5 @@
 #include <iostream>
-#include "CuteAssembler.hpp"
+#include "CuteAsm.hpp"
 
 
 int main(int argc, char** argv) {
@@ -9,7 +9,7 @@ int main(int argc, char** argv) {
 		return 2;
 	}
 
-	ctAssembler assembler;
+	CtAssembler assembler;
 	assembler.assemble(argv[1]);
 
 	return 0;

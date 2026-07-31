@@ -1,5 +1,5 @@
-#ifndef TOKENIZER_TOKENIZER_H
-#define TOKENIZER_TOKENIZER_H
+#ifndef CUTEASM_TOKENIZER_HPP
+#define CUTEASM_TOKENIZER_HPP
 
 #include <cstdint>
 #include <optional>
@@ -51,4 +51,4 @@ public:
 	CtTokenStream tokenize(std::string source);
 };
 
-#endif // TOKENIZER_TOKENIZER_H
+#endif // CUTEASM_TOKENIZER_HPP

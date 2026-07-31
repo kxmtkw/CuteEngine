@@ -1,18 +1,18 @@
 
-#ifndef CUTE_ASSEMBLER_HPP
-#define CUTE_ASSEMBLER_HPP
+#ifndef CUTEASM_ASSEMBLER_HPP
+#define CUTEASM_ASSEMBLER_HPP
 
 #include <string>
 
-class ctAssembler {
+class CtAssembler {
+
+	void assemble_string(std::string source, std::string outfile);
 
 	public:
 
 	void assemble(std::string filepath);
-
-	void assembleString(std::string source, std::string outfile);
 };
 
-#endif // CUTE_ASSEMBLER_HPP
+#endif // CUTEASM_ASSEMBLER_HPP
 
 

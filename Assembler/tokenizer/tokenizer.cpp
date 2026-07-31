@@ -89,9 +89,7 @@ void CtTokenizer::tokenize_number() {
 			continue;
 		}
 
-		if (c == ' ' or c == '\n' or c == '\t') {
-			break;
-		}
+		break;
 
 		// error, illegal token sequence
 	}

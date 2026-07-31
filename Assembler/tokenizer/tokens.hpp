@@ -1,6 +1,6 @@
 
-#ifndef TOKENIZER_TOKENS_H
-#define TOKENIZER_TOKENS_H
+#ifndef CUTEASM_TOKENS_HPP
+#define CUTEASM_TOKENS_HPP
 
 #include <iostream>
 #include <string>
@@ -76,4 +76,4 @@ public:
 
 
 
-#endif // TOKENIZER_TOKENS_H
+#endif // CUTEASM_TOKENS_HPP
