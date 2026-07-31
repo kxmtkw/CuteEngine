@@ -6,8 +6,6 @@ set(CMAKE_CXX_STANDARD 20)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-
-# Global compilation flags
 add_compile_options(-Wall -Wextra -g)
 
 # --- Cute Instructions ---
@@ -39,13 +37,11 @@ target_include_directories(CuteEngine
         Engine
 )
 
-# CMake handles transitive dependencies automatically via PUBLIC linking
 target_link_libraries(CuteEngine PUBLIC CuteInstr)
 
 # --- cute binary ---
 
 add_executable(cute main/engine.c)
-# Linking CuteEngine automatically pulls in CuteInstr
 target_link_libraries(cute PRIVATE CuteEngine)
 
 # --- Cute Assembler ---
@@ -53,6 +49,8 @@ target_link_libraries(cute PRIVATE CuteEngine)
 add_library(CuteAssembler STATIC
     Assembler/tokenizer/tokenizer.cpp
     Assembler/tokenizer/stream.cpp
+	Assembler/resolver/resolver.cpp
+	Assembler/codegen/codegen.cpp
     Assembler/assembler/assembler.cpp
 )
 
