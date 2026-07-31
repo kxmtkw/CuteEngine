@@ -52,9 +52,11 @@ cute_asm_src = Path("Assembler")
 CuteAssembler.source = Source(
 	cute_asm_src / "tokenizer" / "tokenizer.cpp",
 	cute_asm_src / "tokenizer" / "stream.cpp",
+	cute_asm_src / "resolver" / "resolver.cpp",
+	cute_asm_src / "codegen" / "codegen.cpp",
 	cute_asm_src / "assembler" / "assembler.cpp"
 )
-
+CuteAssembler.arguments = "-Wall",  "-Wextra",  "-g"
 CuteAssembler.headers.private = cute_asm_src
 CuteAssembler.headers.public = cute_asm_src / "include"
 CuteAssembler.link(CuteInstr)

@@ -17,7 +17,6 @@ class CtResolver {
 
 	CtTokenStream mStream;
 	std::unique_ptr<CtProgram> mProgram = nullptr;
-	std::unique_ptr<CtProcedure> mCurrentProcedure = nullptr;
 
 
 	std::unique_ptr<CtProcedure>

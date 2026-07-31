@@ -65,7 +65,7 @@ void CtTokenStream::backtrack() {
 
 
 bool CtTokenStream::eof() {
-	return mCurrent < mTokens.size();
+	return peek().type == CtTokenType::EndOfFile;
 };
 
 

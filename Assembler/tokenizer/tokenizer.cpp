@@ -165,7 +165,7 @@ void CtTokenizer::tokenize_symbol() {
 
 CtTokenStream CtTokenizer::tokenize(std::string source) {
 
-	mSource = std::move(source);
+	mSource = source;
 	mCurrent = 0;
 	mSize = mSource.size();
 	mTokens = {};
@@ -200,5 +200,5 @@ CtTokenStream CtTokenizer::tokenize(std::string source) {
 
 	mTokens.emplace_back(CtToken(CtTokenType::EndOfFile, 0 ,0));
 
-	return CtTokenStream(std::move(mSource), std::move(mTokens));
+	return CtTokenStream(mSource, mTokens);
 }

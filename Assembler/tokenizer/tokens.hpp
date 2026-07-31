@@ -74,8 +74,9 @@ public:
 	// expect a certain string literal
 	bool expect_token(const std::string& dest);
 	
+	CtTokenStream() = default;
 	CtTokenStream(std::string src, std::vector<CtToken> tokens): 
-	mSource(std::move(src)), mTokens(std::move(tokens)), mCurrent(0) {}
+	mSource(src), mTokens(std::move(tokens)), mCurrent(0) {}
 };
 
 

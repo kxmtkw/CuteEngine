@@ -5,6 +5,7 @@
 
 #include "tokenizer/tokenizer.hpp"
 #include "tokenizer/tokens.hpp"
+#include "resolver/resolver.hpp"
 #include "codegen/codegen.hpp"
 
 
@@ -32,11 +33,18 @@ void CtAssembler::assemble_string(std::string source, std::string outfile) {
 
 	CtTokenizer tokenizer;
 
-	auto stream = tokenizer.tokenize(source);
+	auto stream = tokenizer.tokenize(std::move(source));
 
 	while (stream.peek().type != CtTokenType::EndOfFile) {
 		CtToken token = stream.next();
 		std::cout << stream.get_value(token) << std::endl;
 	}
 
+	stream.reset();
+
+	CtResolver resolver;
+	auto program = resolver.resolve(std::move(stream));
+
+	CtCodeGen generator;
+	generator.generate(std::move(program), outfile);
 }

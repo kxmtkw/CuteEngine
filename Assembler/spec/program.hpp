@@ -18,11 +18,12 @@ using std::byte;
 struct CtProcedure {
 	unsigned int id;
 	unsigned int arg_count;
-	std::vector<byte> instructions;
+	unsigned int address;
 };
 
 struct CtProgram {
 	std::vector<std::unique_ptr<CtProcedure>> procedures;
+	std::vector<byte> instructions;
 };
 
 
