@@ -3,6 +3,8 @@
 #define CUTEASM_RESOLVER_HPP
 
 #include <memory>
+#include <string>
+#include <unordered_map>
 
 extern "C" {
 	#include "CuteInstr.h"
@@ -17,6 +19,9 @@ class CtResolver {
 
 	CtTokenStream mStream;
 	std::unique_ptr<CtProgram> mProgram = nullptr;
+
+	std::unordered_map<std::string, unsigned int> mJumpAddresses;
+	std::unordered_map<unsigned int, std::string> mPatches;
 
 
 	std::unique_ptr<CtProcedure>

@@ -28,6 +28,9 @@ std::unique_ptr<CtProcedure>
 CtResolver::resolve_procedure() {
 
 	auto procedure = std::make_unique<CtProcedure>();
+
+	mJumpAddresses.clear();
+	mPatches.clear();
 	
 	std::string val;
 
@@ -57,8 +60,16 @@ CtResolver::resolve_procedure() {
 		if (mStream.expect_token("}")) {
 			break;
 		}
-
+	
 		parse_instruction();
+	}
+
+	for (auto item: mPatches) {
+		byte* ptr = mProgram->instructions.data() + item.first;
+		int jump_location = mJumpAddresses[item.second];
+		int current_location = item.first;
+		int offset = jump_location - current_location;
+		memcpy(ptr, &offset, sizeof(offset));
 	}
 
 	return procedure;
@@ -69,6 +80,19 @@ void
 CtResolver::parse_instruction() {
 
 	std::string val;
+
+	if (mStream.expect_token("@")) {
+
+		std::string label;
+
+		mStream.expect_type(CtTokenType::Word, &label);
+
+		mJumpAddresses[label] = mProgram->instructions.size();
+		
+		mStream.expect_token(";");
+
+		return;
+	}
 
 	if (!mStream.expect_type(CtTokenType::Word, &val)) {
 		
@@ -99,6 +123,24 @@ CtResolver::parse_instruction() {
 			
 			float number = std::stof(val);
 			add_bytes_to_vector(mProgram->instructions, 4, &number);
+
+		} else if (mStream.expect_type(CtTokenType::Word, &val)) {
+			
+			if (mJumpAddresses.contains(val)) {
+				
+				int jump_location = mJumpAddresses[val];
+				int current_location = mProgram->instructions.size() + 4;
+				int offset = jump_location - current_location;
+
+				add_bytes_to_vector(mProgram->instructions, 4, &offset);
+
+			} else {
+
+				mPatches[mProgram->instructions.size()] = val;
+				int offset = 0;
+				add_bytes_to_vector(mProgram->instructions, 4, &offset);
+
+			}
 
 		}
 
