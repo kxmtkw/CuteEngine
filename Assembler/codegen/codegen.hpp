@@ -9,8 +9,7 @@
 
 
 extern "C" {
-	#include "common/instructions.h"
-	#include "image/image.h"
+	#include "CuteInstr.h"
 }
 
 class ctCodeGen: ctNodeVisitor {

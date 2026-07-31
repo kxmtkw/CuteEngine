@@ -7,7 +7,7 @@
 #include <vector>
 
 extern "C" {
-	#include "common/instructions.h"
+	#include "CuteInstr.h"
 }
 
 

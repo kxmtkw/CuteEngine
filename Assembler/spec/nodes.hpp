@@ -3,7 +3,7 @@
 #define PARSER_NODES_HPP
 
 extern "C" {
-	#include "common/instructions.h"
+	#include "CuteInstr.h"
 }
 
 #include <cstdint>

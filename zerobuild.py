@@ -4,32 +4,45 @@ build = Build()
 build.compiler = "gcc"
 build.directory = ".build"
 
+# Cute Instructions
+
+CuteInstr = StaticLibrary()
+CuteInstr.source = Source(
+	Path("Instr") / "image.c"
+)
+CuteInstr.headers.public = Path("Instr") / "include"
+CuteInstr.arguments = "-Wall",  "-Wextra",  "-g"
+
 # Cute Engine
 
 CuteEngine = StaticLibrary()
 CuteEngine.compiler = "gcc"
-cute_engine_src = Path("Engine")
+src = Path("Engine")
 
 CuteEngine.source = Source(
-	cute_engine_src / "engine" / "engine.c",
-	cute_engine_src / "engine" / "exec.c",
-	cute_engine_src / "engine" / "context.c",
-	cute_engine_src / "objects" / "manager.c",
-	cute_engine_src / "container" / "container.c",
-	cute_engine_src / "image" / "image.c",
-	cute_engine_src / "utils" / "utils.c",
+	src / "engine" / "engine.c",
+	src / "engine" / "exec.c",
+	src / "engine" / "context.c",
+	src / "objects" / "manager.c",
+	src / "container" / "container.c",
+	src / "utils" / "utils.c",
 )
+CuteEngine.link(CuteInstr)
 
-CuteEngine.headers.public = cute_engine_src / "include", cute_engine_src
-CuteEngine.headers.private = cute_engine_src
+CuteEngine.headers.public = src / "include"
+CuteEngine.headers.private = src
 CuteEngine.arguments = "-Wall",  "-Wextra",  "-g"
+
+# cute binary
 
 cute = Executable()
 cute.source = Source("main/engine.c")
 cute.arguments = "-Wall",  "-Wextra",  "-g"
 cute.link(CuteEngine)
+cute.link(CuteInstr)
 
-# Assembler
+
+# Cute Assembler
 
 CuteAssembler = StaticLibrary()
 CuteAssembler.compiler = "g++"
@@ -46,12 +59,13 @@ CuteAssembler.source = Source(
 
 CuteAssembler.headers.private = cute_asm_src
 CuteAssembler.headers.public = cute_asm_src / "include"
-CuteAssembler.link(CuteEngine)
+CuteAssembler.link(CuteInstr)
 
+# cuteasm binary
 
 cuteasm = Executable()
 cuteasm.source = Source("main/assembler.cpp")
 cuteasm.arguments = "-Wall",  "-Wextra",  "-g"
 cuteasm.link(CuteAssembler)
-cuteasm.link(CuteEngine)
+cuteasm.link(CuteInstr)
 cuteasm.compiler = CuteAssembler.compiler

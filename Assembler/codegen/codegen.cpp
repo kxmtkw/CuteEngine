@@ -8,7 +8,7 @@
 #include "codegen.hpp"
 
 extern "C" {
-	#include "common/instructions.h"
+	#include "CuteInstr.h"
 }
 
 
