@@ -48,7 +48,7 @@ class CtTokenStream {
 	uint mCurrent;
 
 	// resolve backslashes of string tokens
-	std::string resolveBackSlashes(const std::string& str);
+	std::string resolve_string(const std::string& str);
 
 public:
 
@@ -62,13 +62,13 @@ public:
 	void reset();
 
 	// get the value of the token.
-	std::string getValue(CtToken& token);
+	std::string get_value(const CtToken& token);
 
 	// expect a certain token type and write its value to the string provided.
-	bool expeCtTokenType(CtTokenType type, std::string& dest);
+	bool expect_type(CtTokenType type, std::string* dest);
 
 	// expect a certain string literal
-	bool expeCtToken(const std::string& dest);
+	bool expect_token(const std::string& dest);
 	
 	CtTokenStream(std::string src, std::vector<CtToken> tokens): 
 	mSource(std::move(src)), mTokens(std::move(tokens)), mCurrent(0) {}

@@ -9,9 +9,10 @@
 #include "tokenizer.hpp"
 
 
-std::string CtTokenStream::resolveBackSlashes(const std::string& str){
+std::string CtTokenStream::resolve_string(const std::string& str){
 
 	std::string resolved_str;
+	resolved_str.reserve(str.size());
 	char c;
 
 	for (uint i = 0; i < str.size(); i++) {
@@ -66,38 +67,38 @@ void CtTokenStream::reset() {
 	mCurrent = 0;
 }
 
-std::string CtTokenStream::getValue(CtToken& token) {
+std::string CtTokenStream::get_value(const CtToken& token) {
 
 	if (token.start > mSource.size() or token.start + token.len > mSource.size()) {
 		return "";
 	}
 
 	if (token.type == CtTokenType::String) {
-		return resolveBackSlashes(mSource.substr(token.start, token.len));
+		return resolve_string(mSource.substr(token.start, token.len));
 	}
 
 	return mSource.substr(token.start, token.len);
 }
 
 
-bool CtTokenStream::expeCtTokenType(CtTokenType type, std::string& dest) {
+bool CtTokenStream::expect_type(CtTokenType type, std::string* dest) {
 	CtToken token = peek();
 
 	if (token.type != type) {
 		return false;
 	}
 
-	dest = getValue(token);
+	*dest = get_value(token);
 	next();
 	return true;
 }
 
 
-bool CtTokenStream::expeCtToken(const std::string& dest) {
+bool CtTokenStream::expect_token(const std::string& dest) {
 
 	CtToken token = next();
 
-	if (getValue(token) == dest) {
+	if (get_value(token) == dest) {
 		return true;
 	}
 	else {

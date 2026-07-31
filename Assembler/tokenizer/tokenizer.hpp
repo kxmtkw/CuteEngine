@@ -28,18 +28,22 @@ class CtTokenizer {
 	bool eof();
 
 	// eat all spaces, new lines, tabs until there is none.
-	void eatWhitspace();
+	void eat_whitspace();
+
+	// read until new line
+	void read_comment();
 
 	// tokenize a word. a word will always start with an alphabet or underscore and can be continued using numbers.
-	void tokenizeWord();
+	void tokenize_word();
 	// tokenize a number. ints and floats included. does not handle negatives
-	void tokenizeNumber();
+	void tokenize_number();
 	// tokenize a symbol. usually a single character
-	void tokenizeSymbol();
+	void tokenize_symbol();
 	// tokenize a string, backslashes are not resolved here but the TokenStream resolves them with getValue
-	void tokenizeString();
+	void tokenize_string();
 	// tokenize a char, should use '', and only a single is allowed as usual
-	void tokenizeChar();
+	void tokenize_char();
+
 
 public:
 

@@ -33,7 +33,7 @@ bool CtTokenizer::eof() {
 }
 
 
-void CtTokenizer::eatWhitspace() {
+void CtTokenizer::eat_whitspace() {
 
 	char c;
 	c = next();
@@ -46,7 +46,12 @@ void CtTokenizer::eatWhitspace() {
 }
 
 
-void CtTokenizer::tokenizeWord() {
+void CtTokenizer::read_comment() {
+	while (peek() != '\n') { next(); }
+}
+
+
+void CtTokenizer::tokenize_word() {
 	char c;
 	uint start = mCurrent;
 
@@ -63,7 +68,7 @@ void CtTokenizer::tokenizeWord() {
 }
 
 
-void CtTokenizer::tokenizeNumber() {
+void CtTokenizer::tokenize_number() {
 
 	uint start = mCurrent;
 	char c;
@@ -95,7 +100,7 @@ void CtTokenizer::tokenizeNumber() {
 }
 
 
-void CtTokenizer::tokenizeChar() {
+void CtTokenizer::tokenize_char() {
 
 	char c = next();
 	
@@ -116,7 +121,7 @@ void CtTokenizer::tokenizeChar() {
 };
 
 
-void CtTokenizer::tokenizeString() {
+void CtTokenizer::tokenize_string() {
 	char c = next();
 	
 	if (c != '\"') {
@@ -144,7 +149,7 @@ void CtTokenizer::tokenizeString() {
 }
 	
 
-void CtTokenizer::tokenizeSymbol() {
+void CtTokenizer::tokenize_symbol() {
 	char c = next();
 	mTokens.emplace_back(CtToken(CtTokenType::Symbol, mCurrent-1, 1));
 }
@@ -161,28 +166,28 @@ CtTokenStream CtTokenizer::tokenize(std::string source) {
 	char c;
 
 	while (mCurrent < mSize) {
-		
-		eatWhitspace();
+
+		eat_whitspace();
 
 		c = peek();
 
 		if (std::isalpha(c) or c == '_') {
-			tokenizeWord();
+			tokenize_word();
 		}
 		else if (std::isdigit(c)) {
-			tokenizeNumber();
+			tokenize_number();
 		}
 		else if (c == '#') {
-			while (peek() != '\n') { next(); }
+			read_comment();
 		}
 		else if (c == '\'') {
-			tokenizeChar();
+			tokenize_char();
 		}
 		else if (c == '\"') {
-			tokenizeString();
+			tokenize_string();
 		}
 		else {
-			tokenizeSymbol();
+			tokenize_symbol();
 		}
 	}
 
