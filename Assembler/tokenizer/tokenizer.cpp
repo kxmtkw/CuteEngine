@@ -1,7 +1,5 @@
 #include <cctype>
-#include <cstdint>
 #include <string>
-#include <string_view>
 #include <vector>
 
 #include "tokens.hpp"
@@ -9,35 +7,38 @@
 
 
 
-char ctTokenizer::next() {
+char CtTokenizer::next() {
 	if (mCurrent < mSize) {
-		char c = mSource.at(mCurrent++);
-		return c;
+		return mSource[mCurrent++];
 	}
-	return ' ';
+	return '\0';
 }
 
 
-char ctTokenizer::peek() {
+char CtTokenizer::peek() {
 	if (mCurrent < mSize) {
-		char c = mSource.at(mCurrent);
-		return c;
+		return mSource[mCurrent];
 	}
-	return ' ';
+	return '\0';
 }
 
 
-void ctTokenizer::backtrack() {
+void CtTokenizer::backtrack() {
 	mCurrent--;
 }
 
 
-void ctTokenizer::eatWhitspace() {
+bool CtTokenizer::eof() {
+	return mCurrent >= mSize;
+}
+
+
+void CtTokenizer::eatWhitspace() {
 
 	char c;
 	c = next();
 
-	while ((c == ' ' or c == '\n' or c == '\t') and mCurrent < mSize) {
+	while ((c == ' ' or c == '\n' or c == '\t') and !eof()) {
 		c = next();
 	}
 
@@ -45,7 +46,7 @@ void ctTokenizer::eatWhitspace() {
 }
 
 
-void ctTokenizer::tokenizeWord() {
+void CtTokenizer::tokenizeWord() {
 	char c;
 	uint start = mCurrent;
 
@@ -58,17 +59,17 @@ void ctTokenizer::tokenizeWord() {
 		}
 		break;
 	}
-	mTokens.emplace_back(ctToken(ctTokenType::Word, start, mCurrent-start));
+	mTokens.emplace_back(CtToken(CtTokenType::Word, start, mCurrent-start));
 }
 
 
-void ctTokenizer::tokenizeNumber() {
+void CtTokenizer::tokenizeNumber() {
 
 	uint start = mCurrent;
 	char c;
 	bool is_float = false;
 
-	while (mCurrent < mSize) {
+	while (!eof()) {
 
 		c = peek();
 
@@ -77,23 +78,25 @@ void ctTokenizer::tokenizeNumber() {
 			continue;
 		}
 
-		if (c == '.') {
+		if (c == '.' and !is_float) {
 			is_float = true;
 			next();
 			continue;
 		}
 
-		break;
+		if (c == ' ' or c == '\n' or c == '\t') {
+			break;
+		}
+
+		// error, illegal token sequence
 	}
 
-	if (is_float) {
-		mTokens.emplace_back(ctToken(ctTokenType::Float, start, mCurrent-start));
-	} else {
-		mTokens.emplace_back(ctToken(ctTokenType::Int, start, mCurrent-start));
-	}
+	mTokens.emplace_back(CtToken(CtTokenType::Number, start, mCurrent-start));
 }
 
-void ctTokenizer::tokenizeChar() {
+
+void CtTokenizer::tokenizeChar() {
+
 	char c = next();
 	
 	if (c != '\'') {
@@ -101,7 +104,7 @@ void ctTokenizer::tokenizeChar() {
 	}
 
 	uint start = mCurrent;
-	next(); // the char
+	next();
 
 	c = next();
 	
@@ -109,11 +112,11 @@ void ctTokenizer::tokenizeChar() {
 		// error
 	}
 
-	mTokens.emplace_back(ctToken(ctTokenType::Char, start, 1));
+	mTokens.emplace_back(CtToken(CtTokenType::Char, start, 1));
 };
 
 
-void ctTokenizer::tokenizeString() {
+void CtTokenizer::tokenizeString() {
 	char c = next();
 	
 	if (c != '\"') {
@@ -124,27 +127,31 @@ void ctTokenizer::tokenizeString() {
 
 	c = next();
 
-	while (c != '\"' and mCurrent < mSize) {
+	while (c != '\"') {
+		
 		c = next();
+
+		if (eof()) {
+			// unterminated string
+		}
 
 		if (c == '\\') {
 			next();
 		}
 	}
 
-	mTokens.emplace_back(ctToken(ctTokenType::String, start, mCurrent-start-1));
+	mTokens.emplace_back(CtToken(CtTokenType::String, start, mCurrent-start-1));
 }
 	
 
-void ctTokenizer::tokenizeSymbol() {
+void CtTokenizer::tokenizeSymbol() {
 	char c = next();
-	if (c == ' ' or c == '\n' or c == '\t') {return;}
-	mTokens.emplace_back(ctToken(ctTokenType::Symbol, mCurrent-1, 1));
+	mTokens.emplace_back(CtToken(CtTokenType::Symbol, mCurrent-1, 1));
 }
 
 
 
-ctTokenStream ctTokenizer::tokenize(std::string source) {
+CtTokenStream CtTokenizer::tokenize(std::string source) {
 
 	mSource = std::move(source);
 	mCurrent = 0;
@@ -154,6 +161,7 @@ ctTokenStream ctTokenizer::tokenize(std::string source) {
 	char c;
 
 	while (mCurrent < mSize) {
+		
 		eatWhitspace();
 
 		c = peek();
@@ -178,7 +186,7 @@ ctTokenStream ctTokenizer::tokenize(std::string source) {
 		}
 	}
 
-	mTokens.emplace_back(ctToken(ctTokenType::EndOfFile, 0 ,0));
+	mTokens.emplace_back(CtToken(CtTokenType::EndOfFile, 0 ,0));
 
-	return ctTokenStream(std::move(mSource), std::move(mTokens));
+	return CtTokenStream(std::move(mSource), std::move(mTokens));
 }

@@ -9,7 +9,7 @@
 #include "tokenizer.hpp"
 
 
-std::string ctTokenStream::resolveBackSlashes(const std::string& str){
+std::string CtTokenStream::resolveBackSlashes(const std::string& str){
 
 	std::string resolved_str;
 	char c;
@@ -42,7 +42,7 @@ std::string ctTokenStream::resolveBackSlashes(const std::string& str){
 }
 
 
-ctToken ctTokenStream::next() {
+CtToken CtTokenStream::next() {
 	if (mCurrent < mTokens.size()) {
 		return mTokens[mCurrent++];
 	}
@@ -50,7 +50,7 @@ ctToken ctTokenStream::next() {
 };
 
 
-ctToken ctTokenStream::peek() {
+CtToken CtTokenStream::peek() {
 	if (mCurrent < mTokens.size()) {
 		return mTokens[mCurrent];
 	}
@@ -58,21 +58,21 @@ ctToken ctTokenStream::peek() {
 };
 
 
-void ctTokenStream::backtrack() {
+void CtTokenStream::backtrack() {
 	if (mCurrent > 0) mCurrent--;
 };
 
-void ctTokenStream::reset() {
+void CtTokenStream::reset() {
 	mCurrent = 0;
 }
 
-std::string ctTokenStream::getValue(ctToken& token) {
+std::string CtTokenStream::getValue(CtToken& token) {
 
 	if (token.start > mSource.size() or token.start + token.len > mSource.size()) {
 		return "";
 	}
 
-	if (token.type == ctTokenType::String) {
+	if (token.type == CtTokenType::String) {
 		return resolveBackSlashes(mSource.substr(token.start, token.len));
 	}
 
@@ -80,8 +80,8 @@ std::string ctTokenStream::getValue(ctToken& token) {
 }
 
 
-bool ctTokenStream::expectTokenType(ctTokenType type, std::string& dest) {
-	ctToken token = peek();
+bool CtTokenStream::expeCtTokenType(CtTokenType type, std::string& dest) {
+	CtToken token = peek();
 
 	if (token.type != type) {
 		return false;
@@ -93,9 +93,9 @@ bool ctTokenStream::expectTokenType(ctTokenType type, std::string& dest) {
 }
 
 
-bool ctTokenStream::expectToken(const std::string& dest) {
+bool CtTokenStream::expeCtToken(const std::string& dest) {
 
-	ctToken token = next();
+	CtToken token = next();
 
 	if (getValue(token) == dest) {
 		return true;

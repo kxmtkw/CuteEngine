@@ -9,10 +9,10 @@
 #include "tokens.hpp"
 
 
-class ctTokenizer {
+class CtTokenizer {
 
 	std::string mSource;
-	std::vector<ctToken> mTokens;
+	std::vector<CtToken> mTokens;
 	uint mCurrent;
 	uint mSize;
 
@@ -22,6 +22,10 @@ class ctTokenizer {
 	char peek();
 	// backtrack by one char
 	void backtrack();
+
+
+	// check whether eol reached
+	bool eof();
 
 	// eat all spaces, new lines, tabs until there is none.
 	void eatWhitspace();
@@ -39,8 +43,8 @@ class ctTokenizer {
 
 public:
 
-	// tokenize a string and return ctTokenStream object.
-	ctTokenStream tokenize(std::string source);
+	// tokenize a string and return CtTokenStream object.
+	CtTokenStream tokenize(std::string source);
 };
 
 #endif // TOKENIZER_TOKENIZER_H
