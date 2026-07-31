@@ -1,6 +1,6 @@
 
-#ifndef CODEGEN_INSTRSPEC_HPP
-#define CODEGEN_INSTRSPEC_HPP
+#ifndef CUTEASM_INSTRUCTIONS_HPP
+#define CUTEASM_INSTRUCTIONS_HPP
 
 #include <map>
 #include <string>
@@ -11,7 +11,7 @@ extern "C" {
 }
 
 
-static const std::map<std::string, CtInstr> ctInstrMap = {
+static const std::map<std::string, CtInstr> CtInstrMap = {
 	{"halt",        CT_INSTR_HALT},
 	{"null",        CT_INSTR_NULL},
 
@@ -94,4 +94,4 @@ static const std::map<std::string, CtInstr> ctInstrMap = {
 	{"concopy",     CT_INSTR_CON_COPY},
 };
 
-#endif // CODEGEN_INSTRSPEC_HPP
+#endif // CUTEASM_INSTRUCTIONS_HPP

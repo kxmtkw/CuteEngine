@@ -10,7 +10,8 @@
 enum class CtTokenType {
 	EndOfFile,
 	Word,
-	Number,
+	Int,
+	Float,
 	String,
 	Char,
 	Symbol
@@ -28,11 +29,12 @@ struct CtToken {
 
 
 static inline std::string 
-tokenTypeToString(CtTokenType type) {
+CtTokenTypeString(CtTokenType type) {
     switch (type) {
         case CtTokenType::EndOfFile: return "EndOfFile";
         case CtTokenType::Word:      return "Word";
-        case CtTokenType::Number:    return "Number";
+        case CtTokenType::Int:       return "Int";
+		case CtTokenType::Float:     return "Float";
         case CtTokenType::String:    return "String";
 		case CtTokenType::Char:      return "Char";
         case CtTokenType::Symbol:    return "Symbol";
@@ -60,6 +62,8 @@ public:
 	void backtrack();
 	// back to index 0
 	void reset();
+	// check whether eof hit
+	bool eof();
 
 	// get the value of the token.
 	std::string get_value(const CtToken& token);

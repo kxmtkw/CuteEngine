@@ -83,18 +83,27 @@ void CtTokenizer::tokenize_number() {
 			continue;
 		}
 
-		if (c == '.' and !is_float) {
+		if (c == '.') {
+
+			if (is_float) {
+				// invalid
+			}
+
 			is_float = true;
 			next();
 			continue;
 		}
 
-		break;
 
+		if (std::isalpha(c)) {
+			// illegal
+		}
+		
+		break;
 		// error, illegal token sequence
 	}
 
-	mTokens.emplace_back(CtToken(CtTokenType::Number, start, mCurrent-start));
+	mTokens.emplace_back(CtToken(is_float ? CtTokenType::Float: CtTokenType::Int, start, mCurrent-start));
 }
 
 

@@ -63,6 +63,12 @@ void CtTokenStream::backtrack() {
 	if (mCurrent > 0) mCurrent--;
 };
 
+
+bool CtTokenStream::eof() {
+	return mCurrent < mTokens.size();
+};
+
+
 void CtTokenStream::reset() {
 	mCurrent = 0;
 }
