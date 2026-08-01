@@ -76,6 +76,8 @@ typedef enum {
     CT_INSTR_JMP_GE       = 0xA4,
     CT_INSTR_JMP_LT       = 0xA5,
     CT_INSTR_JMP_LE       = 0xA6,
+	CT_INSTR_JMP_IF       = 0xA7,
+	CT_INSTR_JMP_IFNOT    = 0xA8,
 
     CT_INSTR_CALL         = 0xB0,
     CT_INSTR_RETURN       = 0xB1,

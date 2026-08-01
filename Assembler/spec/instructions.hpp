@@ -82,6 +82,9 @@ static const std::map<std::string, CtInstr> CtInstrMap = {
 	{"jmpge",       CT_INSTR_JMP_GE},
 	{"jmplt",       CT_INSTR_JMP_LT},
 	{"jmple",       CT_INSTR_JMP_LE},
+	{"jmpif",       CT_INSTR_JMP_IF},
+	{"jmpifn",      CT_INSTR_JMP_IFNOT},
+	
 	{"call",        CT_INSTR_CALL},
 	{"ret",         CT_INSTR_RETURN},
 	{"retval",      CT_INSTR_RETURN_VAL},

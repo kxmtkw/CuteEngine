@@ -125,14 +125,14 @@ _ct_out(uint8_t fmt, CtAtom atom) {
 	}
 }
 
-#ifndef CUTE_CONF_DEBUG
+#ifndef CT_CONF_DEBUG
 
 #define NEXT() if (ctx->running) {goto *dispatch_table[instrs[ctx->ip++]];};
 
 #else 
 
 #define NEXT() if (ctx->running) { \
-	CUTE_LOG("trace", "ip: 0x%08lX | instr: 0x%02X | ctx: %p\n", ctx->ip, instrs[ctx->ip], ctx); goto *dispatch_table[instrs[ctx->ip++]]; \
+	CT_LOG("trace", "ip: 0x%08lX | instr: 0x%02X | ctx: %p\n", ctx->ip, instrs[ctx->ip], ctx); goto *dispatch_table[instrs[ctx->ip++]]; \
 };
 
 #endif // CUTE_CONF_DEBUG
@@ -211,6 +211,8 @@ ct_engine_exec(CtEngine* engine, CtContext* ctx) {
 		[CT_INSTR_JMP_GE]     = &&HANDLER_JMP_GE,
 		[CT_INSTR_JMP_LT]     = &&HANDLER_JMP_LT,
 		[CT_INSTR_JMP_LE]     = &&HANDLER_JMP_LE,
+		[CT_INSTR_JMP_IF]     = &&HANDLER_JMP_IF,
+		[CT_INSTR_JMP_IFNOT]  = &&HANDLER_JMP_IFNOT,
 
 		[CT_INSTR_CALL]       = &&HANDLER_CALL,
 		[CT_INSTR_RETURN]     = &&HANDLER_RETURN,
@@ -542,6 +544,20 @@ HANDLER_JMP_LT:
 
 HANDLER_JMP_LE:
 	if (ctx->cmp_diff <= 0) { CT_INSTR_JMP(); NEXT(); }
+	ctx->ip += 4;
+	NEXT();
+
+HANDLER_JMP_IF:
+	r1 = instrs[ctx->ip++];
+	ct_ctx_load_atom(ctx, r1, &a1, &t1);
+	if (a1.as_bool) { CT_INSTR_JMP(); NEXT(); }
+	ctx->ip += 4;
+	NEXT();
+
+HANDLER_JMP_IFNOT:
+	r1 = instrs[ctx->ip++];
+	ct_ctx_load_atom(ctx, r1, &a1, &t1);
+	if (!a1.as_bool) { CT_INSTR_JMP(); NEXT(); }
 	ctx->ip += 4;
 	NEXT();
 

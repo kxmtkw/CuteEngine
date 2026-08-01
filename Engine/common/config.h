@@ -8,7 +8,7 @@
 
 #define CT_CONF_FAIL_ON_NULL
 
-//#define CT_CONF_DEBUG
+#define CT_CONF_DEBUG
 
 
 #ifdef CT_CONF_DEBUG
