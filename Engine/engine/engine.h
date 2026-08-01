@@ -3,7 +3,7 @@
 
 #include <stdint.h>
 
-#include "image/image.h"
+#include "CuteInstr.h"
 
 #include "context.h"
 

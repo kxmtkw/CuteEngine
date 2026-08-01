@@ -5,13 +5,14 @@
 
 #include <stdint.h>
 
+#include "CuteInstr.h"
+
 #include "common/atom.h"
 #include "common/config.h"
 #include "common/error.h"
 
 #include "objects/manager.h"
 
-#include "image/image.h"
 
 
 // Array of atoms and their types. For use in call frames

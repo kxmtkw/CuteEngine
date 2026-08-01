@@ -5,9 +5,10 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "CuteInstr.h"
+
 #include "common/atom.h"
 #include "common/config.h"
-#include "common/instructions.h"
 #include "common/error.h"
 
 

@@ -1,10 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "common/instructions.h"
-
-#include "image/image.h"
-
+#include "CuteInstr.h"
 
 
 void 

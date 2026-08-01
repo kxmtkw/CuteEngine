@@ -3,11 +3,12 @@
 
 #include "Cute.h"
 
+#include "CuteInstr.h"
+
 #include "common/atom.h"
 #include "common/config.h"
 #include "common/error.h"
 
-#include "image/image.h"
 #include "objects/manager.h"
 #include "utils/utils.h"
 

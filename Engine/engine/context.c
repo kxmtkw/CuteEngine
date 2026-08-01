@@ -5,12 +5,12 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "CuteInstr.h"
+
 #include "common/atom.h"
 #include "common/config.h"
-#include "common/instructions.h"
 #include "common/error.h"
 
-#include "image/image.h"
 #include "objects/manager.h"
 #include "modules/modules.h"
 #include "modules/modulespec.h"
