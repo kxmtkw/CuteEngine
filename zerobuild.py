@@ -17,7 +17,7 @@ CuteInstr.headers.public = Path("Instr") / "include"
 
 # Cute Engine
 
-CuteEngine = SharedLibrary()
+CuteEngine = StaticLibrary()
 CuteEngine.compiler = "gcc"
 src = Path("Engine")
 
