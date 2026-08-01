@@ -107,12 +107,12 @@ ct_ctx_call_procedure(CtContext* ctx, uint32_t procedure_id, uint8_t arg_start_s
 	CtImageProcedure proc = ctx->image->procedure_table[procedure_id];
 	uint32_t arg_count = procedure_id == 0 ? 0 : proc.arg_count;
 
-	if (arg_count >= CT_CONF_SLOT_COUNT) {
+	if (arg_count >= CT_CONF_FIXED_SLOT_COUNT) {
 		
 		CT_ERROR(
 			(&ctx->error), 
 			ctErrorCode_Procedure, 
-			"Too many arguments requested by procedure(%u): '%u' (>=%u)", procedure_id, arg_count, CT_CONF_SLOT_COUNT
+			"Too many arguments requested by procedure(%u): '%u' (>=%u)", procedure_id, arg_count, CT_CONF_FIXED_SLOT_COUNT
 		);
 
 		ctx->error = (ctError){.code=ctErrorCode_Procedure};
@@ -127,7 +127,7 @@ ct_ctx_call_procedure(CtContext* ctx, uint32_t procedure_id, uint8_t arg_start_s
 	frame->return_ip = ctx->ip;
 	frame->return_value_slot = return_slot;
 	frame->args_count = arg_count;
-	memset(frame->file.types, 0, CT_CONF_SLOT_COUNT);
+	memset(frame->file.types, 0, CT_CONF_FIXED_SLOT_COUNT);
 
 	for (size_t i = 0; i < arg_count; i++) {
 		frame->file.atoms[i] = ctx->current_frame->file.atoms[arg_start_slot + i];
@@ -161,7 +161,7 @@ ct_ctx_return_procedure(CtContext* ctx, CtAtom returned_atom, CtAtomType returne
 	ctx->ip = frame->return_ip;
 	ct_ctx_store_atom(ctx, frame->return_value_slot, returned_atom, returned_atom_type);
 
-	for (size_t i = 0; i < CT_CONF_SLOT_COUNT && frame->object_field_count; i++) {
+	for (size_t i = 0; i < CT_CONF_FIXED_SLOT_COUNT && frame->object_field_count; i++) {
 		if (frame->file.types[i] == CT_ATOM_OBJECT) {
 			ct_objects_dec_ref(ctx->objects, frame->file.atoms[i].as_object);
 			frame->object_field_count--;

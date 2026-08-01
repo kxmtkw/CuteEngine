@@ -17,8 +17,8 @@
 
 // Array of atoms and their types. For use in call frames
 typedef struct {
-	CtAtom         atoms[CT_CONF_SLOT_COUNT];
-	CtAtomTypeSize types[CT_CONF_SLOT_COUNT];
+	CtAtom         atoms[CT_CONF_FIXED_SLOT_COUNT];
+	CtAtomTypeSize types[CT_CONF_FIXED_SLOT_COUNT];
 } CtAtomFile;
 
 

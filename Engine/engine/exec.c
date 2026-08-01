@@ -243,7 +243,12 @@ ct_engine_exec(CtEngine* engine, CtContext* ctx) {
 	NEXT();
 
 HANDLER_NULL:
+
+	#ifdef CT_CONF_FAIL_ON_NULL
+	goto HANDLER_ILLEGAL_INSTRUCTION;
+	#else		
 	NEXT();
+	#endif // CT_CONF_FAIL_ON_NULL
 
 HANDLER_HALT:
 	r1 = instrs[ctx->ip++];
