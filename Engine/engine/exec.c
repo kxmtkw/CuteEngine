@@ -273,7 +273,7 @@ HANDLER_CAST_I2F:
 	r1 = instrs[ctx->ip++];
 	r2 = instrs[ctx->ip++];
 	ct_ctx_load_atom(ctx, r2, &a1, &t1);
-	ct_ctx_store_atom(ctx, r1, (CtAtom){.as_float=a1.as_int}, CT_ATOM_PRIMITIVE);
+	ct_ctx_store_atom(ctx, r1, (CtAtom){.as_float=(double)a1.as_int}, CT_ATOM_PRIMITIVE);
 	NEXT();
 
 HANDLER_CAST_F2I:
@@ -299,7 +299,7 @@ HANDLER_CAST_U2F:
 	r1 = instrs[ctx->ip++];
 	r2 = instrs[ctx->ip++];
 	ct_ctx_load_atom(ctx, r2, &a1, &t1);
-	ct_ctx_store_atom(ctx, r1, (CtAtom){.as_float=a1.as_uint}, CT_ATOM_PRIMITIVE);
+	ct_ctx_store_atom(ctx, r1, (CtAtom){.as_float=(double)a1.as_uint}, CT_ATOM_PRIMITIVE);
 	NEXT();
 
 HANDLER_CAST_F2U:
