@@ -101,11 +101,9 @@ static const uint32_t ct_magic_id = 0x12345678;
 
 typedef struct {
 	uint32_t magic_id;
-	uint32_t padding;
+	uint32_t version;
 	uint32_t procedure_count;
 	uint32_t instruction_count;
-	uint32_t procedure_table_offset;
-	uint32_t instruction_pool_offset; 
 } CtImageHeader;
 
 
@@ -123,10 +121,11 @@ typedef struct {
 
 
 typedef enum {
-	CT_IMAGE_STATUS_SUCCESS,
-	CT_IMAGE_STATUS_FILE_NOT_FOUND,
-	CT_IMAGE_STATUS_READ_WRITE_FAILURE,
-	CT_IMAGE_CORRUPTED_FILE
+	CT_IMAGE_STATUS_SUCCESS = 0x0,
+	CT_IMAGE_STATUS_FILE_NOT_FOUND = 0x1,
+	CT_IMAGE_STATUS_CORRUPTED_IMAGE = 0x2,
+	CT_IMAGE_STATUS_VERSION_MISTMATCH = 0x3,
+	CT_IMAGE_STATUS_READ_WRITE_FAILURE = 0x4,
 } CtImageStatus;
 
 
@@ -246,5 +245,9 @@ ct_image_byteswap_f64(double value) {
 	return value;
 }
 
+
+// Versioning
+
+#define CT_CUTE_VERSION 1
 
 #endif // CUTE_INSTR_H

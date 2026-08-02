@@ -27,6 +27,7 @@ ct_image_write(CtImage *img, const char *filepath) {
 	if (!fp) {return CT_IMAGE_STATUS_FILE_NOT_FOUND;}
 
 	img->header.magic_id = ct_magic_id;
+	img->header.version = CT_CUTE_VERSION;
 
 	u_int32_t items_written;
 
@@ -56,7 +57,11 @@ ct_image_read(CtImage *img, const char *filepath) {
 	if (items_read != 1) {return CT_IMAGE_STATUS_READ_WRITE_FAILURE;}
 
 	if (img->header.magic_id != ct_magic_id) {
-		return CT_IMAGE_CORRUPTED_FILE;
+		return CT_IMAGE_STATUS_CORRUPTED_IMAGE;
+	}
+
+	if (img->header.version != CT_CUTE_VERSION) {
+		return CT_IMAGE_STATUS_VERSION_MISTMATCH;
 	}
 
 	img->procedure_table = malloc(sizeof(CtImageProcedure) * img->header.procedure_count);
