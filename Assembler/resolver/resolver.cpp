@@ -43,7 +43,7 @@ CtResolver::resolve_procedure() {
 	if (!(
 		mStream.expect_token("(") &&
 		mStream.expect_type(CtTokenType::Int, &val) &&
-		mStream.expect_token("(")
+		mStream.expect_token(")")
 	)) {
 		// invalid
 	}
