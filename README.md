@@ -74,18 +74,18 @@ cute demo.cute
 No official installation exists since the project is still in its infant stage.
 
 1. Clone the repository.
-2. Build the project. See [Building Cute](07-building.md).
+2. Build the project. See [Building Cute](docs/07-building.md).
 3. Run `cuteasm` or `cute` to make and run image files respectively.
 
 
 ### Docs
 Here is a list of documentation to get you started:
 
-1. [Project Architecture](01-arch.md)
-2. [Assembly Lang](02-assembly.md)
-3. [Instruction Set](03-instructions.md)
-4. [Image Format](04-image.md)
-5. [Assembler](05-assembler.md)
-6. [Engine](06-engine.md)
-7. [Building Cute](07-building.md)
+1. [Project Architecture](docs/01-arch.md)
+2. [Assembly Lang](docs/02-assembly.md)
+3. [Instruction Set](docs/03-instructions.md)
+4. [Image Format](docs/04-image.md)
+5. [Assembler](docs/05-assembler.md)
+6. [Engine](docs/06-engine.md)
+7. [Building Cute](docs/07-building.md)
 
