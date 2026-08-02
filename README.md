@@ -1,32 +1,91 @@
-# Cute (,,>﹏<,,)
 
-**Cute** is a cute little language runtime that I am working on.
+<h1 align="center">Cute (,,>﹏<,,)</h1>
 
-## Arch
+`Cute` is a cute little language runtime that I am working on. It comes with its own instruction set, assembly, assembler and engine (the core runtime).
 
-The project is divided into two parts:
-- Instr
-- Engine
-- Assembler
+### Features
+- `Bytecode compiled` instruction set.
+- `64-Bit` architecture.
+- `Slot/Register based` VM.
+- Objects and `Automatic Memory Management`.
+- `Modules` system to add more functionality to the runtime.
 
-### `Instr`
+### Design Goals
+- As fast and optimized as possible without the need of a JIT (for now).
+- Featureful runtime.
+- Easily extendable.
+- Extremely flexible runtime.
 
-Defines the core instruction set and acts as a mediator between the `Engine` and `Assembler`.
+### Example
 
-### `Engine`
+Make a `demo.csm` file in your project. Write the following assembly in it.
 
-The main runtime that executes the bytecode, written purely in C.
+```bash
+# a loop based implementation of the power function. $0 is base and $1 is the exponent
+proc 1 (2) {
+	# $0 and $1 are filled with the passed arguments by the engine.
 
-Some features of the runtime:
-+ Register-based
-+ Typed instruction set
-+ Objects supported along with reference counting GC
+	setu $2 1;
+	setu $3 1;
+
+	@loop;
+
+	mulu $3 $3 $0;
+	
+	cmpu $2 $1;
+	incu $2;
+
+	jmplt loop;
+
+	retval $3;
+}
+
+# procedure 0 is the entry point of the program. It takes 0 arguments.
+proc 0 (0) {
+
+	# set up the arguments
+	setu $0 5; # the base
+	setu $1 4; # the power
+
+	# set up the proc id to be called
+	setu $2 1;
+	call $2 $0 $4; # here $2 holds the id, $0 is the arg start slot and $4 is the return slot
+
+	out $3 $4; # should print [ uint 125 ]
+
+	setu $3 0;
+	halt $3; # exits with code 0
+}
+```
+
+Then compile the file using:
+```bash
+cuteasm demo.csm
+```
+
+This will output a `demo.cute` file. Simply run that file using the engine.
+```bash
+cute demo.cute
+# output: [ uint 125 ]
+```
+
+### Installing
+
+No official installation exists since the project is still in its infant stage.
+
+1. Clone the repository.
+2. Build the project. See [Building Cute](07-building.md).
+3. Run `cuteasm` or `cute` to make and run image files respectively.
 
 
-### `Assembler`
+### Docs
+Here is a list of documentation to get you started:
 
-A simple assembler that turns human readable instructions into bytecode. Written in C++.
-
-
-
+1. [Project Architecture](01-arch.md)
+2. [Assembly Lang](02-assembly.md)
+3. [Instruction Set](03-instructions.md)
+4. [Image Format](04-image.md)
+5. [Assembler](05-assembler.md)
+6. [Engine](06-engine.md)
+7. [Building Cute](07-building.md)
 
