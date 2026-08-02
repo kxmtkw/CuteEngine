@@ -69,12 +69,21 @@ ct_engine_load(CtEngine* engine, const char* filepath) {
 			);
 			break;
 
-		case CT_IMAGE_CORRUPTED_FILE:
+		case CT_IMAGE_STATUS_CORRUPTED_IMAGE:
 			error.code = ctErrorCode_Engine;
 			ct_utils_format(
 				error.msg,
 				sizeof(error.msg),
 				"Invalid image file: %s", filepath
+			);
+			break;
+
+		case CT_IMAGE_STATUS_VERSION_MISTMATCH:
+			error.code = ctErrorCode_Engine;
+			ct_utils_format(
+				error.msg,
+				sizeof(error.msg),
+				"Version mismatch. Engine is v%u but image '%s' is v%u.", CT_CUTE_VERSION, filepath, engine->image.header.version
 			);
 			break;
 
