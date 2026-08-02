@@ -133,7 +133,7 @@ _ct_out(uint8_t fmt, CtAtom atom) {
 
 #define NEXT() if (ctx->running) { \
 	CT_LOG("trace", "ip: 0x%08lX | instr: 0x%02X | ctx: %p\n", ctx->ip, instrs[ctx->ip], ctx); goto *dispatch_table[instrs[ctx->ip++]]; \
-};
+} else { return;};
 
 #endif // CUTE_CONF_DEBUG
 

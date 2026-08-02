@@ -35,18 +35,24 @@ ct_ctx_delStack(ctCallStack* s) {
 }
 
 static inline ctCallFrame*
-ct_ctx_getFrame(ctCallStack* s) {		
-    return &s->frames[s->size++];
+ct_ctx_getFrame(ctCallStack* s) {	
+	return &s->frames[s->size++];
 }
 
 static inline ctCallFrame* 
 ct_ctx_popFrame(ctCallStack* s) {
-    return &s->frames[--s->size];
+    if (s->size > 0) {
+		return &s->frames[--s->size];
+	};	
+	return NULL;
 }
 
 static inline ctCallFrame* 
 ct_ctx_peekFrame(ctCallStack* s) {
-    return &s->frames[s->size-1];
+    if (s->size > 0) {
+		return &s->frames[s->size-1];
+	};	
+	return NULL;
 }
 
 
@@ -139,7 +145,6 @@ ct_ctx_call_procedure(CtContext* ctx, uint32_t procedure_id, uint8_t arg_start_s
 		}
 	};
 	
-	
 
 	ctx->ip = proc.bytecode_index;
 	ctx->current_frame = ct_ctx_peekFrame(&ctx->callstack);
@@ -157,6 +162,12 @@ ct_ctx_return_procedure(CtContext* ctx, CtAtom returned_atom, CtAtomType returne
 
 	ctCallFrame* frame = ct_ctx_popFrame(&ctx->callstack);
 	ctx->current_frame = ct_ctx_peekFrame(&ctx->callstack);
+
+	if (ctx->current_frame == NULL) {
+		ctx->running = false;
+		ctx->exit_code = returned_atom.as_uint;
+		return;
+	}
 	
 	ctx->ip = frame->return_ip;
 	ct_ctx_store_atom(ctx, frame->return_value_slot, returned_atom, returned_atom_type);
