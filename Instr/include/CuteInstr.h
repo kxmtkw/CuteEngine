@@ -3,6 +3,7 @@
 
 // Main Cute Instruction Set.
 #include <stdint.h>
+#include <string.h>
 
 typedef enum {
 
@@ -140,6 +141,110 @@ ct_image_read(CtImage *img, const char *filepath);
 // Free the image's resources.
 void 
 ct_image_free(CtImage *img);
+
+
+
+#if defined(__BYTE_ORDER__) && (__BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__)
+#define CT_HOST_IS_LITTLE_ENDIAN 1
+#else
+#define CT_HOST_IS_LITTLE_ENDIAN 0
+#endif
+
+
+
+// Convert big endian to little endian while perserves little endian values.
+// Always use this when reading/writing an integer to an image file. 
+// This is to ensure that the image file is always in little endian format, regardless of the host architecture.
+static inline uint32_t
+ct_image_byteswap_u32(uint32_t value) {
+
+	#if CT_HOST_IS_LITTLE_ENDIAN
+
+	return value;
+	
+	#else
+
+	uint8_t* be = (uint8_t*) &value;
+	uint32_t le = (
+		((uint32_t) be[3]) << 24 |
+		((uint32_t) be[2]) << 16 |
+		((uint32_t) be[1]) << 8  |
+		((uint32_t) be[0])
+	);
+	return le;
+
+	#endif // CT_HOST_IS_BIG_ENDIAN
+
+}
+
+// Convert big endian u64 to little endian u64 while perserves little endian values.
+static inline uint64_t
+ct_image_byteswap_u64(uint64_t value) {
+
+	#if CT_HOST_IS_LITTLE_ENDIAN
+
+	return value;
+
+	#else
+
+	uint8_t* be = (uint8_t*) &value;
+	uint64_t le = (
+		((uint64_t) be[7]) << 56 |
+		((uint64_t) be[6]) << 48 |
+		((uint64_t) be[5]) << 40 |
+		((uint64_t) be[4]) << 32 |
+		((uint64_t) be[3]) << 24 |
+		((uint64_t) be[2]) << 16 |
+		((uint64_t) be[1]) << 8  |
+		((uint64_t) be[0])
+	);
+
+	return le;
+
+	#endif // CT_HOST_IS_BIG_ENDIAN
+
+}
+
+// This is to ensure that the image file is always in little endian format, regardless of the host architecture.
+static inline uint16_t
+ct_image_byteswap_u16(uint16_t value) {
+
+	#if CT_HOST_IS_LITTLE_ENDIAN
+
+	return value;
+	
+	#else
+
+	uint8_t* be = (uint8_t*) &value;
+	uint16_t le = (
+		((uint16_t) be[1]) << 8  |
+		((uint16_t) be[0])
+	);
+	return le;
+
+	#endif // CT_HOST_IS_BIG_ENDIAN
+
+}
+
+// Convert big endian f32 to little endian f32 while perserves little endian values.
+static inline float
+ct_image_byteswap_f32(float value) {
+	uint32_t as_int;
+	memcpy(&as_int, &value, sizeof(uint32_t));
+	as_int = ct_image_byteswap_u32(as_int);
+	memcpy(&value, &as_int, sizeof(uint32_t));
+	return value;
+}
+
+// Convert big endian f64 to little endian f64 while perserves little endian values.
+static inline double
+ct_image_byteswap_f64(double value) {
+	uint64_t as_int;
+	memcpy(&as_int, &value, sizeof(uint64_t));
+	as_int = ct_image_byteswap_u64(as_int);
+	memcpy(&value, &as_int, sizeof(uint64_t));
+	return value;
+}
 
 
 #endif // CUTE_INSTR_H
