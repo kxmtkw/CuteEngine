@@ -2,6 +2,7 @@
 #include <iostream>
 #include <sstream>
 #include <format>
+#include <filesystem>
 
 #include "tokenizer/tokenizer.hpp"
 #include "tokenizer/tokens.hpp"
@@ -25,7 +26,8 @@ void CtAssembler::assemble(std::string filepath) {
 	ss << file.rdbuf();
 	std::string content = ss.str();
 
-	assemble_string(std::move(content), std::format("{}.out", filepath));
+	filepath = std::filesystem::path(filepath).replace_extension(".cute").string();
+	assemble_string(std::move(content), filepath);
 };
 
 
