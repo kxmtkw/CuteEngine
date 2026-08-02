@@ -45,27 +45,27 @@ cute.link(CuteInstr)
 
 # Cute Assembler
 
-CuteAssembler = StaticLibrary()
-CuteAssembler.compiler = "g++"
+CuteAsm = StaticLibrary()
+CuteAsm.compiler = "g++"
 
 cute_asm_src = Path("Assembler")
 
-CuteAssembler.source = Source(
+CuteAsm.source = Source(
 	cute_asm_src / "tokenizer" / "tokenizer.cpp",
 	cute_asm_src / "tokenizer" / "stream.cpp",
 	cute_asm_src / "resolver" / "resolver.cpp",
 	cute_asm_src / "codegen" / "codegen.cpp",
 	cute_asm_src / "assembler" / "assembler.cpp"
 )
-CuteAssembler.headers.private = cute_asm_src
-CuteAssembler.headers.public = cute_asm_src / "include"
-CuteAssembler.link(CuteInstr)
+CuteAsm.headers.private = cute_asm_src
+CuteAsm.headers.public = cute_asm_src / "include"
+CuteAsm.link(CuteInstr)
 
 
 # cuteasm binary
 
 cuteasm = Executable()
 cuteasm.source = Source("main/assembler.cpp")
-cuteasm.link(CuteAssembler)
+cuteasm.link(CuteAsm)
 cuteasm.link(CuteInstr)
-cuteasm.compiler = CuteAssembler.compiler
+cuteasm.compiler = CuteAsm.compiler

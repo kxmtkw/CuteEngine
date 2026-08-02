@@ -46,7 +46,7 @@ target_link_libraries(cute PRIVATE CuteEngine)
 
 # --- Cute Assembler ---
 
-add_library(CuteAssembler STATIC
+add_library(CuteAsm STATIC
     Assembler/tokenizer/tokenizer.cpp
     Assembler/tokenizer/stream.cpp
 	Assembler/resolver/resolver.cpp
@@ -54,16 +54,16 @@ add_library(CuteAssembler STATIC
     Assembler/assembler/assembler.cpp
 )
 
-target_include_directories(CuteAssembler
+target_include_directories(CuteAsm
     PUBLIC
         Assembler/include
     PRIVATE
         Assembler
 )
 
-target_link_libraries(CuteAssembler PUBLIC CuteInstr)
+target_link_libraries(CuteAsm PUBLIC CuteInstr)
 
 # --- cuteasm binary ---
 
 add_executable(cuteasm main/assembler.cpp)
-target_link_libraries(cuteasm PRIVATE CuteAssembler)
+target_link_libraries(cuteasm PRIVATE CuteAsm)
