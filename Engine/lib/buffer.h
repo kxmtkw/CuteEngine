@@ -8,24 +8,23 @@
 
 
 typedef struct {
-	CtObject object;
+	CtObject __object__;
 	uint8_t* data;
-	uint32_t capacity;
 	uint32_t size;
 } CtBufferObject;
 
 
 // Initialize a buffer object.
-void
-ct_lib_buffer_init(CtBufferObject* obj, uint32_t cap);
+CtBufferObject*
+ct_lib_buffer_new(CtObjectManager* manager, uint32_t size);
 
 // Delete method for the buffer object.
 void
-ct_lib_buffer_del(CtObject* obj);
+ct_lib_buffer_del(CtObjectManager* manager, CtObject* obj);
 
-// Resize a buffer. Truncates if new cap < old cap.
+// Resize a buffer. Truncates if new size is less.
 void
-ct_lib_buffer_resize(CtBufferObject* obj, uint32_t new_cap);
+ct_lib_buffer_resize(CtBufferObject* obj, uint32_t new_size);
 
 // Get a byte at a specific index in the buffer
 uint8_t
@@ -38,18 +37,6 @@ ct_lib_buffer_set_byte(CtBufferObject* obj, uint32_t index, uint8_t byte);
 // Set n bytes starting from index
 void
 ct_lib_buffer_set_bytes(CtBufferObject* obj, uint32_t index, uint32_t n, uint8_t* bytes);
-
-// Push a byte to the end of the buffer.
-void
-ct_lib_buffer_push_byte(CtBufferObject* obj, uint8_t byte);
-
-// Push n bytes to the end of the buffer.
-void
-ct_lib_buffer_push_bytes(CtBufferObject* obj, uint32_t count, uint8_t* bytes);
-
-// Extend a buffer with another buffer's contents. The other buffer remains unchanged.
-void
-ct_lib_buffer_extend(CtBufferObject* obj, CtBufferObject* other);
 
 
 #endif // CT_LIB_BUFFER_H
