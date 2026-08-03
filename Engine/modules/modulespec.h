@@ -24,4 +24,14 @@ typedef struct {
 
 typedef void (*CtModuleMethod)(CtModuleMethodArguments, CtModuleMethodResult*);
 
+typedef struct {
+	CtModuleMethod method;
+	uint32_t       argument_count;
+} CtModuleMethodEntry;
+
+#define CT_MODULE_ENTRY(METHOD, ARG_COUNT) (CtModuleMethodEntry) {METHOD, ARG_COUNT}
+#define CT_MODULE_DEFINE(NAME) CtModuleMethodEntry _ct_module_ ## NAME ## _method_map[]
+#define CT_MODULE_REFER(NAME) _ct_module_ ## NAME ## _method_map
+#define CT_MODULE_COUNT_METHODS(NAME) sizeof(CT_MODULE_REFER(NAME)) / sizeof(CT_MODULE_REFER(NAME)[0]) 
+
 #endif // ENGINE_MODULESPEC_H

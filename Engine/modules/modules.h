@@ -4,14 +4,12 @@
 
 #include "modules/modulespec.h"
 
+#include "modules/buffer.h"
 
 
 
 /*
 Module registration for the Cute Engine.
-Each module must define these macros:
-	CUTE_MODULE_****_METHODS
-	CUTE_MODULE_****_METHODS_COUNT
 
 How to use the dispatch map:
 	map[index] -> module_map: gives you the dispatch table for the module at index.
@@ -20,10 +18,12 @@ How to use the dispatch map:
 */
 
 
-static const CtModuleMethod* ct_modules_dispatch_map[] = {
+static const CtModuleMethodEntry* ct_modules_dispatch_map[] = {
+	[0] = CT_MODULE_REFER(buffer),
 };
 
 static const uint32_t ct_modules_method_count[] = {
+	[0] = CT_MODULE_COUNT_METHODS(buffer),
 };
 
 static const uint32_t ct_modules_count = sizeof(ct_modules_dispatch_map) / sizeof(ct_modules_dispatch_map[0]);
@@ -31,13 +31,13 @@ static const uint32_t ct_modules_count = sizeof(ct_modules_dispatch_map) / sizeo
 
 
 static inline int32_t
-ct_modules_get_method(uint32_t module_id, uint32_t method_id, CtModuleMethod* method) {
+ct_modules_get_method(uint32_t module_id, uint32_t method_id, CtModuleMethodEntry* entry) {
 
 	if (module_id >= ct_modules_count) {
 		return 0;
 	}
 
-	const CtModuleMethod* module_map = ct_modules_dispatch_map[module_id];
+	const CtModuleMethodEntry* module_map = ct_modules_dispatch_map[module_id];
 
 	if (module_map == NULL) {
 		return 0;
@@ -47,8 +47,8 @@ ct_modules_get_method(uint32_t module_id, uint32_t method_id, CtModuleMethod* me
 		return 0;
 	};
 
-	*method = module_map[method_id];
-	
+	*entry = module_map[method_id];
+
 	return 1;
 };
 
