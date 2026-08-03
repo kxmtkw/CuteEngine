@@ -7,6 +7,7 @@
 #include "common/error.h"
 
 #include "objects/manager.h"
+#include "objects/object.h"
 #include "utils/utils.h"
 
 
@@ -112,7 +113,7 @@ ct_objects_pop_empty_bucket(CtObjectManager* manager) {
 
 
 CtObject*
-ct_objects_new_object(CtObjectManager* manager, uint32_t obj_size, uint64_t obj_type, CtObjectDelete del_func) {
+ct_objects_new_object(CtObjectManager* manager, uint32_t size, uint64_t type, CtObjectDeleteFunc del_func) {
 
 	CtObjectBucket* assigned_bucket = NULL;
 
@@ -148,14 +149,14 @@ ct_objects_new_object(CtObjectManager* manager, uint32_t obj_size, uint64_t obj_
 	};
 
 	// allocating the object
-	CtObject* obj = malloc(obj_size);
+	CtObject* obj = malloc(size);
 
 	if (obj == NULL) {
 		ct_utils_clear_bit(&assigned_bucket->bitmask, assigned_obj_slot);
 
 		CT_ERROR((&manager->error), ctErrorCode_Engine, "Engine failed to allocate memory for new Object (%u.%u). Out of memory.", assigned_bucket->id, assigned_obj_slot)
 
-		CT_LOG("objects", "Failed to allocate memory for Object (%u.%u) [%p] of size %u\n", assigned_bucket->id, assigned_obj_slot, obj, obj_size);
+		CT_LOG("objects", "Failed to allocate memory for Object (%u.%u) [%p] of size %u\n", assigned_bucket->id, assigned_obj_slot, obj, size);
 		return NULL;
 	}
 	
@@ -163,12 +164,12 @@ ct_objects_new_object(CtObjectManager* manager, uint32_t obj_size, uint64_t obj_
 	obj->bucket_index = assigned_obj_slot;
 	obj->bucket = assigned_bucket;
 	obj->ref_count = 0;
-	obj->obj_type = obj_type;
-	obj->obj_size = obj_size;
-	obj->obj_del_func = del_func;
+	obj->type = type;
+	obj->size = size;
+	obj->delete = del_func;
 
 
-	CT_LOG("objects", "New Object (%u.%u) [%p] (data:%u bytes) allocated to bucket (%u)\n", obj->bucket_id, obj->bucket_index, obj, obj_size, assigned_bucket->id);
+	CT_LOG("objects", "New Object (%u.%u) [%p] (data:%u bytes) allocated to bucket (%u)\n", obj->bucket_id, obj->bucket_index, obj, size, assigned_bucket->id);
 
 	return obj;
 }
@@ -186,8 +187,8 @@ ct_objects_del_object(CtObjectManager* manager, CtObject* obj) {
 
 	ct_utils_clear_bit(&bucket->bitmask, obj->bucket_index);
 
-	if (obj->obj_del_func) {
-		obj->obj_del_func(manager, obj);
+	if (obj->delete) {
+		obj->delete(manager, obj);
 	}
 
 	free(obj);

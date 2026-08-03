@@ -14,16 +14,16 @@ typedef struct CtObjectManager CtObjectManager;
 struct CtObjectBucket;
 typedef struct CtObjectBucket CtObjectBucket;
 
-typedef void (*CtObjectDelete)(struct CtObjectManager*, struct CtObject*);
+typedef void (*CtObjectDeleteFunc) (struct CtObjectManager*, struct CtObject*);
 
 struct CtObject {
-	uint32_t            bucket_id;
-	uint32_t            bucket_index;
-	uint32_t            ref_count;
-	uint32_t            obj_size;
-	uint32_t            obj_type;
-	CtObjectDelete      obj_del_func;
-	CtObjectBucket*     bucket;
+	CtObjectBucket*         bucket;
+	uint32_t                bucket_id;
+	uint32_t                bucket_index;
+	uint32_t                ref_count;
+	uint32_t                size;
+	uint32_t                type;
+	CtObjectDeleteFunc      delete;
 }; 
 
 #endif // CUTE_OBJECT_H

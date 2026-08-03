@@ -52,7 +52,7 @@ ct_objects_pop_empty_bucket(CtObjectManager* manager);
 
 // Allocate a new object.
 CtObject*
-ct_objects_new_object(CtObjectManager* manager, uint32_t obj_size, uint64_t obj_type, CtObjectDelete del_func);
+ct_objects_new_object(CtObjectManager* manager, uint32_t obj_size, uint64_t obj_type, CtObjectDeleteFunc del_func);
 
 // Delete an object, sub objects are NOT considered. The deleter if it exists, is also called.
 void

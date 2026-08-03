@@ -595,7 +595,7 @@ HANDLER_CON_NEW:
 	r1 = instrs[ctx->ip++];
 	r2 = instrs[ctx->ip++];
 	ct_ctx_load_atom(ctx, r2, &a1, &t1);
-	a2.as_object = ct_container_new(ctx->objects, a1.as_uint, &ctx->error);
+	a2.as_object = (CtObject*) ct_container_new(ctx->objects, a1.as_uint, &ctx->error);
 	if (ctx->error.code) {
 		ct_ctx_throw_error(ctx, ctx->error);
 		return;
@@ -610,7 +610,7 @@ HANDLER_CON_GET:
 	ct_ctx_load_atom(ctx, r2, &a1, &t1);
 	ct_ctx_load_atom(ctx, r3, &a2, &t2);
 	CT_CHECK_IF_OBJECT(t1);
-	typed_atom = ct_container_get(ctx->objects, a1.as_object, a2.as_uint, &ctx->error);
+	typed_atom = ct_container_get(ctx->objects, (CtContainer*) a1.as_object, a2.as_uint, &ctx->error);
 	if (ctx->error.code) {
 		ct_ctx_throw_error(ctx, ctx->error);
 		return;
@@ -626,7 +626,7 @@ HANDLER_CON_SET:
 	ct_ctx_load_atom(ctx, r2, &a2, &t2);
 	ct_ctx_load_atom(ctx, r3, &a3, &t3);
 	CT_CHECK_IF_OBJECT(t1);
-	ct_container_set(ctx->objects, a1.as_object, a2.as_uint, (CtTypedAtom){t3, a3}, &ctx->error);
+	ct_container_set(ctx->objects, (CtContainer*) a1.as_object, a2.as_uint, (CtTypedAtom){t3, a3}, &ctx->error);
 	if (ctx->error.code) {
 		ct_ctx_throw_error(ctx, ctx->error);
 		return;
@@ -638,7 +638,7 @@ HANDLER_CON_SIZE:
 	r2 = instrs[ctx->ip++];
 	ct_ctx_load_atom(ctx, r2, &a1, &t1);
 	CT_CHECK_IF_OBJECT(t1);
-	ct_ctx_store_atom(ctx, r1, (CtAtom){.as_uint = ct_container_size(ctx->objects, a1.as_object)}, CT_ATOM_PRIMITIVE);
+	ct_ctx_store_atom(ctx, r1, (CtAtom){.as_uint = ct_container_size(ctx->objects, (CtContainer*) a1.as_object)}, CT_ATOM_PRIMITIVE);
 	NEXT();
 
 HANDLER_CON_COPY:
@@ -646,7 +646,7 @@ HANDLER_CON_COPY:
 	r2 = instrs[ctx->ip++];
 	ct_ctx_load_atom(ctx, r2, &a2, &t2);
 	CT_CHECK_IF_OBJECT(t2);
-	a1.as_object = ct_container_copy(ctx->objects, a2.as_object, &ctx->error);
+	a1.as_object = (CtObject*) ct_container_copy(ctx->objects, (CtContainer*) a2.as_object, &ctx->error);
 	if (ctx->error.code) {
 		ct_ctx_throw_error(ctx, ctx->error);
 		return;
