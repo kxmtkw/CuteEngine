@@ -4,26 +4,24 @@
 #include <stdint.h>
 
 #include "common/atom.h"
-#include "objects/manager.h"
-#include "common/error.h"
 
+#include "engine/context.h"
 
 
 typedef struct {
-	const CtAtom*     atoms;
-	const CtAtomTypeSize* types;
-	const uint32_t    count;
-	CtObjectManager* container_manager;
-} ctModuleArguments;
+	const CtContext* const       context;
+	const CtAtom* const          argument_atoms;
+	const CtAtomTypeSize* const  argument_types;
+	const uint32_t               argument_count;
+} CtModuleMethodArguments;
 
 
 typedef struct {
 	CtAtom         returned_atom;
-	CtAtomTypeSize returned_atom_type;
+	CtAtomTypeSize returned_type;
 	bool           success;
-	ctError        error;
-} ctModuleResult;
+} CtModuleMethodResult;
 
-typedef ctModuleResult (*ctModuleMethod)(ctModuleArguments);
+typedef void (*CtModuleMethod)(CtModuleMethodArguments, CtModuleMethodResult*);
 
 #endif // ENGINE_MODULESPEC_H
