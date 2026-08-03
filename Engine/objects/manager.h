@@ -1,5 +1,5 @@
-#ifndef CUTE_OBJECTS_H
-#define CUTE_OBJECTS_H
+#ifndef CUTE_OBJECTS_MANAGER_H
+#define CUTE_OBJECTS_MANAGER_H
 
 #include <stdint.h>
 
@@ -8,23 +8,7 @@
 #include "common/error.h"
 
 
-struct CtObjectManager;
-typedef struct CtObjectManager CtObjectManager;
-
-struct CtObjectBucket;
-typedef struct CtObjectBucket CtObjectBucket;
-
-typedef void (*CtObjectDelete)(struct CtObjectManager*, struct CtObject*);
-
-struct CtObject {
-	uint32_t            bucket_id;
-	uint32_t            bucket_index;
-	uint32_t            ref_count;
-	uint32_t            obj_size;
-	uint32_t            obj_type;
-	CtObjectDelete      obj_del_func;
-	CtObjectBucket*     bucket;
-}; 
+#include "objects/object.h"
 
 typedef struct CtObjectBucket {
 	uint32_t                id;
@@ -94,4 +78,4 @@ ct_objects_dec_ref(CtObjectManager* manager, CtObject* obj) {
 }
 
 
-#endif // CUTE_OBJECTS_H
+#endif // CUTE_OBJECTS_MANAGER_H
