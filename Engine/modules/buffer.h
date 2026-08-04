@@ -32,7 +32,20 @@ ct_module_buffer_resize(CtModuleMethodArguments args, CtModuleMethodResult* resu
 
 
 static void
+ct_module_buffer_copy(CtModuleMethodArguments args, CtModuleMethodResult* result) {
+
+	CtBufferObject* buffer = (CtBufferObject*) args.argument_atoms[0].as_object;
+
+	CtBufferObject* copy = ct_lib_buffer_copy(ct_ctx_get_object_manager(args.context), buffer);
+
+	result->returned_atom.as_object = (CtObject*) copy;
+	result->returned_type = CT_ATOM_OBJECT;
+}
+
+
+static void
 ct_module_buffer_get_byte(CtModuleMethodArguments args, CtModuleMethodResult* result) {
+
 	CtBufferObject* buffer = (CtBufferObject*) args.argument_atoms[0].as_object;
 	uint32_t index = args.argument_atoms[1].as_uint;
 
@@ -58,11 +71,27 @@ ct_module_buffer_set_byte(CtModuleMethodArguments args, CtModuleMethodResult* re
 }
 
 
+static void
+ct_module_buffer_extend(CtModuleMethodArguments args, CtModuleMethodResult* result) {
+	
+	CtBufferObject* buffer = (CtBufferObject*) args.argument_atoms[0].as_object;
+	CtBufferObject* other_buffer = (CtBufferObject*) args.argument_atoms[1].as_object;
+
+	ct_lib_buffer_extend(buffer, other_buffer);
+
+	result->returned_atom.as_uint = (uint32_t) 0;
+	result->returned_type = CT_ATOM_PRIMITIVE;
+}
+
+
+
 CT_MODULE_DEFINE(buffer) = {
 	CT_MODULE_ENTRY(ct_module_buffer_new, 1),
 	CT_MODULE_ENTRY(ct_module_buffer_resize, 2),
+	CT_MODULE_ENTRY(ct_module_buffer_copy, 1),
 	CT_MODULE_ENTRY(ct_module_buffer_get_byte, 2),
 	CT_MODULE_ENTRY(ct_module_buffer_set_byte, 3),
+	CT_MODULE_ENTRY(ct_module_buffer_extend, 2),
 };
 
 
