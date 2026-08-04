@@ -7,6 +7,7 @@
 #include "common/error.h"
 
 #include "objects/manager.h"
+#include "engine/context.h"
 #include "objects/object.h"
 #include "utils/utils.h"
 
@@ -23,8 +24,8 @@ struct CtObjectManager {
 	CtObjectBucket*     buckets_list;
 	uint32_t            bucket_count;
 	CtObjectBucket*     empty_buckets_list;
-	ctError             error;
 };
+
 
 CtObjectManager*
 ct_objects_init() {
@@ -72,20 +73,19 @@ ct_objects_end(CtObjectManager** manager_ptr) {
 }
 
 
-bool
-ct_objects_check_error(CtObjectManager* manager) {
-	return manager->error.code != ctErrorCode_None;
-}
-
-
 uint32_t
 ct_objects_new_bucket(CtObjectManager* manager) {
 	
 	CtObjectBucket* bucket = malloc(sizeof(CtObjectBucket));
 
 	if (bucket == NULL) {
-		CT_LOG("objects", "Failed to allocate memory for new bucket.\n");
-		return UINT32_MAX;
+		CT_ERROR_ENGINE(
+			ct_thread_error,
+			"Engine",
+			"ObjectBucketAllocation",
+			"Failed to allocate memory for new bucket.", NULL
+		);
+		return 0;
 	}
 
 	bucket->id = manager->bucket_count;
@@ -168,8 +168,12 @@ ct_objects_new_object(CtObjectManager* manager, uint32_t size, uint64_t type, Ct
 	if (obj == NULL) {
 		ct_utils_clear_bit(&assigned_bucket->bitmask, assigned_obj_slot);
 
-		CT_ERROR((&manager->error), ctErrorCode_Engine, "Engine failed to allocate memory for new Object (%u.%u). Out of memory.", assigned_bucket->id, assigned_obj_slot)
-
+		CT_ERROR_ENGINE(
+			ct_thread_error,
+			"Engine",
+			"OutOfMemory",
+			"Engine failed to allocate memory for new Object (%u.%u). Out of memory.", assigned_bucket->id, assigned_obj_slot
+		);
 		CT_LOG("objects", "Failed to allocate memory for Object (%u.%u) [%p] of size %u\n", assigned_bucket->id, assigned_obj_slot, obj, size);
 		return NULL;
 	}

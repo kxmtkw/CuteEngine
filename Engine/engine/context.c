@@ -20,6 +20,8 @@
 #include "contextdef.h"
 
 
+thread_local CtError ct_thread_error;
+
 // Call Stack helpers
 
 static inline void
@@ -82,31 +84,25 @@ ct_ctx_call_procedure(CtContext* ctx, uint32_t procedure_id, uint8_t arg_start_s
 
 	if (ctx->callstack.size >= CT_CONF_CALLSTACK_SIZE) {
 		
-		CT_ERROR(
-			(&ctx->error), 
-			ctErrorCode_Recursion, 
-			"Recursion depth reached. (%u calls)", ctx->callstack.capacity
+		CT_ERROR_ENGINE(
+			ct_thread_error, 
+			"Engine", 
+			"RecursionDepth", 
+			"Recursion depth reached. Too many calls. (%u)", CT_CONF_CALLSTACK_SIZE
 		);
 
-		ct_ctx_throw_error(
-			ctx, 
-			ctx->error
-		);
 		return;
 	};
 
 	if (procedure_id >= ctx->image->header.procedure_count) {
 
-		CT_ERROR(
-			(&ctx->error), 
-			ctErrorCode_Procedure, 
-			"Invalid procedure ID '%u' called. [%u-%u]", procedure_id, 0, ctx->image->header.procedure_count-1
+		CT_ERROR_ENGINE(
+			ct_thread_error, 
+			"Engine", 
+			"InvalidProcedure", 
+			"Procedure %u does not exist.", procedure_id
 		);
 
-		ct_ctx_throw_error(
-			ctx, 
-			ctx->error
-		);
 		return;
 	}
 
@@ -115,14 +111,13 @@ ct_ctx_call_procedure(CtContext* ctx, uint32_t procedure_id, uint8_t arg_start_s
 
 	if (arg_count >= CT_CONF_FIXED_SLOT_COUNT) {
 		
-		CT_ERROR(
-			(&ctx->error), 
-			ctErrorCode_Procedure, 
+		CT_ERROR_ENGINE(
+			ct_thread_error, 
+			"Engine", 
+			"TooManyArguments", 
 			"Too many arguments requested by procedure(%u): '%u' (>=%u)", procedure_id, arg_count, CT_CONF_FIXED_SLOT_COUNT
 		);
 
-		ctx->error = (ctError){.code=ctErrorCode_Procedure};
-		ct_ctx_throw_error(ctx, ctx->error);
 		return;
 	};
 
@@ -183,12 +178,6 @@ ct_ctx_return_procedure(CtContext* ctx, CtAtom returned_atom, CtAtomType returne
 }
 
 
-inline void
-ct_ctx_throw_error(CtContext* ctx, ctError error) {
-	ctx->running = false;
-	ctx->error = error;
-}
-
 
 void
 ct_ctx_modcall(CtContext* ctx, uint32_t module_id, uint32_t method_id, uint8_t arg_start_slot, uint8_t return_slot) {
@@ -198,16 +187,18 @@ ct_ctx_modcall(CtContext* ctx, uint32_t module_id, uint32_t method_id, uint8_t a
 	uint32_t code = ct_modules_get_method(module_id, method_id, &entry);
 
 	if (!code) {
-		CT_ERROR((&ctx->error), ctErrorCode_Module, "Unknown module method: %u.%u", module_id, method_id);
-		ct_ctx_throw_error(ctx, ctx->error);
 		return;
 	};
 
 	CT_LOG("context", "Calling module method: %u.%u with %u arguments starting from slot %u. Returning to slot %u.\n", module_id, method_id, entry.argument_count, arg_start_slot, return_slot);
 
 	if (arg_start_slot + entry.argument_count > 255) {
-		CT_ERROR((&ctx->error), ctErrorCode_Module, "Module method: %u.%u expected %u arguments. Cannot use arguments starting from slot %u", module_id, method_id, entry.argument_count, arg_start_slot);
-		ct_ctx_throw_error(ctx, ctx->error);
+		CT_ERROR_ENGINE(
+			ct_thread_error, 
+			"Engine", 
+			"FaultyAlignment", 
+			"Module method: %u.%u expected %u arguments. Cannot use arguments starting from slot %u.", module_id, method_id, entry.argument_count, arg_start_slot
+		);
 		return;
 	}
 
@@ -222,7 +213,6 @@ ct_ctx_modcall(CtContext* ctx, uint32_t module_id, uint32_t method_id, uint8_t a
 	entry.method(args, &result);
 
 	if (!result.success) {
-		ct_ctx_throw_error(ctx, ctx->error);
 		return;
 	};
 

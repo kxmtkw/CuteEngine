@@ -4,6 +4,7 @@
 #define ENGINE_CONTEXT_H
 
 #include <stdint.h>
+#include <threads.h>
 
 #include "CuteInstr.h"
 
@@ -14,6 +15,8 @@
 #include "objects/manager.h"
 #include "objects/object.h"
 
+
+extern thread_local CtError ct_thread_error;
 
 
 // Array of atoms and their types. For use in call frames
@@ -63,10 +66,6 @@ ct_ctx_call_procedure(CtContext* ctx, uint32_t procedure_id, uint8_t arg_start_s
 // Return from the last called procedure.
 void
 ct_ctx_return_procedure(CtContext* ctx, CtAtom returned_atom, CtAtomType returned_atom_type);
-
-// Throw an internal error
-void
-ct_ctx_throw_error(CtContext* ctx, ctError error);
 
 // Call a module method
 void

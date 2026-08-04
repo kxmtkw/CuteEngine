@@ -5,6 +5,7 @@
 // Exists so context's definition can be hidden from the rest of the code
 // Should not be included by any file outside of engine/
 
+#include <stdbool.h>
 #include <stdint.h>
 
 #include "CuteInstr.h"
@@ -28,12 +29,19 @@ struct CtContext {
 	CtCallFrame*        current_frame;
 	double              cmp_diff;
 	bool                running;
-	ctError             error;
 	uint8_t             exit_code;
 };
 
 typedef struct CtContext CtContext;
 
+static inline bool
+ct_ctx_is_running(CtContext* ctx) {
+	if (ct_thread_error.raised) {
+		ctx->running = false;
+		ctx->exit_code = 1;
+	};
+	return !ct_thread_error.raised;
+}
 
 // Store an atom at a specified slot in the CURRENT call frame.
 static inline void

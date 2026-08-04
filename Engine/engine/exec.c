@@ -54,15 +54,24 @@ ct_ctx_store_atom(ctx, r1, (CtAtom){.as_bool = ctx->cmp_diff OP 0 ? 1 : 0}, CT_A
 _ct_load_bytes(instrs, &ctx->ip, 4, &i32); \
 ctx->ip += i32; \
 if (ctx->ip >= engine->image.header.instruction_count) { \
-ctx->error = (ctError) {.code=ctErrorCode_Engine}; \
-ct_utils_format(ctx->error.msg, sizeof(ctx->error.msg), "Out of range ip: 0x%08lX", ctx->ip); ct_ctx_throw_error(ctx, ctx->error); };
+	CT_ERROR_ENGINE( \
+		ct_thread_error, \
+		"Engine", \
+		"IllegalJump", \
+		"Out of range ip: 0x%08lX", ctx->ip \
+	); \
+	return; \
+};
 
 
 #define CT_CHECK_IF_OBJECT(TYPE) \
 if (TYPE != CT_ATOM_OBJECT) { \
-	ctx->error.code = ctErrorCode_Type; \
-	ct_utils_format(ctx->error.msg, sizeof(ctx->error.msg), "Expected container, got primitive."); \
-	ct_ctx_throw_error(ctx, ctx->error); \
+	CT_ERROR_ENGINE( \
+		ct_thread_error, \
+		"Engine", \
+		"TypeError", \
+		"Expected Container, Got Primitive", NULL \
+	); \
 	return; \
 }; \
 
@@ -128,11 +137,11 @@ _ct_out(uint8_t fmt, CtAtom atom) {
 
 #ifndef CT_CONF_DEBUG
 
-#define NEXT() if (ctx->running) {goto *dispatch_table[instrs[ctx->ip++]];};
+#define NEXT() if (ct_ctx_is_running(ctx)) {goto *dispatch_table[instrs[ctx->ip++]];};
 
 #else 
 
-#define NEXT() if (ctx->running) { \
+#define NEXT() if (ct_ctx_is_running(ctx)) { \
 	CT_LOG("trace", "ip: 0x%08lX | instr: 0x%02X | ctx: %p\n", ctx->ip, instrs[ctx->ip], ctx); goto *dispatch_table[instrs[ctx->ip++]]; \
 } else { return;};
 
@@ -285,13 +294,13 @@ HANDLER_CAST_F2I:
 	ct_ctx_load_atom(ctx, r2, &a1, &t1);
 
 	if (!isfinite(a1.as_float) || a1.as_float > INT64_MAX || a1.as_float < INT64_MIN) {
-		CT_ERROR(
-			(&ctx->error),
-			ctErrorCode_Overflow,
-			"Unable to cast %f to int",
-			a1.as_float, a1.raw
+		CT_ERROR_ENGINE(
+			ct_thread_error, 
+			"Engine", 
+			"Overflow", 
+			"Unable to cast %f to int.",
+			a1.as_float
 		);
-		ct_ctx_throw_error(ctx, ctx->error);
 		return;
 	};
 
@@ -311,13 +320,13 @@ HANDLER_CAST_F2U:
 	ct_ctx_load_atom(ctx, r2, &a1, &t1);
 
 	if (!isfinite(a1.as_float) || a1.as_float > UINT64_MAX || a1.as_float < 0) {
-		CT_ERROR(
-			(&ctx->error),
-			ctErrorCode_Overflow,
-			"Unable to cast %f to uint",
-			a1.as_float, a1.raw
+		CT_ERROR_ENGINE(
+			ct_thread_error, 
+			"Engine", 
+			"Overflow", 
+			"Unable to cast %f to uint.",
+			a1.as_float
 		);
-		ct_ctx_throw_error(ctx, ctx->error);
 		return;
 	};
 
@@ -594,11 +603,7 @@ HANDLER_CON_NEW:
 	r1 = instrs[ctx->ip++];
 	r2 = instrs[ctx->ip++];
 	ct_ctx_load_atom(ctx, r2, &a1, &t1);
-	a2.as_object = (CtObject*) ct_container_new(ctx->objects, a1.as_uint, &ctx->error);
-	if (ctx->error.code) {
-		ct_ctx_throw_error(ctx, ctx->error);
-		return;
-	}
+	a2.as_object = (CtObject*) ct_container_new(ctx->objects, a1.as_uint);
 	ct_ctx_store_atom(ctx, r1, a2, CT_ATOM_OBJECT);
 	NEXT();
 
@@ -609,11 +614,7 @@ HANDLER_CON_GET:
 	ct_ctx_load_atom(ctx, r2, &a1, &t1);
 	ct_ctx_load_atom(ctx, r3, &a2, &t2);
 	CT_CHECK_IF_OBJECT(t1);
-	typed_atom = ct_container_get(ctx->objects, (CtContainer*) a1.as_object, a2.as_uint, &ctx->error);
-	if (ctx->error.code) {
-		ct_ctx_throw_error(ctx, ctx->error);
-		return;
-	}
+	typed_atom = ct_container_get(ctx->objects, (CtContainer*) a1.as_object, a2.as_uint);
 	ct_ctx_store_atom(ctx, r1, typed_atom.atom, typed_atom.type);
 	NEXT();
 
@@ -625,11 +626,7 @@ HANDLER_CON_SET:
 	ct_ctx_load_atom(ctx, r2, &a2, &t2);
 	ct_ctx_load_atom(ctx, r3, &a3, &t3);
 	CT_CHECK_IF_OBJECT(t1);
-	ct_container_set(ctx->objects, (CtContainer*) a1.as_object, a2.as_uint, (CtTypedAtom){t3, a3}, &ctx->error);
-	if (ctx->error.code) {
-		ct_ctx_throw_error(ctx, ctx->error);
-		return;
-	}
+	ct_container_set(ctx->objects, (CtContainer*) a1.as_object, a2.as_uint, (CtTypedAtom){t3, a3});
 	NEXT();
 
 HANDLER_CON_SIZE:
@@ -645,21 +642,17 @@ HANDLER_CON_COPY:
 	r2 = instrs[ctx->ip++];
 	ct_ctx_load_atom(ctx, r2, &a2, &t2);
 	CT_CHECK_IF_OBJECT(t2);
-	a1.as_object = (CtObject*) ct_container_copy(ctx->objects, (CtContainer*) a2.as_object, &ctx->error);
-	if (ctx->error.code) {
-		ct_ctx_throw_error(ctx, ctx->error);
-		return;
-	}
+	a1.as_object = (CtObject*) ct_container_copy(ctx->objects, (CtContainer*) a2.as_object);
 	ct_ctx_store_atom(ctx, r1, a1, CT_ATOM_OBJECT);
 	NEXT();
 
 HANDLER_ILLEGAL_INSTRUCTION:
-	CT_ERROR(
-		(&ctx->error),
-		ctErrorCode_Engine,
-		"Illegal instruction: 0x%x",
+	CT_ERROR_ENGINE(
+		ct_thread_error,
+		"Engine",
+		"IllegalInstruction",
+		"0x%x",
 		instrs[--ctx->ip]
 	);
-	ct_ctx_throw_error(ctx, ctx->error);
 	return;
 }

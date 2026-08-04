@@ -5,11 +5,13 @@
 
 #include "CuteInstr.h"
 
+#include "common/error.h"
 #include "context.h"
 
 
 typedef struct {
 	CtImage             image;
+	CtError             error;
 	uint8_t             exit_code;
 } CtEngine;
 

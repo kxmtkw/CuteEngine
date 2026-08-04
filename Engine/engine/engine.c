@@ -44,62 +44,61 @@ ct_engine_load(CtEngine* engine, const char* filepath) {
 
 	CtImageStatus code = ct_image_read(&engine->image, filepath);
 
-	ctError error;
-
 	switch (code) {
 
 		case CT_IMAGE_STATUS_SUCCESS:
 			CT_LOG("engine", "Image loaded successfully.\n");
 			break;
 
-		case CT_IMAGE_STATUS_FILE_NOT_FOUND:
-			error.code = ctErrorCode_Engine;
-			ct_utils_format(
-				error.msg,
-				sizeof(error.msg),
+			case CT_IMAGE_STATUS_FILE_NOT_FOUND:
+			CT_ERROR_ENGINE(
+				engine->error, 
+				"Engine", 
+				"ImageNotFound", 
 				"Cannot find image file: %s", filepath
 			);
 			break;
 
 		case CT_IMAGE_STATUS_READ_WRITE_FAILURE:
-			error.code = ctErrorCode_Engine;
-			ct_utils_format(
-				error.msg,
-				sizeof(error.msg),
+			CT_ERROR_ENGINE(
+				engine->error, 
+				"Engine", 
+				"ImageReadWriteFailure", 
 				"Failed to read image file: %s", filepath
 			);
 			break;
 
 		case CT_IMAGE_STATUS_CORRUPTED_IMAGE:
-			error.code = ctErrorCode_Engine;
-			ct_utils_format(
-				error.msg,
-				sizeof(error.msg),
+			CT_ERROR_ENGINE(
+				engine->error, 
+				"Engine", 
+				"CorruptedImage", 
 				"Invalid image file: %s", filepath
 			);
 			break;
 
 		case CT_IMAGE_STATUS_VERSION_MISTMATCH:
-			error.code = ctErrorCode_Engine;
-			ct_utils_format(
-				error.msg,
-				sizeof(error.msg),
-				"Version mismatch. Engine is v%u but image '%s' is v%u.", CT_CUTE_VERSION, filepath, engine->image.header.version
+			CT_ERROR_ENGINE(
+				engine->error, 
+				"Engine", 
+				"VersionMismatch", 
+				"Version mismatch. Engine is v%u but image '%s' is v%u.", 
+				CT_CUTE_VERSION, filepath, engine->image.header.version
 			);
 			break;
 
 		default:
-			error.code = ctErrorCode_Engine;
-			ct_utils_format(
-				error.msg,
-				sizeof(error.msg),
+			CT_ERROR_ENGINE(
+				engine->error, 
+				"Engine", 
+				"UnknownImageError", 
 				"Unknown failure while reading image file: %s", filepath
 			);
 			break;
 	}
 
 	if (code != CT_IMAGE_STATUS_SUCCESS) {
-		ct_error_print(error);
+		ct_error_print(&engine->error);
 		engine->exit_code = 1;
 		ct_engine_end(engine);
 		exit(1);
@@ -112,8 +111,8 @@ ct_engine_run_context(CtEngine* engine, CtContext* ctx) {
 
 	ct_engine_exec(engine, ctx);
 	
-	if (ctx->error.code) {
-		ct_error_print(ctx->error);
+	if (ct_thread_error.raised) {
+		ct_error_print(&ct_thread_error);
 	}
 
 	engine->exit_code = ctx->exit_code;

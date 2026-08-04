@@ -2,11 +2,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 
 #include "common/atom.h"
 #include "common/config.h"
 #include "common/error.h"
 
+#include "engine/context.h"
 #include "objects/manager.h"
 
 #include "container.h"
@@ -16,17 +18,16 @@
 
 
 CtContainer*
-ct_container_new(CtObjectManager* manager, uint32_t size, ctError* err) {
+ct_container_new(CtObjectManager* manager, uint32_t size) {
 
 	uint32_t req_size = sizeof(CtContainer) + sizeof(CtAtom) * size + sizeof(CtAtomTypeSize) * size;
 
 	CtObject* obj = ct_objects_new_object(manager, req_size, 0 /*placeholder*/, ct_container_del);
 	CtContainer* container = (CtContainer*) obj;
 
-	if (ct_objects_check_error(manager)) {
-		//*err = manager->error;
+	if (obj == NULL) {
 		return NULL;
-	};
+	}
 	
 	uint8_t* data = (uint8_t*) obj;
 	container->atoms = (CtAtom*) (data + sizeof(CtContainer));
@@ -60,10 +61,15 @@ ct_container_del(CtObjectManager* manager, CtObject* obj) {
 
 // Get an atom in the container. Will return ctConManagerCode_OutOfBounds if index is out of bounds
 CtTypedAtom
-ct_container_get(CtObjectManager* manager, CtContainer* obj, uint32_t index, ctError* err) {
+ct_container_get(CtObjectManager* manager, CtContainer* obj, uint32_t index) {
 
 	if (index >= obj->size) {
-		CT_ERROR(err, ctErrorCode_OutOfBounds, "Can not access container slot #%u (>= %u)", index, obj->size);
+		CT_ERROR_ENGINE(
+			ct_thread_error,
+			"Engine",
+			"ContainerAccess",
+			"Can not access container slot #%u (>= %u)", index, obj->size
+		);
 		return (CtTypedAtom){CT_ATOM_PRIMITIVE, (CtAtom){0}};
 	}
 
@@ -72,10 +78,15 @@ ct_container_get(CtObjectManager* manager, CtContainer* obj, uint32_t index, ctE
 
 // Set an atom in the container. Will return ctConManagerCode_OutOfBounds if index is out of bounds.
 void
-ct_container_set(CtObjectManager* manager, CtContainer* obj, uint32_t index, CtTypedAtom atom, ctError* err) {
+ct_container_set(CtObjectManager* manager, CtContainer* obj, uint32_t index, CtTypedAtom atom) {
 
 	if (index >= obj->size) {
-		CT_ERROR(err, ctErrorCode_OutOfBounds, "Can not access container slot #%u (>= %u)", index, obj->size);
+		CT_ERROR_ENGINE(
+			ct_thread_error,
+			"Engine",
+			"ContainerAccess",
+			"Can not access container slot #%u (>= %u)", index, obj->size
+		);
 		return;
 	}
 
@@ -95,13 +106,11 @@ ct_container_set(CtObjectManager* manager, CtContainer* obj, uint32_t index, CtT
 
 // Create a shallow copy of a container
 CtContainer*
-ct_container_copy(CtObjectManager* manager, CtContainer* obj, ctError* err) {
+ct_container_copy(CtObjectManager* manager, CtContainer* obj) {
 	
-	CtContainer* copy = ct_container_new(manager, obj->__object__.size, err);
+	CtContainer* copy = ct_container_new(manager, obj->__object__.size);
 
-	if (err->code) {return NULL;}
-
-	if (!copy) {
+	if (copy == NULL) {
 		return NULL;
 	}
 

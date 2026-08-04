@@ -19,10 +19,6 @@ ct_objects_init(void);
 void
 ct_objects_end(CtObjectManager** manager_ptr);
 
-// Check if the object manager failed.
-bool
-ct_objects_check_error(CtObjectManager* manager_ptr);
-
 // Allocate a new empty bucket and pushes it to the stack. Returns it's id.
 uint32_t
 ct_objects_new_bucket(CtObjectManager* manager);
