@@ -36,7 +36,7 @@ ct_lib_buffer_new(CtObjectManager* manager, uint32_t size) {
 		)
 	}
 
-	CT_LOG("lib-buffer", "Buffer [%p] of size %u bytes allocated.\n", buffer, size);
+	CT_LOG("lib/buffer", "Buffer [%p] of size %u bytes allocated.\n", buffer, size);
 	
 	return buffer;
 }
@@ -49,6 +49,8 @@ ct_lib_buffer_del(CtObjectManager* manager, CtObject* obj) {
 	free(buffer->data);
 	buffer->data = NULL;
 	buffer->size = 0;
+
+	CT_LOG("lib/buffer", "Freed data for Buffer [%p]\n", buffer);
 
 	return true;
 }
@@ -64,6 +66,8 @@ ct_lib_buffer_copy(CtObjectManager* manager, CtBufferObject* obj) {
 	}
 	
 	memcpy(buffer_copy->data, obj->data, obj->size);
+
+	CT_LOG("lib/buffer", "Copied Buffer [%p] from Buffer [%p].\n", obj, buffer_copy);
 
 	return buffer_copy;
 }
@@ -88,6 +92,9 @@ ct_lib_buffer_resize(CtBufferObject* obj, uint32_t new_size) {
 		)
 		return false;
 	}
+
+	CT_LOG("lib/buffer", "Resized data for Buffer [%p] %u bytes -> %u bytes.\n", obj, obj->size, new_size);
+
 	obj->data = new_data;
 	obj->size = new_size;
 
@@ -161,5 +168,8 @@ ct_lib_buffer_extend(CtBufferObject* obj, CtBufferObject* other) {
 	};
 
 	memcpy(&obj->data[obj->size], other->data, other->size);	
+
+	CT_LOG("lib/buffer", "Extended Buffer [%p] with the data of Buffer [%p]\n", obj, other);
+
 	return true;
 }
