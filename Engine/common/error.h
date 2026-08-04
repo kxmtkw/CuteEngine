@@ -30,6 +30,12 @@ ERROR.level = LEVEL;
 #define CT_ERROR_ENGINE(ERROR, WHERE, WHAT, DETAILS, ...) \
 CT_ERROR(ERROR, CT_ERROR_LEVEL_ENGINE, WHERE, WHAT, DETAILS, __VA_ARGS__)
 
+#define CT_ERROR_LIB(ERROR, WHERE, WHAT, DETAILS, ...) \
+CT_ERROR(ERROR, CT_ERROR_LEVEL_LIB, WHERE, WHAT, DETAILS, __VA_ARGS__)
+
+#define CT_ERROR_USER(ERROR, WHERE, WHAT, DETAILS, ...) \
+CT_ERROR(ERROR, CT_ERROR_LEVEL_USER, WHERE, WHAT, DETAILS, __VA_ARGS__)
+
 static inline void
 ct_error_print(CtError* err) {
 	printf("%s.%s :: %s\n", err->where, err->what, err->details);
