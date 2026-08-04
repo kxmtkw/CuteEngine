@@ -12,6 +12,7 @@
 #include "common/error.h"
 
 #include "objects/manager.h"
+#include "objects/object.h"
 
 
 
@@ -43,19 +44,9 @@ typedef struct {
 
 
 // context specifies the state of execution. 
-struct CtContext {
-	const CtImage*      image;
-	CtObjectManager*    objects;
-	uint64_t            ip;
-	ctCallStack         callstack;
-	ctCallFrame*        current_frame;
-	double              cmp_diff;
-	bool                running;
-	ctError             error;
-	uint8_t             exit_code;
-};
-
+struct CtContext;
 typedef struct CtContext CtContext;
+
 
 // Create a new context. Requires the image to be ran and the starting procedure.
 CtContext*
@@ -73,49 +64,6 @@ ct_ctx_call_procedure(CtContext* ctx, uint32_t procedure_id, uint8_t arg_start_s
 void
 ct_ctx_return_procedure(CtContext* ctx, CtAtom returned_atom, CtAtomType returned_atom_type);
 
-// Store an atom at a specified slot in the CURRENT call frame.
-static inline void
-ct_ctx_store_atom(CtContext* ctx, uint8_t slot, CtAtom atom, CtAtomType type) {
-
-	if (ctx->current_frame->file.types[slot] == CT_ATOM_OBJECT) {
-		ct_objects_dec_ref(ctx->objects, ctx->current_frame->file.atoms[slot].as_object);
-		ctx->current_frame->object_field_count--;
-	};
-
-	ctx->current_frame->file.atoms[slot] = atom;
-	ctx->current_frame->file.types[slot] = type;
-
-	if (type == CT_ATOM_OBJECT) {
-		ct_objects_inc_ref(ctx->objects, atom.as_object);
-		ctx->current_frame->object_field_count++;
-	};
-};
-
-// Load an atom from a specified index from the CURRENT call frame.
-static inline void
-ct_ctx_load_atom(CtContext* ctx, uint8_t slot, CtAtom* atom, CtAtomType* type) {
-	*atom = ctx->current_frame->file.atoms[slot];
-	*type = ctx->current_frame->file.types[slot];
-};
-
-// Move an atom from one slot to another.
-static inline void
-ct_ctx_move_atom(CtContext* ctx, uint8_t src_slot, uint8_t dest_slot) {
-
-	if (ctx->current_frame->file.types[dest_slot] == CT_ATOM_OBJECT) {
-		ct_objects_dec_ref(ctx->objects, ctx->current_frame->file.atoms[dest_slot].as_object);
-		ctx->current_frame->object_field_count--;
-	};
-
-	ctx->current_frame->file.atoms[dest_slot] = ctx->current_frame->file.atoms[src_slot];
-	ctx->current_frame->file.types[dest_slot] = ctx->current_frame->file.types[src_slot];
-
-	if (ctx->current_frame->file.types[src_slot] == CT_ATOM_OBJECT) {
-		ct_objects_inc_ref(ctx->objects, ctx->current_frame->file.atoms[src_slot].as_object);
-		ctx->current_frame->object_field_count++;
-	};
-};
-
 // Throw an internal error
 void
 ct_ctx_throw_error(CtContext* ctx, ctError error);
@@ -123,5 +71,9 @@ ct_ctx_throw_error(CtContext* ctx, ctError error);
 // Call a module method
 void
 ct_ctx_modcall(CtContext* ctx, uint32_t module_id, uint32_t method_id, uint8_t arg_start_slot, uint8_t return_slot);
+
+// Get the object manager pointer of this context
+CtObjectManager*
+ct_ctx_get_object_manager(CtContext* ctx);
 
 #endif // ENGINE_CONTEXT_H

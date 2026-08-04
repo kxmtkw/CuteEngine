@@ -12,8 +12,9 @@
 #include "common/error.h"
 
 
-#include "engine.h"
-#include "context.h"
+#include "engine/engine.h"
+#include "engine/context.h"
+#include "engine/contextdef.h"
 
 #include "container/container.h"
 #include "utils/utils.h"

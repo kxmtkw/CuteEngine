@@ -17,7 +17,7 @@
 #include "utils/utils.h"
 
 #include "context.h"
-
+#include "contextdef.h"
 
 
 // Call Stack helpers
@@ -229,3 +229,9 @@ ct_ctx_modcall(CtContext* ctx, uint32_t module_id, uint32_t method_id, uint8_t a
 	ctx->current_frame->file.atoms[return_slot] = result.returned_atom;
 	ctx->current_frame->file.types[return_slot] = result.returned_type;
 };
+
+
+CtObjectManager*
+ct_ctx_get_object_manager(CtContext* ctx) {
+	return ctx->objects;
+}

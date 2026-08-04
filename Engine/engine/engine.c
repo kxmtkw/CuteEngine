@@ -12,8 +12,9 @@
 #include "objects/manager.h"
 #include "utils/utils.h"
 
-#include "engine/context.h"
 #include "engine/engine.h"
+#include "engine/context.h"
+#include "engine/contextdef.h"
 
 
 void
