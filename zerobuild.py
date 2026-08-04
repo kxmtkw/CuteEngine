@@ -28,7 +28,10 @@ CuteEngine.source = Source(
 	src / "objects" / "manager.c",
 	src / "container" / "container.c",
 	src / "utils" / "utils.c",
+
+	src / "lib" / "buffer.c",
 )
+
 CuteEngine.link(CuteInstr)
 
 CuteEngine.headers.public = src / "include"

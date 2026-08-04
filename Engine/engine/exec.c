@@ -584,11 +584,9 @@ HANDLER_MOD_CALL:
 	r2 = instrs[ctx->ip++];
 	r3 = instrs[ctx->ip++];
 	r4 = instrs[ctx->ip++];
-	r5 = instrs[ctx->ip++];
 	ct_ctx_load_atom(ctx, r1, &a1, &t1);
 	ct_ctx_load_atom(ctx, r2, &a2, &t2);
-	ct_ctx_load_atom(ctx, r3, &a3, &t3);
-	ct_ctx_modcall(ctx, a1.as_uint, a2.as_uint, a3.as_uint, r4, r5);
+	ct_ctx_modcall(ctx, a1.as_uint, a2.as_uint, r3, r4);
 	NEXT();
 
 HANDLER_CON_NEW:

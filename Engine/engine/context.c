@@ -191,34 +191,41 @@ ct_ctx_throw_error(CtContext* ctx, ctError error) {
 
 
 void
-ct_ctx_modcall(CtContext* ctx, uint32_t module_id, uint32_t method_id, uint32_t arg_count, uint8_t arg_start_slot, uint8_t return_slot) {
+ct_ctx_modcall(CtContext* ctx, uint32_t module_id, uint32_t method_id, uint8_t arg_start_slot, uint8_t return_slot) {
 
-	ctModuleMethod method;
+	CtModuleMethodEntry entry;
 
-	ctModuleDispatchCode code = ct_modules_getMethod(module_id, method_id, &method);
+	uint32_t code = ct_modules_get_method(module_id, method_id, &entry);
 
-	if (code != ctModuleDispatchCode_Success) {
-		CT_ERROR((&ctx->error), ctErrorCode_Module, "Can not access container slot #%u (>= %u)", "Unknown module method: %u.%u", module_id, method_id);
+	if (!code) {
+		CT_ERROR((&ctx->error), ctErrorCode_Module, "Unknown module method: %u.%u", module_id, method_id);
 		ct_ctx_throw_error(ctx, ctx->error);
 		return;
 	};
 
-	CT_LOG("context", "Calling module method: %u.%u with %u arguments starting from slot %u. Returning to slot %u.\n", module_id, method_id, arg_count, arg_start_slot, return_slot);
+	CT_LOG("context", "Calling module method: %u.%u with %u arguments starting from slot %u. Returning to slot %u.\n", module_id, method_id, entry.argument_count, arg_start_slot, return_slot);
 
-	ctModuleArguments args = {
-		.atoms = &ctx->current_frame->file.atoms[arg_start_slot],
-		.types = &ctx->current_frame->file.types[arg_start_slot],
-		.container_manager = ctx->objects,
-		.count = arg_count
+	if (arg_start_slot + entry.argument_count > 255) {
+		CT_ERROR((&ctx->error), ctErrorCode_Module, "Module method: %u.%u expected %u arguments. Cannot use arguments starting from slot %u", module_id, method_id, entry.argument_count, arg_start_slot);
+		ct_ctx_throw_error(ctx, ctx->error);
+		return;
+	}
+
+	CtModuleMethodArguments args = {
+		.context = ctx,
+		.argument_atoms = &ctx->current_frame->file.atoms[arg_start_slot],
+		.argument_types = &ctx->current_frame->file.types[arg_start_slot],
 	};
 
-	ctModuleResult result = method(args);
+	CtModuleMethodResult result;
+
+	entry.method(args, &result);
 
 	if (!result.success) {
-		ct_ctx_throw_error(ctx, result.error);
+		ct_ctx_throw_error(ctx, ctx->error);
 		return;
 	};
 
 	ctx->current_frame->file.atoms[return_slot] = result.returned_atom;
-	ctx->current_frame->file.types[return_slot] = result.returned_atom_type;
+	ctx->current_frame->file.types[return_slot] = result.returned_type;
 };

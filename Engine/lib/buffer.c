@@ -1,3 +1,4 @@
+#include "common/config.h"
 #include "stdlib.h"
 
 #include "common/atom.h"
@@ -20,6 +21,7 @@ ct_lib_buffer_new(CtObjectManager* manager, uint32_t size) {
 	buffer->size = size;
 	buffer->data = (uint8_t*) malloc(size);
 
+	CT_LOG("lib-buffer", "Buffer [%p] of size %u bytes allocated.\n", buffer, size);
 	return buffer;
 }
 

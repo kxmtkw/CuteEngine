@@ -12,7 +12,6 @@ typedef struct {
 	const CtContext* const       context;
 	const CtAtom* const          argument_atoms;
 	const CtAtomTypeSize* const  argument_types;
-	const uint32_t               argument_count;
 } CtModuleMethodArguments;
 
 

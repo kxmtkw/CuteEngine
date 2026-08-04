@@ -122,6 +122,6 @@ ct_ctx_throw_error(CtContext* ctx, ctError error);
 
 // Call a module method
 void
-ct_ctx_modcall(CtContext* ctx, uint32_t module_id, uint32_t method_id, uint32_t arg_count, uint8_t arg_start_slot, uint8_t return_slot);
+ct_ctx_modcall(CtContext* ctx, uint32_t module_id, uint32_t method_id, uint8_t arg_start_slot, uint8_t return_slot);
 
 #endif // ENGINE_CONTEXT_H
