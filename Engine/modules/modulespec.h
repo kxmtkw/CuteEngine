@@ -9,7 +9,7 @@
 
 
 typedef struct {
-	const CtContext* const       context;
+	CtContext*                   context;
 	const CtAtom* const          argument_atoms;
 	const CtAtomTypeSize* const  argument_types;
 } CtModuleMethodArguments;
