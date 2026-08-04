@@ -165,6 +165,17 @@ ct_lib_buffer_set_bytes(CtBufferObject* obj, uint32_t index, uint32_t n, uint8_t
 bool
 ct_lib_buffer_extend(CtBufferObject* obj, CtBufferObject* other) {
 
+	if (obj == other) {
+		CT_ERROR_LIB(
+			ct_thread_error, 
+			"Buffer", 
+			"SelfExtension",
+			"Cannot extend buffer with itself.",
+			NULL
+		)
+		return false;
+	}
+
 	if (!ct_lib_buffer_resize(obj, obj->size + other->size)) {
 		return false;
 	};
