@@ -36,6 +36,8 @@ ct_lib_buffer_new(CtObjectManager* manager, uint32_t size) {
 		)
 	}
 
+	memset(buffer->data, 0, buffer->size);
+
 	CT_LOG("lib/buffer", "Buffer [%p] of size %u bytes allocated.\n", buffer, size);
 	
 	return buffer;
