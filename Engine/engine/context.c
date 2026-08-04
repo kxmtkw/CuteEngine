@@ -216,8 +216,15 @@ ct_ctx_modcall(CtContext* ctx, uint32_t module_id, uint32_t method_id, uint8_t a
 		return;
 	};
 
+	if (ctx->current_frame->file.types[return_slot] == CT_ATOM_OBJECT) {
+		ct_objects_dec_ref(ctx->objects, ctx->current_frame->file.atoms[return_slot].as_object);	
+	} 
 	ctx->current_frame->file.atoms[return_slot] = result.returned_atom;
 	ctx->current_frame->file.types[return_slot] = result.returned_type;
+
+	if (result.returned_type == CT_ATOM_OBJECT) {
+		ct_objects_inc_ref(ctx->objects, result.returned_atom.as_object);
+	}
 };
 
 

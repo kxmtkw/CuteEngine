@@ -17,7 +17,7 @@ ct_module_buffer_new(CtModuleMethodArguments args, CtModuleMethodResult* result)
 	result->success = buffer = ct_lib_buffer_new(ct_ctx_get_object_manager(args.context), size);
 	
 	result->returned_atom.as_object = (CtObject*) buffer;
-	result->returned_type = CT_ATOM_PRIMITIVE;
+	result->returned_type = CT_ATOM_OBJECT;
 }
 
 
