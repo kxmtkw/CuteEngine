@@ -188,7 +188,7 @@ ct_lib_buffer_extend(CtBufferObject* obj, CtBufferObject* other) {
 }
 
 bool
-ct_lib_buffer_set(CtBufferObject* obj, uint8_t byte) {
+ct_lib_buffer_fill(CtBufferObject* obj, uint8_t byte) {
 	memset(obj->data, byte, obj->size);
 
 	CT_LOG("lib/buffer", "Set Buffer [%p] data to %u.\n", obj, byte);

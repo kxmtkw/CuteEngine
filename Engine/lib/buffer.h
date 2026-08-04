@@ -49,7 +49,7 @@ ct_lib_buffer_extend(CtBufferObject* obj, CtBufferObject* other);
 
 // Sets every byte in the buffer to a specific value.
 bool
-ct_lib_buffer_set(CtBufferObject* obj, uint8_t byte);
+ct_lib_buffer_fill(CtBufferObject* obj, uint8_t byte);
 
 // Clears the data for a buffer. Sets everything to zero.
 bool
