@@ -18,25 +18,34 @@ typedef struct {
 CtBufferObject*
 ct_lib_buffer_new(CtObjectManager* manager, uint32_t size);
 
+// Create a copy of a buffer.
+CtBufferObject*
+ct_lib_buffer_copy(CtObjectManager* manager, CtBufferObject* obj);
+
 // Delete method for the buffer object.
-void
+bool
 ct_lib_buffer_del(CtObjectManager* manager, CtObject* obj);
 
 // Resize a buffer. Truncates if new size is less.
-void
+bool
 ct_lib_buffer_resize(CtBufferObject* obj, uint32_t new_size);
 
 // Get a byte at a specific index in the buffer
-void
-ct_lib_buffer_get_byte(CtBufferObject* obj, uint32_t index, uint8_t* outbyte);
+bool
+ct_lib_buffer_get_byte(CtBufferObject* obj, uint32_t index, uint8_t* out);
 
 // Set a byte at a specific index in the buffer.
-void
+bool
 ct_lib_buffer_set_byte(CtBufferObject* obj, uint32_t index, uint8_t byte);
 
 // Set n bytes starting from index
-void
+bool
 ct_lib_buffer_set_bytes(CtBufferObject* obj, uint32_t index, uint32_t n, uint8_t* bytes);
+
+// Extend a buffer with the contents of another. Impliclity resizes the first buffer so the 
+// contents of the second buffer can fit.
+bool
+ct_lib_buffer_extend(CtBufferObject* obj, CtBufferObject* other);
 
 
 #endif // CT_LIB_BUFFER_H

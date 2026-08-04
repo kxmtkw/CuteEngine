@@ -19,43 +19,84 @@ ct_lib_buffer_new(CtObjectManager* manager, uint32_t size) {
 
 	CtBufferObject* buffer = (CtBufferObject*) ct_objects_new_object(manager, sizeof(CtBufferObject), 1, ct_lib_buffer_del);
 
-	if (buffer == NULL) {
+	if (!buffer) {
 		return NULL;
 	}
 
 	buffer->size = size;
 	buffer->data = (uint8_t*) malloc(size);
 
+	if (!buffer->data) {
+		CT_ERROR_LIB(
+			ct_thread_error, 
+			"Buffer", 
+			"Allocation", 
+			"Failed to allocate data (%u bytes) for buffer.",
+			size
+		)
+	}
+
 	CT_LOG("lib-buffer", "Buffer [%p] of size %u bytes allocated.\n", buffer, size);
+	
 	return buffer;
 }
 
 
-void
+bool
 ct_lib_buffer_del(CtObjectManager* manager, CtObject* obj) {
 
 	CtBufferObject* buffer = (CtBufferObject*) obj;
 	free(buffer->data);
 	buffer->data = NULL;
 	buffer->size = 0;
+
+	return true;
 }
 
 
-void
+CtBufferObject*
+ct_lib_buffer_copy(CtObjectManager* manager, CtBufferObject* obj) {
+	
+	CtBufferObject* buffer_copy = ct_lib_buffer_new(manager, obj->size);
+	
+	if (!buffer_copy) {
+		return NULL;
+	}
+	
+	memcpy(buffer_copy->data, obj->data, obj->size);
+
+	return buffer_copy;
+}
+
+
+bool
 ct_lib_buffer_resize(CtBufferObject* obj, uint32_t new_size) {
 
 	if (new_size == obj->size) {
-		return;
+		return true;
 	}
 
 	uint8_t* new_data = realloc(obj->data, new_size);
+
+	if (!new_data) {
+		CT_ERROR_LIB(
+			ct_thread_error, 
+			"Buffer", 
+			"Allocation", 
+			"Failed to resize data (%u bytes -> %u bytes) for buffer.",
+			obj->size, new_size
+		)
+		return false;
+	}
 	obj->data = new_data;
 	obj->size = new_size;
+
+	return true;
 }
 
 
-void
-ct_lib_buffer_get_byte(CtBufferObject* obj, uint32_t index, uint8_t* outbyte) {
+bool
+ct_lib_buffer_get_byte(CtBufferObject* obj, uint32_t index, uint8_t* out) {
 
 	if (index > obj->size) {
 		CT_ERROR_LIB(
@@ -65,15 +106,16 @@ ct_lib_buffer_get_byte(CtBufferObject* obj, uint32_t index, uint8_t* outbyte) {
 			"Index %u falls out of range [0-%u]",
 			index, obj->size-1
 		)
-		return;
+		return false;
 	}
 
-	*outbyte = obj->data[index];
-	return;
+	*out = obj->data[index];
+
+	return true;
 }
 
 
-void
+bool
 ct_lib_buffer_set_byte(CtBufferObject* obj, uint32_t index, uint8_t byte) {
 
 	if (index > obj->size) {
@@ -84,14 +126,15 @@ ct_lib_buffer_set_byte(CtBufferObject* obj, uint32_t index, uint8_t byte) {
 			"Index %u falls out of range [0-%u]",
 			index, obj->size-1
 		);
-		return;
+		return false;
 	}
 
 	obj->data[index] = byte;
+	return true;
 }
 
 
-void
+bool
 ct_lib_buffer_set_bytes(CtBufferObject* obj, uint32_t index, uint32_t n, uint8_t* bytes) {
 
 	if (index + n > obj->size) {
@@ -102,8 +145,21 @@ ct_lib_buffer_set_bytes(CtBufferObject* obj, uint32_t index, uint32_t n, uint8_t
 			"Range [%u-%u] falls out of range [0-%u]",
 			index, index + n
 		)
-		return;
+		return false;
 	}
 
 	memcpy(&obj->data[index], bytes, n);
+	return true;
+}
+
+
+bool
+ct_lib_buffer_extend(CtBufferObject* obj, CtBufferObject* other) {
+
+	if (!ct_lib_buffer_resize(obj, obj->size + other->size)) {
+		return false;
+	};
+
+	memcpy(&obj->data[obj->size], other->data, other->size);	
+	return true;
 }
