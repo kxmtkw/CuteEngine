@@ -209,7 +209,7 @@ ct_objects_del_object(CtObjectManager* manager, CtObject* obj) {
 		obj->delete(manager, obj);
 	}
 
-	free(obj);
-
 	CT_LOG("objects", "Object (%u.%u) [%p] unallocated.\n", obj->bucket_id, obj->bucket_index, obj);
+
+	free(obj);
 }
