@@ -23,7 +23,7 @@ CtContainer*
 ct_container_new(CtObjectManager* manager, uint32_t size);
 
 
-void
+bool
 ct_container_del(CtObjectManager* manager, CtObject* obj);
 
 
