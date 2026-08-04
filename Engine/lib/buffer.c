@@ -69,7 +69,7 @@ ct_lib_buffer_copy(CtObjectManager* manager, CtBufferObject* obj) {
 	
 	memcpy(buffer_copy->data, obj->data, obj->size);
 
-	CT_LOG("lib/buffer", "Copied Buffer [%p] from Buffer [%p].\n", obj, buffer_copy);
+	CT_LOG("lib/buffer", "Copied Buffer [%p] from Buffer [%p].\n", buffer_copy, obj);
 
 	return buffer_copy;
 }
