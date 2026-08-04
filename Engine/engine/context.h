@@ -31,16 +31,16 @@ typedef struct {
 	uint8_t             args_count;
 	uint8_t             return_value_slot;
 	CtAtomFile          file;
-} ctCallFrame;
+} CtCallFrame;
 
 
 // call stack, statically sized
 typedef struct {
 	CtAtomFile   file;
-	ctCallFrame  frames[CT_CONF_CALLSTACK_SIZE];
+	CtCallFrame  frames[CT_CONF_CALLSTACK_SIZE];
 	uint32_t     size;
 	uint32_t     capacity;
-} ctCallStack;
+} CtCallStack;
 
 
 // context specifies the state of execution. 

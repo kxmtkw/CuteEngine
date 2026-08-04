@@ -23,32 +23,32 @@
 // Call Stack helpers
 
 static inline void
-ct_ctx_initStack(ctCallStack* s) {
+ct_ctx_initStack(CtCallStack* s) {
     s->size     = 0;
     s->capacity = CT_CONF_CALLSTACK_SIZE;
 }
 
 static inline void 
-ct_ctx_delStack(ctCallStack* s) {
+ct_ctx_delStack(CtCallStack* s) {
     s->size    = 0;
     s->capacity = 0;
 }
 
-static inline ctCallFrame*
-ct_ctx_getFrame(ctCallStack* s) {	
+static inline CtCallFrame*
+ct_ctx_getFrame(CtCallStack* s) {	
 	return &s->frames[s->size++];
 }
 
-static inline ctCallFrame* 
-ct_ctx_popFrame(ctCallStack* s) {
+static inline CtCallFrame* 
+ct_ctx_popFrame(CtCallStack* s) {
     if (s->size > 0) {
 		return &s->frames[--s->size];
 	};	
 	return NULL;
 }
 
-static inline ctCallFrame* 
-ct_ctx_peekFrame(ctCallStack* s) {
+static inline CtCallFrame* 
+ct_ctx_peekFrame(CtCallStack* s) {
     if (s->size > 0) {
 		return &s->frames[s->size-1];
 	};	
@@ -126,7 +126,7 @@ ct_ctx_call_procedure(CtContext* ctx, uint32_t procedure_id, uint8_t arg_start_s
 		return;
 	};
 
-	ctCallFrame* frame = ct_ctx_getFrame(&ctx->callstack);
+	CtCallFrame* frame = ct_ctx_getFrame(&ctx->callstack);
 
 	frame->procedure_id = procedure_id;
 	frame->object_field_count = 0;
@@ -160,7 +160,7 @@ ct_ctx_call_procedure(CtContext* ctx, uint32_t procedure_id, uint8_t arg_start_s
 void
 ct_ctx_return_procedure(CtContext* ctx, CtAtom returned_atom, CtAtomType returned_atom_type) {
 
-	ctCallFrame* frame = ct_ctx_popFrame(&ctx->callstack);
+	CtCallFrame* frame = ct_ctx_popFrame(&ctx->callstack);
 	ctx->current_frame = ct_ctx_peekFrame(&ctx->callstack);
 
 	if (ctx->current_frame == NULL) {

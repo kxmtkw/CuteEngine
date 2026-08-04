@@ -24,8 +24,8 @@ struct CtContext {
 	const CtImage*      image;
 	CtObjectManager*    objects;
 	uint64_t            ip;
-	ctCallStack         callstack;
-	ctCallFrame*        current_frame;
+	CtCallStack         callstack;
+	CtCallFrame*        current_frame;
 	double              cmp_diff;
 	bool                running;
 	ctError             error;
