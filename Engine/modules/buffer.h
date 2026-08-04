@@ -36,7 +36,8 @@ ct_module_buffer_get_byte(CtModuleMethodArguments args, CtModuleMethodResult* re
 	CtBufferObject* buffer = (CtBufferObject*) args.argument_atoms[0].as_object;
 	uint32_t index = args.argument_atoms[1].as_uint;
 
-	uint8_t byte = ct_lib_buffer_get_byte(buffer, index);
+	uint8_t byte;
+	ct_lib_buffer_get_byte(buffer, index, &byte);
 
 	result->returned_atom.as_uint = (uint32_t) byte;
 	result->returned_type = CT_ATOM_PRIMITIVE;

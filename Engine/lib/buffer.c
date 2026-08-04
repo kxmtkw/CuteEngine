@@ -1,4 +1,5 @@
 #include "common/config.h"
+#include "engine/context.h"
 #include "stdlib.h"
 
 #include "common/atom.h"
@@ -18,6 +19,10 @@ ct_lib_buffer_new(CtObjectManager* manager, uint32_t size) {
 
 	CtBufferObject* buffer = (CtBufferObject*) ct_objects_new_object(manager, sizeof(CtBufferObject), 1, ct_lib_buffer_del);
 
+	if (buffer == NULL) {
+		return NULL;
+	}
+
 	buffer->size = size;
 	buffer->data = (uint8_t*) malloc(size);
 
@@ -33,7 +38,6 @@ ct_lib_buffer_del(CtObjectManager* manager, CtObject* obj) {
 	free(buffer->data);
 	buffer->data = NULL;
 	buffer->size = 0;
-
 }
 
 
@@ -50,15 +54,22 @@ ct_lib_buffer_resize(CtBufferObject* obj, uint32_t new_size) {
 }
 
 
-uint8_t
-ct_lib_buffer_get_byte(CtBufferObject* obj, uint32_t index) {
+void
+ct_lib_buffer_get_byte(CtBufferObject* obj, uint32_t index, uint8_t* outbyte) {
 
 	if (index > obj->size) {
-		// Fail
-		exit(6);
+		CT_ERROR_LIB(
+			ct_thread_error, 
+			"Buffer", 
+			"OutOfRange",
+			"Index %u falls out of range [0-%u]",
+			index, obj->size-1
+		)
+		return;
 	}
 
-	return obj->data[index];
+	*outbyte = obj->data[index];
+	return;
 }
 
 
@@ -66,8 +77,14 @@ void
 ct_lib_buffer_set_byte(CtBufferObject* obj, uint32_t index, uint8_t byte) {
 
 	if (index > obj->size) {
-		// Fail
-		exit(6);
+		CT_ERROR_LIB(
+			ct_thread_error, 
+			"Buffer", 
+			"OutOfRange",
+			"Index %u falls out of range [0-%u]",
+			index, obj->size-1
+		);
+		return;
 	}
 
 	obj->data[index] = byte;
@@ -78,8 +95,14 @@ void
 ct_lib_buffer_set_bytes(CtBufferObject* obj, uint32_t index, uint32_t n, uint8_t* bytes) {
 
 	if (index + n > obj->size) {
-		// Fail
-		exit(6);
+		CT_ERROR_LIB(
+			ct_thread_error, 
+			"Buffer", 
+			"OutOfRange",
+			"Range [%u-%u] falls out of range [0-%u]",
+			index, index + n
+		)
+		return;
 	}
 
 	memcpy(&obj->data[index], bytes, n);

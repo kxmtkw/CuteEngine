@@ -27,8 +27,8 @@ void
 ct_lib_buffer_resize(CtBufferObject* obj, uint32_t new_size);
 
 // Get a byte at a specific index in the buffer
-uint8_t
-ct_lib_buffer_get_byte(CtBufferObject* obj, uint32_t index);
+void
+ct_lib_buffer_get_byte(CtBufferObject* obj, uint32_t index, uint8_t* outbyte);
 
 // Set a byte at a specific index in the buffer.
 void
