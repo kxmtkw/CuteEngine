@@ -10,21 +10,6 @@
 
 #include "objects/object.h"
 
-typedef struct CtObjectBucket {
-	uint32_t                id;
-	uint64_t                bitmask;
-	CtObject*               objects[64];
-	struct CtObjectBucket*  next_bucket;
-} CtObjectBucket;
-
-
-struct CtObjectManager {
-	CtObjectBucket*     buckets_list;
-	uint32_t            bucket_count;
-	CtObjectBucket*     empty_buckets_list;
-	ctError             error;
-};
-
 
 // Startup the object manager. Pushes the first object bucket as well.
 CtObjectManager*

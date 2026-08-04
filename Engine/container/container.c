@@ -24,7 +24,7 @@ ct_container_new(CtObjectManager* manager, uint32_t size, ctError* err) {
 	CtContainer* container = (CtContainer*) obj;
 
 	if (ct_objects_check_error(manager)) {
-		*err = manager->error;
+		//*err = manager->error;
 		return NULL;
 	};
 	
