@@ -178,6 +178,7 @@ ct_objects_new_object(CtObjectManager* manager, uint32_t size, uint64_t type, Ct
 		return NULL;
 	}
 	
+	obj->manager = manager;
 	obj->bucket_id = assigned_bucket->id;
 	obj->bucket_index = assigned_obj_slot;
 	obj->bucket = assigned_bucket;

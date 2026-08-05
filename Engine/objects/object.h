@@ -17,6 +17,7 @@ typedef struct CtObjectBucket CtObjectBucket;
 typedef bool (*CtObjectDeleteFunc) (struct CtObjectManager*, struct CtObject*);
 
 struct CtObject {
+	CtObjectManager*        manager;
 	CtObjectBucket*         bucket;
 	uint32_t                bucket_id;
 	uint32_t                bucket_index;
