@@ -125,7 +125,22 @@ ct_module_buffer_extend(CtModuleMethodArguments args, CtModuleMethodResult* resu
 }
 
 
-CT_MODULE_NAME_DEFINE(buffer, "Buffer");
+static void
+ct_module_buffer_slice(CtModuleMethodArguments args, CtModuleMethodResult* result) {
+	
+	CtBufferObject* buffer = (CtBufferObject*) args.argument_atoms[0].as_object;
+	uint32_t index = args.argument_atoms[1].as_uint;
+	uint32_t length = args.argument_atoms[2].as_uint;
+
+	CtBufferObject* slice;
+	result->success = slice =ct_lib_buffer_slice(buffer, index, length);
+
+	result->returned_atom.as_uint = (uint32_t) 0;
+	result->returned_type = CT_ATOM_PRIMITIVE;
+}
+
+
+CT_MODULE_NAME_DEFINE(buffer, "buffer");
 
 CT_MODULE_METHOD_MAP_DEFINE(buffer) = {
 	CT_MODULE_ENTRY("new", ct_module_buffer_new, 1),
@@ -136,6 +151,8 @@ CT_MODULE_METHOD_MAP_DEFINE(buffer) = {
 	CT_MODULE_ENTRY("fill", ct_module_buffer_fill, 2),
 	CT_MODULE_ENTRY("clear", ct_module_buffer_clear, 1),
 	CT_MODULE_ENTRY("extend", ct_module_buffer_extend, 2),
+	CT_MODULE_ENTRY("slice", ct_module_buffer_slice, 3),
+	CT_MODULE_ENTRY("copy", ct_module_buffer_copy, 1),
 };
 
 
