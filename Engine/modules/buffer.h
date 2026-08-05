@@ -84,7 +84,7 @@ ct_module_buffer_set_buffer(CtModuleMethodArguments args, CtModuleMethodResult* 
 
 	result->success = ct_lib_buffer_set_buffer(buffer, index, other_buffer);
 
-	result->returned_atom.as_uint = (uint32_t) 0;
+	result->returned_atom.as_uint = index + other_buffer->size;
 	result->returned_type = CT_ATOM_PRIMITIVE;
 }
 
@@ -97,7 +97,7 @@ ct_module_buffer_fill(CtModuleMethodArguments args, CtModuleMethodResult* result
 
 	result->success = ct_lib_buffer_fill(buffer, byte);
 
-	result->returned_atom.as_uint = (uint32_t) 0;
+	result->returned_atom.as_uint = (uint32_t) buffer->size;
 	result->returned_type = CT_ATOM_PRIMITIVE;
 }
 
@@ -108,7 +108,7 @@ ct_module_buffer_clear(CtModuleMethodArguments args, CtModuleMethodResult* resul
 
 	result->success = ct_lib_buffer_clear(buffer);
 
-	result->returned_atom.as_uint = (uint32_t) 0;
+	result->returned_atom.as_uint = (uint32_t) buffer->size;
 	result->returned_type = CT_ATOM_PRIMITIVE;
 }
 
@@ -120,7 +120,7 @@ ct_module_buffer_extend(CtModuleMethodArguments args, CtModuleMethodResult* resu
 
 	result->success = ct_lib_buffer_extend(buffer, other_buffer);
 
-	result->returned_atom.as_uint = (uint32_t) 0;
+	result->returned_atom.as_uint = (uint32_t) buffer->size;
 	result->returned_type = CT_ATOM_PRIMITIVE;
 }
 
@@ -135,8 +135,8 @@ ct_module_buffer_slice(CtModuleMethodArguments args, CtModuleMethodResult* resul
 	CtBufferObject* slice;
 	result->success = slice =ct_lib_buffer_slice(buffer, index, length);
 
-	result->returned_atom.as_uint = (uint32_t) 0;
-	result->returned_type = CT_ATOM_PRIMITIVE;
+	result->returned_atom.as_object = (CtObject*) slice;
+	result->returned_type = CT_ATOM_OBJECT;
 }
 
 
