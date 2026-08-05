@@ -40,7 +40,7 @@ ct_module_buffer_copy(CtModuleMethodArguments args, CtModuleMethodResult* result
 	CtBufferObject* buffer = (CtBufferObject*) args.argument_atoms[0].as_object;
 
 	CtBufferObject* copy;
-	result->success = copy = ct_lib_buffer_copy(ct_ctx_get_object_manager(args.context), buffer);
+	result->success = copy = ct_lib_buffer_copy(buffer);
 
 	result->returned_atom.as_object = (CtObject*) copy;
 	result->returned_type = CT_ATOM_OBJECT;
@@ -76,6 +76,43 @@ ct_module_buffer_set_byte(CtModuleMethodArguments args, CtModuleMethodResult* re
 
 
 static void
+ct_module_buffer_set_buffer(CtModuleMethodArguments args, CtModuleMethodResult* result) {
+	
+	CtBufferObject* buffer = (CtBufferObject*) args.argument_atoms[0].as_object;
+	uint32_t index = args.argument_atoms[1].as_uint;
+	CtBufferObject* other_buffer = (CtBufferObject*) args.argument_atoms[2].as_object;
+
+	result->success = ct_lib_buffer_set_buffer(buffer, index, other_buffer);
+
+	result->returned_atom.as_uint = (uint32_t) 0;
+	result->returned_type = CT_ATOM_PRIMITIVE;
+}
+
+
+static void
+ct_module_buffer_fill(CtModuleMethodArguments args, CtModuleMethodResult* result) {
+	
+	CtBufferObject* buffer = (CtBufferObject*) args.argument_atoms[0].as_object;
+	uint8_t byte = args.argument_atoms[1].as_uint;
+
+	result->success = ct_lib_buffer_fill(buffer, byte);
+
+	result->returned_atom.as_uint = (uint32_t) 0;
+	result->returned_type = CT_ATOM_PRIMITIVE;
+}
+
+static void
+ct_module_buffer_clear(CtModuleMethodArguments args, CtModuleMethodResult* result) {
+	
+	CtBufferObject* buffer = (CtBufferObject*) args.argument_atoms[0].as_object;
+
+	result->success = ct_lib_buffer_clear(buffer);
+
+	result->returned_atom.as_uint = (uint32_t) 0;
+	result->returned_type = CT_ATOM_PRIMITIVE;
+}
+
+static void
 ct_module_buffer_extend(CtModuleMethodArguments args, CtModuleMethodResult* result) {
 	
 	CtBufferObject* buffer = (CtBufferObject*) args.argument_atoms[0].as_object;
@@ -88,14 +125,17 @@ ct_module_buffer_extend(CtModuleMethodArguments args, CtModuleMethodResult* resu
 }
 
 
+CT_MODULE_NAME_DEFINE(buffer, "Buffer");
 
-CT_MODULE_DEFINE(buffer) = {
-	CT_MODULE_ENTRY(ct_module_buffer_new, 1),
-	CT_MODULE_ENTRY(ct_module_buffer_resize, 2),
-	CT_MODULE_ENTRY(ct_module_buffer_copy, 1),
-	CT_MODULE_ENTRY(ct_module_buffer_get_byte, 2),
-	CT_MODULE_ENTRY(ct_module_buffer_set_byte, 3),
-	CT_MODULE_ENTRY(ct_module_buffer_extend, 2),
+CT_MODULE_METHOD_MAP_DEFINE(buffer) = {
+	CT_MODULE_ENTRY("new", ct_module_buffer_new, 1),
+	CT_MODULE_ENTRY("resize", ct_module_buffer_resize, 2),
+	CT_MODULE_ENTRY("get", ct_module_buffer_get_byte, 2),
+	CT_MODULE_ENTRY("set", ct_module_buffer_set_byte, 3),
+	CT_MODULE_ENTRY("setBuffer", ct_module_buffer_set_buffer, 3),
+	CT_MODULE_ENTRY("fill", ct_module_buffer_fill, 2),
+	CT_MODULE_ENTRY("clear", ct_module_buffer_clear, 1),
+	CT_MODULE_ENTRY("extend", ct_module_buffer_extend, 2),
 };
 
 

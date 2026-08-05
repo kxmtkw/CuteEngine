@@ -19,7 +19,7 @@ How to use the dispatch map:
 
 
 static const CtModuleMethodEntry* ct_modules_dispatch_map[] = {
-	[0] = CT_MODULE_REFER(buffer),
+	[0] = CT_MODULE_METHOD_MAP(buffer),
 };
 
 static const uint32_t ct_modules_method_count[] = {

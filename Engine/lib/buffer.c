@@ -59,9 +59,9 @@ ct_lib_buffer_del(CtObjectManager* manager, CtObject* obj) {
 
 
 CtBufferObject*
-ct_lib_buffer_copy(CtObjectManager* manager, CtBufferObject* obj) {
+ct_lib_buffer_copy(CtBufferObject* obj) {
 	
-	CtBufferObject* buffer_copy = ct_lib_buffer_new(manager, obj->size);
+	CtBufferObject* buffer_copy = ct_lib_buffer_new(obj->__object__.manager, obj->size);
 	
 	if (!buffer_copy) {
 		return NULL;
@@ -163,6 +163,40 @@ ct_lib_buffer_set_bytes(CtBufferObject* obj, uint32_t index, uint32_t n, uint8_t
 
 
 bool
+ct_lib_buffer_set_buffer(CtBufferObject* obj, uint32_t index, CtBufferObject* other) {
+
+	if (!ct_lib_buffer_set_bytes(obj, index, other->size, other->data)) {
+		return false;
+	}
+
+	CT_LOG("lib/buffer", "Set Buffer [%p] data to Buffer [%p] starting from index %u.\n", obj, other, index);
+
+	return true;
+}
+
+
+bool
+ct_lib_buffer_fill(CtBufferObject* obj, uint8_t byte) {
+	memset(obj->data, byte, obj->size);
+
+	CT_LOG("lib/buffer", "Set Buffer [%p] data to %u.\n", obj, byte);
+
+	return true;
+}
+
+
+bool
+ct_lib_buffer_clear(CtBufferObject* obj) {
+
+	memset(obj->data, 0, obj->size);
+	
+	CT_LOG("lib/buffer", "Cleared Buffer [%p]\n", obj);
+
+	return true;
+}
+
+
+bool
 ct_lib_buffer_extend(CtBufferObject* obj, CtBufferObject* other) {
 
 	if (obj == other) {
@@ -187,21 +221,26 @@ ct_lib_buffer_extend(CtBufferObject* obj, CtBufferObject* other) {
 	return true;
 }
 
-bool
-ct_lib_buffer_fill(CtBufferObject* obj, uint8_t byte) {
-	memset(obj->data, byte, obj->size);
 
-	CT_LOG("lib/buffer", "Set Buffer [%p] data to %u.\n", obj, byte);
+CtBufferObject*
+ct_lib_buffer_slice(CtBufferObject* obj, uint32_t index, uint32_t length) {
 
-	return true;
-}
+	if (index + length > obj->size) {
+		CT_ERROR_LIB(
+			ct_thread_error, 
+			"Buffer", 
+			"OutOfRange",
+			"Range [%u-%u] falls out of range [0-%u]",
+			index, index + length
+		)
+		return NULL;
+	}
 
-bool
-ct_lib_buffer_clear(CtBufferObject* obj) {
+	CtBufferObject* slice = ct_lib_buffer_new(obj->__object__.manager, length);
 
-	memset(obj->data, 0, obj->size);
+	memcpy(slice->data, &obj->data[index], slice->size);
+
+	CT_LOG("lib/buffer", "Sliced Buffer [%p] from Buffer [%p] with range [%u-%u]\n", slice, obj, index, index + length);
 	
-	CT_LOG("lib/buffer", "Cleared Buffer [%p]\n", obj);
-
-	return true;
+	return slice;
 }
