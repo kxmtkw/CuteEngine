@@ -4,7 +4,7 @@
 #include <stdlib.h>
 
 #include "common/config.h"
-#include "engine/context.h"
+#include "core/context.h"
 
 #include "common/atom.h"
 #include "common/error.h"

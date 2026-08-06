@@ -6,7 +6,7 @@
 `Cute` is a 64-bit register-based virtual machine toolchain consisting of two primary binaries:
 
 1. `cuteasm`: Compiles `.csm` assembly text files into `.cute` executable images.
-2. `cute`: The runtime engine that loads and executes `.cute` images.
+2. `cute`: The runtime that loads and executes `.cute` images.
 
 
 ### Toolchain Pipeline
@@ -22,9 +22,9 @@ Source Code (.csm)
 Executable Image (.cute)
 		|
 		v
-┌───────────────┐
-│  Cute Engine  │  (Executing image file)
-└───────────────┘
+┌────────────────┐
+│  Cute Runtime  │  (Executing image file)
+└────────────────┘
 ```
 
 ### Project Structure
@@ -38,10 +38,10 @@ Executable Image (.cute)
 │   ├── spec # instruction maps and program repr
 │   └── tokenizer # lexing asm files
 │
-├── Engine # Main Engine Source Code
+├── Runtime # Main Engine Source Code
 │   ├── common # common headers needed throughout the engine
 │   ├── container # sub class of object, exposed to the asm
-│   ├── engine # heart of the engine
+│   ├── core # heart of the runtime
 │   ├── include # public header
 │   ├── modules # module system for extended functionality
 │   ├── objects # objects subsystem, gc, object defintions and manager

@@ -12,9 +12,9 @@
 #include "common/error.h"
 
 
-#include "engine/engine.h"
-#include "engine/context.h"
-#include "engine/contextdef.h"
+#include "core/core.h"
+#include "core/context.h"
+#include "core/contextdef.h"
 
 #include "container/container.h"
 #include "utils/utils.h"
@@ -53,10 +53,10 @@ ct_ctx_store_atom(ctx, r1, (CtAtom){.as_bool = ctx->cmp_diff OP 0 ? 1 : 0}, CT_A
 #define CT_INSTR_JMP() \
 _ct_load_bytes(instrs, &ctx->ip, 4, &i32); \
 ctx->ip += i32; \
-if (ctx->ip >= engine->image.header.instruction_count) { \
-	CT_ERROR_ENGINE( \
+if (ctx->ip >= runtime->image.header.instruction_count) { \
+	CT_ERROR_RUNTIME( \
 		ct_thread_error, \
-		"Engine", \
+		"core", \
 		"IllegalJump", \
 		"Out of range ip: 0x%08lX", ctx->ip \
 	); \
@@ -66,9 +66,9 @@ if (ctx->ip >= engine->image.header.instruction_count) { \
 
 #define CT_CHECK_IF_OBJECT(TYPE) \
 if (TYPE != CT_ATOM_OBJECT) { \
-	CT_ERROR_ENGINE( \
+	CT_ERROR_RUNTIME( \
 		ct_thread_error, \
-		"Engine", \
+		"core", \
 		"TypeError", \
 		"Expected Container, Got Primitive", NULL \
 	); \
@@ -148,7 +148,7 @@ _ct_out(uint8_t fmt, CtAtom atom) {
 #endif // CUTE_CONF_DEBUG
 
 void
-ct_engine_exec(CtEngine* engine, CtContext* ctx) {
+ct_runtime_exec(CtRuntime* runtime, CtContext* ctx) {
 
 	static void* dispatch_table[256] = {
 		[CT_INSTR_NULL]       = &&HANDLER_NULL,
@@ -242,7 +242,7 @@ ct_engine_exec(CtEngine* engine, CtContext* ctx) {
 		}
 	}
 
-	CtInstrSize* instrs = engine->image.instruction_pool;
+	CtInstrSize* instrs = runtime->image.instruction_pool;
 
 	uint8_t r1, r2, r3, r4, r5;
 	int32_t i32;
@@ -294,9 +294,9 @@ HANDLER_CAST_F2I:
 	ct_ctx_load_atom(ctx, r2, &a1, &t1);
 
 	if (!isfinite(a1.as_float) || a1.as_float > INT64_MAX || a1.as_float < INT64_MIN) {
-		CT_ERROR_ENGINE(
+		CT_ERROR_RUNTIME(
 			ct_thread_error, 
-			"Engine", 
+			"core", 
 			"Overflow", 
 			"Unable to cast %f to int.",
 			a1.as_float
@@ -320,9 +320,9 @@ HANDLER_CAST_F2U:
 	ct_ctx_load_atom(ctx, r2, &a1, &t1);
 
 	if (!isfinite(a1.as_float) || a1.as_float > UINT64_MAX || a1.as_float < 0) {
-		CT_ERROR_ENGINE(
+		CT_ERROR_RUNTIME(
 			ct_thread_error, 
-			"Engine", 
+			"core", 
 			"Overflow", 
 			"Unable to cast %f to uint.",
 			a1.as_float
@@ -647,9 +647,9 @@ HANDLER_CON_COPY:
 	NEXT();
 
 HANDLER_ILLEGAL_INSTRUCTION:
-	CT_ERROR_ENGINE(
+	CT_ERROR_RUNTIME(
 		ct_thread_error,
-		"Engine",
+		"core",
 		"IllegalInstruction",
 		"0x%x",
 		instrs[--ctx->ip]

@@ -6,5 +6,5 @@
 3. [Instruction Set](03-instructions.md)
 4. [Image Format](04-image.md)
 5. [Assembler](05-assembler.md)
-6. [Engine](06-engine.md)
+6. [Runtime](06-runtime.md)
 6. [Building Cute](07-building.md)

@@ -8,7 +8,7 @@
 #include "common/config.h"
 #include "common/error.h"
 
-#include "engine/context.h"
+#include "core/context.h"
 #include "objects/manager.h"
 
 #include "container.h"
@@ -64,7 +64,7 @@ CtTypedAtom
 ct_container_get(CtObjectManager* manager, CtContainer* obj, uint32_t index) {
 
 	if (index >= obj->size) {
-		CT_ERROR_ENGINE(
+		CT_ERROR_RUNTIME(
 			ct_thread_error,
 			"Engine",
 			"ContainerAccess",
@@ -81,7 +81,7 @@ void
 ct_container_set(CtObjectManager* manager, CtContainer* obj, uint32_t index, CtTypedAtom atom) {
 
 	if (index >= obj->size) {
-		CT_ERROR_ENGINE(
+		CT_ERROR_RUNTIME(
 			ct_thread_error,
 			"Engine",
 			"ContainerAccess",

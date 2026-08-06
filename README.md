@@ -1,7 +1,7 @@
 
 <h1 align="center">Cute (,,>﹏<,,)</h1>
 
-`Cute` is a cute little language runtime that I am working on. It comes with its own instruction set, assembly, assembler and engine (the core runtime).
+`Cute` is a cute little language runtime that I am working on. It comes with its own instruction set, assembly, assembler and the core runtime.
 
 ### Features
 - `Bytecode compiled` instruction set.
@@ -63,7 +63,7 @@ Then compile the file using:
 cuteasm demo.csm
 ```
 
-This will output a `demo.cute` file. Simply run that file using the engine.
+This will output a `demo.cute` file. Simply run that file using the runtime.
 ```bash
 cute demo.cute
 # output: [ uint 125 ]
@@ -86,6 +86,6 @@ Here is a list of documentation to get you started:
 3. [Instruction Set](docs/03-instructions.md)
 4. [Image Format](docs/04-image.md)
 5. [Assembler](docs/05-assembler.md)
-6. [Engine](docs/06-engine.md)
+6. [Runtime](docs/06-runtime.md)
 7. [Building Cute](docs/07-building.md)
 

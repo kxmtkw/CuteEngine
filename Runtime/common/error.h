@@ -2,12 +2,14 @@
 #ifndef CT_ERROR_H
 #define CT_ERROR_H
 
-#include "utils/utils.h"
 #include <stdint.h>
 #include <stdio.h>
 
+#include "utils/utils.h"
+
+
 typedef enum {
-	CT_ERROR_LEVEL_ENGINE = 0x00,
+	CT_ERROR_LEVEL_RUNTIME = 0x00,
 	CT_ERROR_LEVEL_LIB = 0x01,
 	CT_ERROR_LEVEL_USER = 0x02,
 } CtErrorLevel;
@@ -27,8 +29,8 @@ ct_utils_format(ERROR.details, sizeof(ERROR.details), DETAILS, __VA_ARGS__); \
 ERROR.raised = true; \
 ERROR.level = LEVEL;
 
-#define CT_ERROR_ENGINE(ERROR, WHERE, WHAT, DETAILS, ...) \
-CT_ERROR(ERROR, CT_ERROR_LEVEL_ENGINE, WHERE, WHAT, DETAILS, __VA_ARGS__)
+#define CT_ERROR_RUNTIME(ERROR, WHERE, WHAT, DETAILS, ...) \
+CT_ERROR(ERROR, CT_ERROR_LEVEL_RUNTIME, WHERE, WHAT, DETAILS, __VA_ARGS__)
 
 #define CT_ERROR_LIB(ERROR, WHERE, WHAT, DETAILS, ...) \
 CT_ERROR(ERROR, CT_ERROR_LEVEL_LIB, WHERE, WHAT, DETAILS, __VA_ARGS__)

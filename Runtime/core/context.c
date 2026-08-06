@@ -84,7 +84,7 @@ ct_ctx_call_procedure(CtContext* ctx, uint32_t procedure_id, uint8_t arg_start_s
 
 	if (ctx->callstack.size >= CT_CONF_CALLSTACK_SIZE) {
 		
-		CT_ERROR_ENGINE(
+		CT_ERROR_RUNTIME(
 			ct_thread_error, 
 			"Engine", 
 			"RecursionDepth", 
@@ -96,7 +96,7 @@ ct_ctx_call_procedure(CtContext* ctx, uint32_t procedure_id, uint8_t arg_start_s
 
 	if (procedure_id >= ctx->image->header.procedure_count) {
 
-		CT_ERROR_ENGINE(
+		CT_ERROR_RUNTIME(
 			ct_thread_error, 
 			"Engine", 
 			"InvalidProcedure", 
@@ -111,7 +111,7 @@ ct_ctx_call_procedure(CtContext* ctx, uint32_t procedure_id, uint8_t arg_start_s
 
 	if (arg_count >= CT_CONF_FIXED_SLOT_COUNT) {
 		
-		CT_ERROR_ENGINE(
+		CT_ERROR_RUNTIME(
 			ct_thread_error, 
 			"Engine", 
 			"TooManyArguments", 
@@ -193,7 +193,7 @@ ct_ctx_modcall(CtContext* ctx, uint32_t module_id, uint32_t method_id, uint8_t a
 	CT_LOG("context", "Calling module method: %u.%u with %u arguments starting from slot %u. Returning to slot %u.\n", module_id, method_id, entry.argument_count, arg_start_slot, return_slot);
 
 	if (arg_start_slot + entry.argument_count > 255) {
-		CT_ERROR_ENGINE(
+		CT_ERROR_RUNTIME(
 			ct_thread_error, 
 			"Engine", 
 			"FaultyAlignment", 

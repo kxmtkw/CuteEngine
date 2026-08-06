@@ -17,14 +17,14 @@ CuteInstr.headers.public = Path("Instr") / "include"
 
 # Cute Engine
 
-CuteEngine = StaticLibrary()
-CuteEngine.compiler = "gcc"
-src = Path("Engine")
+CuteRuntime = StaticLibrary()
+CuteRuntime.compiler = "gcc"
+src = Path("Runtime")
 
-CuteEngine.source = Source(
-	src / "engine" / "engine.c",
-	src / "engine" / "exec.c",
-	src / "engine" / "context.c",
+CuteRuntime.source = Source(
+	src / "core" / "core.c",
+	src / "core" / "exec.c",
+	src / "core" / "context.c",
 	src / "objects" / "manager.c",
 	src / "container" / "container.c",
 	src / "utils" / "utils.c",
@@ -32,17 +32,17 @@ CuteEngine.source = Source(
 	src / "lib" / "buffer.c",
 )
 
-CuteEngine.link(CuteInstr)
+CuteRuntime.link(CuteInstr)
 
-CuteEngine.headers.public = src / "include"
-CuteEngine.headers.private = src
+CuteRuntime.headers.public = src / "include"
+CuteRuntime.headers.private = src
 
 
 # cute binary
 
 cute = Executable()
-cute.source = Source("main/engine.c")
-cute.link(CuteEngine)
+cute.source = Source("main/runtime.c")
+cute.link(CuteRuntime)
 cute.link(CuteInstr)
 
 

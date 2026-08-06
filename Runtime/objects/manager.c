@@ -7,7 +7,7 @@
 #include "common/error.h"
 
 #include "objects/manager.h"
-#include "engine/context.h"
+#include "core/context.h"
 #include "objects/object.h"
 #include "utils/utils.h"
 
@@ -79,7 +79,7 @@ ct_objects_new_bucket(CtObjectManager* manager) {
 	CtObjectBucket* bucket = malloc(sizeof(CtObjectBucket));
 
 	if (bucket == NULL) {
-		CT_ERROR_ENGINE(
+		CT_ERROR_RUNTIME(
 			ct_thread_error,
 			"Engine",
 			"ObjectBucketAllocation",
@@ -168,7 +168,7 @@ ct_objects_new_object(CtObjectManager* manager, uint32_t size, uint64_t type, Ct
 	if (obj == NULL) {
 		ct_utils_clear_bit(&assigned_bucket->bitmask, assigned_obj_slot);
 
-		CT_ERROR_ENGINE(
+		CT_ERROR_RUNTIME(
 			ct_thread_error,
 			"Engine",
 			"OutOfMemory",

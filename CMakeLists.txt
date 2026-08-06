@@ -19,30 +19,30 @@ target_include_directories(CuteInstr
         Instr/include
 )
 
-# --- Cute Engine ---
+# --- Cute Runtime ---
 
-add_library(CuteEngine STATIC
-    Engine/engine/engine.c
-    Engine/engine/exec.c
-    Engine/engine/context.c
-    Engine/objects/manager.c
-    Engine/container/container.c
-    Engine/utils/utils.c
+add_library(CuteRuntime STATIC
+    Runtime/core/core.c
+    Runtime/core/exec.c
+    Runtime/core/context.c
+    Runtime/objects/manager.c
+    Runtime/container/container.c
+    Runtime/utils/utils.c
 )
 
-target_include_directories(CuteEngine
+target_include_directories(CuteRuntime
     PUBLIC
-        Engine/include
+        Runtime/include
     PRIVATE
-        Engine
+        Runtime
 )
 
-target_link_libraries(CuteEngine PUBLIC CuteInstr)
+target_link_libraries(CuteRuntime PUBLIC CuteInstr)
 
 # --- cute binary ---
 
-add_executable(cute main/engine.c)
-target_link_libraries(cute PRIVATE CuteEngine)
+add_executable(cute main/runtime.c)
+target_link_libraries(cute PRIVATE CuteRuntime)
 
 # --- Cute Assembler ---
 
