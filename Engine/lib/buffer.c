@@ -1,15 +1,16 @@
+#include <stdbool.h>
+#include <stdint.h>
+#include <string.h>
+#include <stdlib.h>
+
 #include "common/config.h"
 #include "engine/context.h"
-#include "stdlib.h"
 
 #include "common/atom.h"
 #include "common/error.h"
 
 #include "objects/manager.h"
 #include "objects/object.h"
-#include <string.h>
-#include <threads.h>
-#include <time.h>
 
 #include "lib/buffer.h"
 
@@ -24,6 +25,7 @@ ct_lib_buffer_new(CtObjectManager* manager, uint32_t size) {
 	}
 
 	buffer->size = size;
+	buffer->capacity = size;
 	buffer->data = (uint8_t*) malloc(size);
 
 	if (!buffer->data) {
@@ -34,6 +36,7 @@ ct_lib_buffer_new(CtObjectManager* manager, uint32_t size) {
 			"Failed to allocate data (%u bytes) for buffer.",
 			size
 		)
+		return NULL;
 	}
 
 	memset(buffer->data, 0, buffer->size);
@@ -48,9 +51,11 @@ bool
 ct_lib_buffer_del(CtObjectManager* manager, CtObject* obj) {
 
 	CtBufferObject* buffer = (CtBufferObject*) obj;
-	free(buffer->data);
+
+	if (buffer->data) free(buffer->data);
 	buffer->data = NULL;
 	buffer->size = 0;
+	buffer->capacity = 0;
 
 	CT_LOG("lib/buffer", "Freed data for Buffer [%p]\n", buffer);
 
@@ -58,47 +63,65 @@ ct_lib_buffer_del(CtObjectManager* manager, CtObject* obj) {
 }
 
 
-CtBufferObject*
-ct_lib_buffer_copy(CtBufferObject* obj) {
-	
-	CtBufferObject* buffer_copy = ct_lib_buffer_new(obj->__object__.manager, obj->size);
-	
-	if (!buffer_copy) {
-		return NULL;
-	}
-	
-	memcpy(buffer_copy->data, obj->data, obj->size);
+bool
+ct_lib_buffer_resize(CtBufferObject* obj, uint32_t new_size) {
 
-	CT_LOG("lib/buffer", "Copied Buffer [%p] from Buffer [%p].\n", buffer_copy, obj);
+	if (new_size == obj->size) return true;
 
-	return buffer_copy;
+	if (new_size >= obj->capacity) {
+		if (!ct_lib_buffer_reserve(obj, new_size)) {
+			return false;
+		}	
+
+		memset(obj->data + obj->size, 0, new_size - obj->size);
+	} 
+
+	CT_LOG("lib/buffer", "Resized data for Buffer [%p] %u bytes -> %u bytes.\n", obj, obj->size, new_size);
+
+	obj->size = new_size;
+
+	return true;
 }
 
 
 bool
-ct_lib_buffer_resize(CtBufferObject* obj, uint32_t new_size) {
+ct_lib_buffer_reserve(CtBufferObject* obj, uint32_t new_cap) {
 
-	if (new_size == obj->size) {
-		return true;
-	}
+	if (new_cap <= obj->capacity) return true;
 
-	uint8_t* new_data = realloc(obj->data, new_size);
+	uint8_t* data = realloc(obj->data, new_cap);
 
-	if (!new_data) {
+	if (!data) {
 		CT_ERROR_LIB(
 			ct_thread_error, 
 			"Buffer", 
 			"Allocation", 
-			"Failed to resize data (%u bytes -> %u bytes) for buffer.",
-			obj->size, new_size
+			"Failed to allocate new memory (%u bytes -> %u bytes) for Buffer [%p].",
+			obj->size, new_cap, obj
 		)
 		return false;
 	}
 
-	CT_LOG("lib/buffer", "Resized data for Buffer [%p] %u bytes -> %u bytes.\n", obj, obj->size, new_size);
+	obj->data = data;
 
-	obj->data = new_data;
-	obj->size = new_size;
+	CT_LOG("lib/buffer", "Reserved memory (%u bytes -> %u bytes) for Buffer [%p].\n", obj->capacity, new_cap, obj);
+	
+	obj->capacity = new_cap;
+
+	return true;
+}
+
+
+bool
+ct_lib_buffer_truncate(CtBufferObject* obj) {
+
+	uint8_t* data = realloc(obj->data, obj->size);
+
+	uint32_t old_cap = obj->capacity;
+	obj->data = data;
+	obj->capacity = obj->size;
+
+	CT_LOG("lib/buffer", "Truncated (%u bytes -> %u bytes) Buffer [%p] to fit.\n", old_cap, obj->capacity, obj);
 
 	return true;
 }
@@ -142,22 +165,21 @@ ct_lib_buffer_set_byte(CtBufferObject* obj, uint32_t index, uint8_t byte) {
 	return true;
 }
 
-
 bool
-ct_lib_buffer_set_bytes(CtBufferObject* obj, uint32_t index, uint32_t n, uint8_t* bytes) {
+ct_lib_buffer_set_bytes(CtBufferObject* obj, uint32_t index, uint8_t* bytes, uint32_t count) {
 
-	if (index + n > obj->size) {
+	if (index + count > obj->size) {
 		CT_ERROR_LIB(
 			ct_thread_error, 
 			"Buffer", 
 			"OutOfRange",
 			"Range [%u-%u] falls out of range [0-%u]",
-			index, index + n
+			index, index + count
 		)
 		return false;
 	}
 
-	memcpy(&obj->data[index], bytes, n);
+	memcpy(&obj->data[index], bytes, count);
 	return true;
 }
 
@@ -165,7 +187,7 @@ ct_lib_buffer_set_bytes(CtBufferObject* obj, uint32_t index, uint32_t n, uint8_t
 bool
 ct_lib_buffer_set_buffer(CtBufferObject* obj, uint32_t index, CtBufferObject* other) {
 
-	if (!ct_lib_buffer_set_bytes(obj, index, other->size, other->data)) {
+	if (!ct_lib_buffer_set_bytes(obj, index, other->data, other->size)) {
 		return false;
 	}
 
@@ -175,48 +197,69 @@ ct_lib_buffer_set_buffer(CtBufferObject* obj, uint32_t index, CtBufferObject* ot
 }
 
 
+static inline bool
+_ct_lib_buffer_reserve_if_required(CtBufferObject* obj) {
+
+	// Keeping reserving until we can finally fit size. This is done so push_bytes and append_buffer can
+	// intake any number of bytes. 
+
+	while (obj->size >= obj->capacity) {
+		
+		uint32_t new_cap = obj->capacity + (obj->capacity >> 1);
+
+		if (!ct_lib_buffer_reserve(obj, new_cap)) {
+			return false;
+		}
+	}
+
+	return true;
+}
+
 bool
-ct_lib_buffer_fill(CtBufferObject* obj, uint8_t byte) {
-	memset(obj->data, byte, obj->size);
+ct_lib_buffer_push_byte(CtBufferObject* obj, uint8_t byte) {
 
-	CT_LOG("lib/buffer", "Set Buffer [%p] data to %u.\n", obj, byte);
+	if (!_ct_lib_buffer_reserve_if_required(obj)) {
+		return false;
+	}
 
+	obj->data[obj->size++] = byte;
 	return true;
 }
 
 
 bool
-ct_lib_buffer_clear(CtBufferObject* obj) {
-
-	memset(obj->data, 0, obj->size);
+ct_lib_buffer_push_bytes(CtBufferObject* obj, uint8_t* byte, uint32_t count) {
 	
-	CT_LOG("lib/buffer", "Cleared Buffer [%p]\n", obj);
+	uint32_t old_size = obj->size;
+	obj->size += count;
 
-	return true;
+	if (!_ct_lib_buffer_reserve_if_required(obj)) {
+		return false;
+	}
+
+	memcpy(obj->data + old_size, byte, count);
 }
 
 
 bool
-ct_lib_buffer_extend(CtBufferObject* obj, CtBufferObject* other) {
+ct_lib_buffer_append_buffer(CtBufferObject* obj, CtBufferObject* other) {
 
 	if (obj == other) {
 		CT_ERROR_LIB(
 			ct_thread_error, 
 			"Buffer", 
-			"SelfExtension",
-			"Cannot extend buffer with itself.",
+			"SelfAppend",
+			"Cannot append buffer to itself.",
 			NULL
 		)
 		return false;
 	}
 
-	if (!ct_lib_buffer_resize(obj, obj->size + other->size)) {
+	if (!ct_lib_buffer_push_bytes(obj, other->data, other->size)) {
 		return false;
-	};
+	}
 
-	memcpy(&obj->data[obj->size], other->data, other->size);	
-
-	CT_LOG("lib/buffer", "Extended Buffer [%p] with the data of Buffer [%p]\n", obj, other);
+	CT_LOG("lib/buffer", "Appended Buffer [%p] to Buffer [%p]\n", other, obj);
 
 	return true;
 }
@@ -243,4 +286,120 @@ ct_lib_buffer_slice(CtBufferObject* obj, uint32_t index, uint32_t length) {
 	CT_LOG("lib/buffer", "Sliced Buffer [%p] from Buffer [%p] with range [%u-%u]\n", slice, obj, index, index + length);
 	
 	return slice;
+
+}
+
+
+CtBufferObject*
+ct_lib_buffer_copy(CtBufferObject* obj) {
+
+	CtBufferObject* buffer_copy = ct_lib_buffer_new(obj->__object__.manager, obj->size);
+	
+	if (!buffer_copy) {
+		return NULL;
+	}
+	
+	memcpy(buffer_copy->data, obj->data, obj->size);
+
+	CT_LOG("lib/buffer", "Copied Buffer [%p] from Buffer [%p].\n", buffer_copy, obj);
+
+	return buffer_copy;
+
+}
+
+
+bool
+ct_lib_buffer_fill(CtBufferObject* obj, uint8_t byte) {
+
+	memset(obj->data, byte, obj->size);
+
+	CT_LOG("lib/buffer", "Set Buffer [%p] data to %u.\n", obj, byte);
+
+	return true;
+}
+
+
+bool
+ct_lib_buffer_clear(CtBufferObject* obj) {
+
+	memset(obj->data, 0, obj->size);
+	
+	CT_LOG("lib/buffer", "Cleared Buffer [%p]\n", obj);
+
+	return true;
+}
+
+
+bool
+ct_lib_buffer_find_byte(CtBufferObject* obj, uint8_t byte, uint32_t start_idx, uint32_t* out) {
+
+	if (start_idx >= obj->size) {
+		CT_ERROR_LIB(
+			ct_thread_error, 
+			"Buffer", 
+			"OutOfRange",
+			"Starting index %u is greater than Buffer size %u.",
+			start_idx, obj->size
+		)
+		return false;
+	}
+
+	
+	CT_LOG("lib/buffer", "Finding byte %u/%c/0x%x in Buffer [%p].\n", byte, byte, byte, obj);
+
+	for (uint32_t i = start_idx; i < obj->size; i++) {
+		if (obj->data[i] == byte) {
+			*out = i;
+			return true;
+		}
+	}
+
+	*out = UINT32_MAX;
+	return true;
+}
+
+
+bool
+ct_lib_buffer_find_bytes(CtBufferObject* obj, uint8_t* bytes, uint32_t count, uint32_t start_idx, uint32_t* out) {
+
+	if (start_idx + count >= obj->size) {
+		CT_ERROR_LIB(
+			ct_thread_error, 
+			"Buffer", 
+			"OutOfRange",
+			"Byte pattern of size %u cannot be searched from starting index %u in Buffer of size %u.",
+			count, start_idx, obj->size
+		)
+		return false;
+	}
+
+	bool found = false;
+
+	for (uint32_t i = start_idx; i + count < obj->size; i++) {
+
+		for (uint32_t j = 0; j < count; j++) {
+
+			if (obj->data[i+j] != bytes[j]) {
+				found = false;
+				break;
+			} else {
+				found = true;
+			}
+
+		}
+
+		if (found) {
+			*out = i;
+			return true;
+		}
+	}
+
+	*out = UINT32_MAX;
+	return true;
+}
+
+
+bool
+ct_lib_buffer_find_buffer(CtBufferObject* obj, CtBufferObject* other, uint32_t start_idx, uint32_t* out) {
+	return ct_lib_buffer_find_bytes(obj, other->data, other->size, start_idx, out);
 }
