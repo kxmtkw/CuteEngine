@@ -208,11 +208,11 @@ ct_ctx_modcall(CtContext* ctx, uint32_t module_id, uint32_t method_id, uint8_t a
 		.argument_types = &ctx->current_frame->file.types[arg_start_slot],
 	};
 
-	CtModuleMethodResult result;
+	CtModuleMethodResult result = {0};
 
 	entry.method(args, &result);
 
-	if (!result.success) {
+	if (!ct_ctx_is_running(ctx)) {
 		return;
 	};
 
