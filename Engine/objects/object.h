@@ -27,4 +27,10 @@ struct CtObject {
 	CtObjectDeleteFunc      delete;
 }; 
 
+
+static inline bool
+ct_object_check_type(CtObject* obj, uint32_t hash) {
+	return obj->type == hash;
+}
+
 #endif // CUTE_OBJECT_H
