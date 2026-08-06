@@ -17,8 +17,25 @@
 #include "utils/utils.h"
 
 
+void
+_ct_lib_buffer_too_large(uint64_t size) {
+	CT_ERROR_LIB(
+		ct_thread_error, 
+		"Buffer", 
+		"TooLarge", 
+		"Buffer of size %u cannot be allocated. Exceeds the max size %lu (2GB).",
+		size, CT_LIB_BUFFER_MAX_SIZE
+	)
+}
+
+
 CtBufferObject*
-ct_lib_buffer_new(CtObjectManager* manager, uint32_t size) {
+ct_lib_buffer_new(CtObjectManager* manager, uint64_t size) {
+
+	if (size > CT_LIB_BUFFER_MAX_SIZE) {
+		_ct_lib_buffer_too_large(size);
+		return NULL;
+	}
 
 	CtBufferObject* buffer = (CtBufferObject*) ct_objects_new_object(manager, sizeof(CtBufferObject), 1, ct_lib_buffer_del);
 
@@ -27,8 +44,8 @@ ct_lib_buffer_new(CtObjectManager* manager, uint32_t size) {
 	}
 
 	buffer->size = size;
-	buffer->capacity = size;
-	buffer->data = (uint8_t*) malloc(size);
+	buffer->capacity = size < 16 ? 16: size;
+	buffer->data = (uint8_t*) malloc(buffer->capacity);
 
 	if (!buffer->data) {
 		CT_ERROR_LIB(
@@ -66,7 +83,12 @@ ct_lib_buffer_del(CtObjectManager* manager, CtObject* obj) {
 
 
 bool
-ct_lib_buffer_resize(CtBufferObject* obj, uint32_t new_size) {
+ct_lib_buffer_resize(CtBufferObject* obj, uint64_t new_size) {
+
+	if (new_size > CT_LIB_BUFFER_MAX_SIZE) {
+		_ct_lib_buffer_too_large(new_size);
+		return NULL;
+	}
 
 	if (new_size == obj->size) return true;
 
@@ -78,7 +100,7 @@ ct_lib_buffer_resize(CtBufferObject* obj, uint32_t new_size) {
 		memset(obj->data + obj->size, 0, new_size - obj->size);
 	} 
 
-	CT_LOG("lib/buffer", "Resized data for Buffer [%p] %u bytes -> %u bytes.\n", obj, obj->size, new_size);
+	CT_LOG("lib/buffer", "Resized data for Buffer [%p] %u bytes -> %lu bytes.\n", obj, obj->size, new_size);
 
 	obj->size = new_size;
 
@@ -87,7 +109,12 @@ ct_lib_buffer_resize(CtBufferObject* obj, uint32_t new_size) {
 
 
 bool
-ct_lib_buffer_reserve(CtBufferObject* obj, uint32_t new_cap) {
+ct_lib_buffer_reserve(CtBufferObject* obj, uint64_t new_cap) {
+
+	if (new_cap > CT_LIB_BUFFER_MAX_SIZE) {
+		_ct_lib_buffer_too_large(new_cap);
+		return NULL;
+	}
 
 	if (new_cap <= obj->capacity) return true;
 
@@ -106,7 +133,7 @@ ct_lib_buffer_reserve(CtBufferObject* obj, uint32_t new_cap) {
 
 	obj->data = data;
 
-	CT_LOG("lib/buffer", "Reserved memory (%u bytes -> %u bytes) for Buffer [%p].\n", obj->capacity, new_cap, obj);
+	CT_LOG("lib/buffer", "Reserved memory (%u bytes -> %lu bytes) for Buffer [%p].\n", obj->capacity, new_cap, obj);
 	
 	obj->capacity = new_cap;
 
@@ -223,11 +250,13 @@ _ct_lib_buffer_reserve_if_required(CtBufferObject* obj) {
 bool
 ct_lib_buffer_push_byte(CtBufferObject* obj, uint8_t byte) {
 
+	obj->size++;
+
 	if (!_ct_lib_buffer_reserve_if_required(obj)) {
 		return false;
 	}
 
-	obj->data[obj->size++] = byte;
+	obj->data[obj->size] = byte;
 	return true;
 }
 

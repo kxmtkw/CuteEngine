@@ -14,10 +14,11 @@ typedef struct {
 	uint32_t capacity;
 } CtBufferObject;
 
+#define CT_LIB_BUFFER_MAX_SIZE (INT32_MAX)
 
 // Create a new buffer with the given size.
 CtBufferObject*
-ct_lib_buffer_new(CtObjectManager* manager, uint32_t size);
+ct_lib_buffer_new(CtObjectManager* manager, uint64_t size);
 
 // Delete method for the buffer object.
 bool
@@ -25,11 +26,11 @@ ct_lib_buffer_del(CtObjectManager* manager, CtObject* obj);
 
 // Resize a buffer. Truncates data if new size is less.
 bool
-ct_lib_buffer_resize(CtBufferObject* obj, uint32_t new_size);
+ct_lib_buffer_resize(CtBufferObject* obj, uint64_t new_size);
 
 // Reserve data for a buffer, skips if new cap is less then current cap.
 bool
-ct_lib_buffer_reserve(CtBufferObject* obj, uint32_t new_cap);
+ct_lib_buffer_reserve(CtBufferObject* obj, uint64_t new_cap);
 
 // Truncates the current capacity to fit the size.
 bool
