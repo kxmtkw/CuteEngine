@@ -4,9 +4,9 @@
 
 #include <stdint.h>
 #include <stdio.h>
+#include <stdbool.h>
 
-#include "utils/utils.h"
-
+#include "common/config.h"
 
 typedef enum {
 	CT_ERROR_LEVEL_RUNTIME = 0x00,
@@ -14,33 +14,35 @@ typedef enum {
 	CT_ERROR_LEVEL_USER = 0x02,
 } CtErrorLevel;
 
+
 typedef struct {
 	bool          raised;
 	CtErrorLevel  level;
-	char*         where;
-	char*         what;
+	char*         domain;
+	char*         subdomain;
+	char*         topic;
 	char          details[256];
 } CtError;
 
 
-#define CT_ERROR(ERROR, LEVEL, WHERE, WHAT, DETAILS, ...) \
-ERROR.where = WHERE; ERROR.what = WHAT; \
+#define CT_ERROR(ERROR, LEVEL, DOMAIN, SUBDOMAIN, TOPIC, DETAILS, ...) \
+ERROR.domain = DOMAIN; ERROR.subdomain = SUBDOMAIN; ERROR.topic = TOPIC; \
 ct_utils_format(ERROR.details, sizeof(ERROR.details), DETAILS, __VA_ARGS__); \
 ERROR.raised = true; \
 ERROR.level = LEVEL;
 
-#define CT_ERROR_RUNTIME(ERROR, WHERE, WHAT, DETAILS, ...) \
-CT_ERROR(ERROR, CT_ERROR_LEVEL_RUNTIME, WHERE, WHAT, DETAILS, __VA_ARGS__)
+#define CT_ERROR_RUNTIME(ERROR, SUBDOMAIN, TOPIC, DETAILS, ...) \
+CT_ERROR(ERROR, CT_ERROR_LEVEL_RUNTIME, CT_CONF_INTERNAL_ERROR_DOMAIN, SUBDOMAIN, TOPIC, DETAILS, __VA_ARGS__)
 
-#define CT_ERROR_LIB(ERROR, WHERE, WHAT, DETAILS, ...) \
-CT_ERROR(ERROR, CT_ERROR_LEVEL_LIB, WHERE, WHAT, DETAILS, __VA_ARGS__)
+#define CT_ERROR_LIB(ERROR, SUBDOMAIN, TOPIC, DETAILS, ...) \
+CT_ERROR(ERROR, CT_ERROR_LEVEL_LIB, CT_CONF_INTERNAL_ERROR_DOMAIN, SUBDOMAIN, TOPIC, DETAILS, __VA_ARGS__)
 
-#define CT_ERROR_USER(ERROR, WHERE, WHAT, DETAILS, ...) \
-CT_ERROR(ERROR, CT_ERROR_LEVEL_USER, WHERE, WHAT, DETAILS, __VA_ARGS__)
+#define CT_ERROR_USER(ERROR, DOMAIN, SUBDOMAIN, TOPIC, DETAILS, ...) \
+CT_ERROR(ERROR, CT_ERROR_LEVEL_USER, DOMAIN, SUBDOMAIN, TOPIC, __VA_ARGS__)
 
 static inline void
 ct_error_print(CtError* err) {
-	printf("%s.%s :: %s\n", err->where, err->what, err->details);
+	printf("%s.%s.%s :: %s\n", err->domain, err->subdomain, err->topic, err->details);
 }
 
 

@@ -86,7 +86,7 @@ ct_ctx_call_procedure(CtContext* ctx, uint32_t procedure_id, uint8_t arg_start_s
 		
 		CT_ERROR_RUNTIME(
 			ct_thread_error, 
-			"Engine", 
+			"Runtime", 
 			"RecursionDepth", 
 			"Recursion depth reached. Too many calls. (%u)", CT_CONF_CALLSTACK_SIZE
 		);
@@ -98,7 +98,7 @@ ct_ctx_call_procedure(CtContext* ctx, uint32_t procedure_id, uint8_t arg_start_s
 
 		CT_ERROR_RUNTIME(
 			ct_thread_error, 
-			"Engine", 
+			"Runtime", 
 			"InvalidProcedure", 
 			"Procedure %u does not exist.", procedure_id
 		);
@@ -113,7 +113,7 @@ ct_ctx_call_procedure(CtContext* ctx, uint32_t procedure_id, uint8_t arg_start_s
 		
 		CT_ERROR_RUNTIME(
 			ct_thread_error, 
-			"Engine", 
+			"Runtime", 
 			"TooManyArguments", 
 			"Too many arguments requested by procedure(%u): '%u' (>=%u)", procedure_id, arg_count, CT_CONF_FIXED_SLOT_COUNT
 		);
@@ -195,7 +195,7 @@ ct_ctx_modcall(CtContext* ctx, uint32_t module_id, uint32_t method_id, uint8_t a
 	if (arg_start_slot + entry.argument_count > 255) {
 		CT_ERROR_RUNTIME(
 			ct_thread_error, 
-			"Engine", 
+			"Runtime", 
 			"FaultyAlignment", 
 			"Module method: %u.%u expected %u arguments. Cannot use arguments starting from slot %u.", module_id, method_id, entry.argument_count, arg_start_slot
 		);

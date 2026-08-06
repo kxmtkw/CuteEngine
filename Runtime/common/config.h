@@ -8,6 +8,8 @@
 
 #define CT_CONF_FAIL_ON_NULL
 
+#define CT_CONF_INTERNAL_ERROR_DOMAIN "Cute"
+
 #define CT_CONF_DEBUG
 
 

@@ -53,7 +53,7 @@ ct_runtime_load(CtRuntime* runtime, const char* filepath) {
 			case CT_IMAGE_STATUS_FILE_NOT_FOUND:
 			CT_ERROR_RUNTIME(
 				runtime->error, 
-				"runtime", 
+				"Runtime", 
 				"ImageNotFound", 
 				"Cannot find image file: %s", filepath
 			);
@@ -62,7 +62,7 @@ ct_runtime_load(CtRuntime* runtime, const char* filepath) {
 		case CT_IMAGE_STATUS_READ_WRITE_FAILURE:
 			CT_ERROR_RUNTIME(
 				runtime->error, 
-				"runtime", 
+				"Runtime", 
 				"ImageReadWriteFailure", 
 				"Failed to read image file: %s", filepath
 			);
@@ -71,7 +71,7 @@ ct_runtime_load(CtRuntime* runtime, const char* filepath) {
 		case CT_IMAGE_STATUS_CORRUPTED_IMAGE:
 			CT_ERROR_RUNTIME(
 				runtime->error, 
-				"runtime", 
+				"Runtime", 
 				"CorruptedImage", 
 				"Invalid image file: %s", filepath
 			);
@@ -80,7 +80,7 @@ ct_runtime_load(CtRuntime* runtime, const char* filepath) {
 		case CT_IMAGE_STATUS_VERSION_MISTMATCH:
 			CT_ERROR_RUNTIME(
 				runtime->error, 
-				"runtime", 
+				"Runtime", 
 				"VersionMismatch", 
 				"Version mismatch. runtime is v%u but image '%s' is v%u.", 
 				CT_CUTE_VERSION, filepath, runtime->image.header.version
@@ -90,7 +90,7 @@ ct_runtime_load(CtRuntime* runtime, const char* filepath) {
 		default:
 			CT_ERROR_RUNTIME(
 				runtime->error, 
-				"runtime", 
+				"Runtime", 
 				"UnknownImageError", 
 				"Unknown failure while reading image file: %s", filepath
 			);

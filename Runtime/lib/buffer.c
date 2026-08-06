@@ -14,6 +14,8 @@
 
 #include "lib/buffer.h"
 
+#include "utils/utils.h"
+
 
 CtBufferObject*
 ct_lib_buffer_new(CtObjectManager* manager, uint32_t size) {

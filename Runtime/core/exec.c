@@ -56,7 +56,7 @@ ctx->ip += i32; \
 if (ctx->ip >= runtime->image.header.instruction_count) { \
 	CT_ERROR_RUNTIME( \
 		ct_thread_error, \
-		"core", \
+		"Runtime", \
 		"IllegalJump", \
 		"Out of range ip: 0x%08lX", ctx->ip \
 	); \
@@ -68,7 +68,7 @@ if (ctx->ip >= runtime->image.header.instruction_count) { \
 if (TYPE != CT_ATOM_OBJECT) { \
 	CT_ERROR_RUNTIME( \
 		ct_thread_error, \
-		"core", \
+		"Runtime", \
 		"TypeError", \
 		"Expected Container, Got Primitive", NULL \
 	); \
@@ -296,7 +296,7 @@ HANDLER_CAST_F2I:
 	if (!isfinite(a1.as_float) || a1.as_float > INT64_MAX || a1.as_float < INT64_MIN) {
 		CT_ERROR_RUNTIME(
 			ct_thread_error, 
-			"core", 
+			"Runtime", 
 			"Overflow", 
 			"Unable to cast %f to int.",
 			a1.as_float
@@ -322,7 +322,7 @@ HANDLER_CAST_F2U:
 	if (!isfinite(a1.as_float) || a1.as_float > UINT64_MAX || a1.as_float < 0) {
 		CT_ERROR_RUNTIME(
 			ct_thread_error, 
-			"core", 
+			"Runtime", 
 			"Overflow", 
 			"Unable to cast %f to uint.",
 			a1.as_float
@@ -649,7 +649,7 @@ HANDLER_CON_COPY:
 HANDLER_ILLEGAL_INSTRUCTION:
 	CT_ERROR_RUNTIME(
 		ct_thread_error,
-		"core",
+		"Runtime",
 		"IllegalInstruction",
 		"0x%x",
 		instrs[--ctx->ip]

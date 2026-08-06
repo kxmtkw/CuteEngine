@@ -7,6 +7,7 @@
 
 #include "core/context.h"
 
+#include "utils/utils.h"
 
 typedef struct {
 	CtContext*                   context;

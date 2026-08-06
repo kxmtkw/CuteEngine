@@ -81,8 +81,8 @@ ct_objects_new_bucket(CtObjectManager* manager) {
 	if (bucket == NULL) {
 		CT_ERROR_RUNTIME(
 			ct_thread_error,
-			"Engine",
-			"ObjectBucketAllocation",
+			"Objects",
+			"BucketAllocation",
 			"Failed to allocate memory for new bucket.", NULL
 		);
 		return 0;
@@ -170,7 +170,7 @@ ct_objects_new_object(CtObjectManager* manager, uint32_t size, uint64_t type, Ct
 
 		CT_ERROR_RUNTIME(
 			ct_thread_error,
-			"Engine",
+			"Objects",
 			"OutOfMemory",
 			"Engine failed to allocate memory for new Object (%u.%u). Out of memory.", assigned_bucket->id, assigned_obj_slot
 		);

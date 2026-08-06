@@ -66,8 +66,8 @@ ct_container_get(CtObjectManager* manager, CtContainer* obj, uint32_t index) {
 	if (index >= obj->size) {
 		CT_ERROR_RUNTIME(
 			ct_thread_error,
-			"Engine",
-			"ContainerAccess",
+			"Container",
+			"Access",
 			"Can not access container slot #%u (>= %u)", index, obj->size
 		);
 		return (CtTypedAtom){CT_ATOM_PRIMITIVE, (CtAtom){0}};
@@ -83,8 +83,8 @@ ct_container_set(CtObjectManager* manager, CtContainer* obj, uint32_t index, CtT
 	if (index >= obj->size) {
 		CT_ERROR_RUNTIME(
 			ct_thread_error,
-			"Engine",
-			"ContainerAccess",
+			"Container",
+			"Access",
 			"Can not access container slot #%u (>= %u)", index, obj->size
 		);
 		return;
