@@ -130,7 +130,7 @@ ct_lib_buffer_truncate(CtBufferObject* obj) {
 bool
 ct_lib_buffer_get_byte(CtBufferObject* obj, uint32_t index, uint8_t* out) {
 
-	if (index > obj->size) {
+	if (index >= obj->size) {
 		CT_ERROR_LIB(
 			ct_thread_error, 
 			"Buffer", 
@@ -150,7 +150,7 @@ ct_lib_buffer_get_byte(CtBufferObject* obj, uint32_t index, uint8_t* out) {
 bool
 ct_lib_buffer_set_byte(CtBufferObject* obj, uint32_t index, uint8_t byte) {
 
-	if (index > obj->size) {
+	if (index >= obj->size) {
 		CT_ERROR_LIB(
 			ct_thread_error, 
 			"Buffer", 
@@ -168,13 +168,16 @@ ct_lib_buffer_set_byte(CtBufferObject* obj, uint32_t index, uint8_t byte) {
 bool
 ct_lib_buffer_set_bytes(CtBufferObject* obj, uint32_t index, uint8_t* bytes, uint32_t count) {
 
-	if (index + count > obj->size) {
+	// if say index is 0, count is 4, then 0+4 is 4 but the actual data is only upto index 3 count(0,1,2,3) = 4
+	// hence the -1 which is also equivalent to converting >= to >
+
+	if (index + count - 1 >= obj->size) {
 		CT_ERROR_LIB(
 			ct_thread_error, 
 			"Buffer", 
 			"OutOfRange",
 			"Range [%u-%u] falls out of range [0-%u]",
-			index, index + count
+			index, index + count - 1, obj->size-1
 		)
 		return false;
 	}
@@ -375,7 +378,7 @@ ct_lib_buffer_find_bytes(CtBufferObject* obj, uint8_t* bytes, uint32_t count, ui
 
 	bool found = false;
 
-	for (uint32_t i = start_idx; i + count < obj->size; i++) {
+	for (uint32_t i = start_idx; i + count - 1 < obj->size; i++) {
 
 		for (uint32_t j = 0; j < count; j++) {
 
@@ -402,4 +405,29 @@ ct_lib_buffer_find_bytes(CtBufferObject* obj, uint8_t* bytes, uint32_t count, ui
 bool
 ct_lib_buffer_find_buffer(CtBufferObject* obj, CtBufferObject* other, uint32_t start_idx, uint32_t* out) {
 	return ct_lib_buffer_find_bytes(obj, other->data, other->size, start_idx, out);
+}
+
+
+bool
+ct_lib_buffer_equals(CtBufferObject* obj, CtBufferObject* other, bool* out) {
+	
+	if (obj == other) {
+		*out = true;
+		return true;
+	}
+	
+	if (obj->size != other->size) {
+		*out = false;
+		return true;
+	}
+
+	for (uint32_t i = 0; i < obj->size; i++) {
+		if (obj->data[i] != other->data[i]) {
+			*out = false;
+			return true;
+		}
+	}
+
+	*out = true;
+	return true;
 }

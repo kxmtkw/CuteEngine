@@ -92,5 +92,8 @@ ct_lib_buffer_find_bytes(CtBufferObject* obj, uint8_t* byte, uint32_t count, uin
 bool
 ct_lib_buffer_find_buffer(CtBufferObject* obj, CtBufferObject* other, uint32_t start_idx, uint32_t* out);
 
+// Check if two buffers are equal
+bool
+ct_lib_buffer_equals(CtBufferObject* obj, CtBufferObject* other, bool* out);
 
 #endif // CT_LIB_BUFFER_H
