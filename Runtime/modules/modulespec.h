@@ -32,6 +32,7 @@ typedef struct {
 
 
 #define CT_MODULE_NAME_DEFINE(NAME, STRING) static const char* _ct_module_ ## NAME ## _name = STRING;
+#define CT_MODULE_NAME(NAME) (_ct_module_ ## NAME ## _name)
 #define CT_MODULE_METHOD_MAP_DEFINE(NAME) CtModuleMethodEntry _ct_module_ ## NAME ## _method_map[]
 #define CT_MODULE_METHOD_MAP(NAME) _ct_module_ ## NAME ## _method_map
 #define CT_MODULE_ENTRY(NAME, METHOD, ARG_COUNT) (CtModuleMethodEntry) {NAME, METHOD, ARG_COUNT}
@@ -66,6 +67,18 @@ if (args.argument_types[INDEX] != CT_ATOM_OBJECT) { \
 }\
 TYPE NAME = (TYPE) (args.argument_atoms[INDEX].as_object); \
 
+
+#define CT_MODCALL_OBJECT_TYPE_CHECK(VAR, TYPEHASH, NAME) \
+if (!ct_object_check_type((CtObject*) VAR, TYPEHASH)) { \
+	CT_ERROR_RUNTIME( \
+		ct_thread_error, \
+		"Module", \
+		"TypeMismatch", \
+		"Expected %s object.", \
+		NAME, NULL \
+	); \
+	return; \
+}\
 
 #define CT_MODCALL_RESULT(ACCESSOR, VALUE, TYPE) \
 result->returned_atom.ACCESSOR = VALUE; \

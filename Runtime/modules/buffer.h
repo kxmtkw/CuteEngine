@@ -20,7 +20,7 @@ ct_module_buffer_new(CtModuleMethodArguments args, CtModuleMethodResult* result)
     CT_MODCALL_PRIMIT_ARG(0, uint32_t, size, as_uint);
 
     CtBufferObject* buffer = ct_lib_buffer_new(ct_ctx_get_object_manager(args.context), size);
-    
+	
     CT_MODCALL_RESULT(as_object, (CtObject*)buffer, CT_ATOM_OBJECT);
 }
 
@@ -30,7 +30,8 @@ static void
 ct_module_buffer_size(CtModuleMethodArguments args, CtModuleMethodResult* result) {
 
     CT_MODCALL_OBJECT_ARG(0, CtBufferObject*, buffer);
-    
+	CT_MODCALL_OBJECT_TYPE_CHECK(buffer, 1, CT_MODULE_NAME(buffer));
+
     CT_MODCALL_RESULT(as_uint, buffer->size, CT_ATOM_PRIMITIVE);
 }
 
@@ -40,6 +41,8 @@ static void
 ct_module_buffer_capacity(CtModuleMethodArguments args, CtModuleMethodResult* result) {
 
     CT_MODCALL_OBJECT_ARG(0, CtBufferObject*, buffer);
+	CT_MODCALL_OBJECT_TYPE_CHECK(buffer, 1, CT_MODULE_NAME(buffer));
+
     
     CT_MODCALL_RESULT(as_uint, buffer->capacity, CT_ATOM_PRIMITIVE);
 }
@@ -49,6 +52,8 @@ static void
 ct_module_buffer_resize(CtModuleMethodArguments args, CtModuleMethodResult* result) {
 
     CT_MODCALL_OBJECT_ARG(0, CtBufferObject*, buffer);
+	CT_MODCALL_OBJECT_TYPE_CHECK(buffer, 1, CT_MODULE_NAME(buffer));
+
     CT_MODCALL_PRIMIT_ARG(1, uint32_t, new_size, as_uint);
     
     ct_lib_buffer_resize(buffer, new_size);
@@ -59,6 +64,8 @@ static void
 ct_module_buffer_reserve(CtModuleMethodArguments args, CtModuleMethodResult* result) {
 
     CT_MODCALL_OBJECT_ARG(0, CtBufferObject*, buffer);
+	CT_MODCALL_OBJECT_TYPE_CHECK(buffer, 1, CT_MODULE_NAME(buffer));
+
     CT_MODCALL_PRIMIT_ARG(1, uint32_t, new_cap, as_uint);
 
     ct_lib_buffer_reserve(buffer, new_cap);
@@ -69,6 +76,8 @@ static void
 ct_module_buffer_truncate(CtModuleMethodArguments args, CtModuleMethodResult* result) {
 
     CT_MODCALL_OBJECT_ARG(0, CtBufferObject*, buffer);
+	CT_MODCALL_OBJECT_TYPE_CHECK(buffer, 1, CT_MODULE_NAME(buffer));
+
 
     ct_lib_buffer_truncate(buffer);
 }
@@ -78,6 +87,8 @@ static void
 ct_module_buffer_get(CtModuleMethodArguments args, CtModuleMethodResult* result) {
 
     CT_MODCALL_OBJECT_ARG(0, CtBufferObject*, buffer);
+	CT_MODCALL_OBJECT_TYPE_CHECK(buffer, 1, CT_MODULE_NAME(buffer));
+
     CT_MODCALL_PRIMIT_ARG(1, uint32_t, index, as_uint);
 
     uint8_t byte_val = 0;
@@ -91,6 +102,8 @@ static void
 ct_module_buffer_set(CtModuleMethodArguments args, CtModuleMethodResult* result) {
 
     CT_MODCALL_OBJECT_ARG(0, CtBufferObject*, buffer);
+	CT_MODCALL_OBJECT_TYPE_CHECK(buffer, 1, CT_MODULE_NAME(buffer));
+
     CT_MODCALL_PRIMIT_ARG(1, uint32_t, index, as_uint);
     CT_MODCALL_PRIMIT_ARG(2, uint32_t, byte_val, as_uint);
 
@@ -102,8 +115,11 @@ static void
 ct_module_buffer_set_buffer(CtModuleMethodArguments args, CtModuleMethodResult* result) {
 
     CT_MODCALL_OBJECT_ARG(0, CtBufferObject*, dst);
+	CT_MODCALL_OBJECT_TYPE_CHECK(dst, 1, CT_MODULE_NAME(buffer));
+
     CT_MODCALL_PRIMIT_ARG(1, uint32_t, index, as_uint);
     CT_MODCALL_OBJECT_ARG(2, CtBufferObject*, src);
+	CT_MODCALL_OBJECT_TYPE_CHECK(src, 1, CT_MODULE_NAME(buffer));
 
     if (ct_lib_buffer_set_buffer(dst, index, src)) {
         uint32_t written_upto = index + src->size;
@@ -116,6 +132,8 @@ static void
 ct_module_buffer_push(CtModuleMethodArguments args, CtModuleMethodResult* result) {
 
     CT_MODCALL_OBJECT_ARG(0, CtBufferObject*, buffer);
+	CT_MODCALL_OBJECT_TYPE_CHECK(buffer, 1, CT_MODULE_NAME(buffer));
+
     CT_MODCALL_PRIMIT_ARG(1, uint32_t, byte_val, as_uint);
 
     ct_lib_buffer_push_byte(buffer, (uint8_t)byte_val);
@@ -126,7 +144,10 @@ static void
 ct_module_buffer_append(CtModuleMethodArguments args, CtModuleMethodResult* result) {
 
     CT_MODCALL_OBJECT_ARG(0, CtBufferObject*, dst);
+	CT_MODCALL_OBJECT_TYPE_CHECK(dst, 1, CT_MODULE_NAME(buffer));
+
     CT_MODCALL_OBJECT_ARG(1, CtBufferObject*, src);
+	CT_MODCALL_OBJECT_TYPE_CHECK(src, 1, CT_MODULE_NAME(buffer));
 
     ct_lib_buffer_append_buffer(dst, src);
 }
@@ -136,6 +157,8 @@ static void
 ct_module_buffer_slice(CtModuleMethodArguments args, CtModuleMethodResult* result) {
 
     CT_MODCALL_OBJECT_ARG(0, CtBufferObject*, buffer);
+	CT_MODCALL_OBJECT_TYPE_CHECK(buffer, 1, CT_MODULE_NAME(buffer));
+
     CT_MODCALL_PRIMIT_ARG(1, uint32_t, index, as_uint);
     CT_MODCALL_PRIMIT_ARG(2, uint32_t, length, as_uint);
 
@@ -150,6 +173,8 @@ static void
 ct_module_buffer_copy(CtModuleMethodArguments args, CtModuleMethodResult* result) {
 
     CT_MODCALL_OBJECT_ARG(0, CtBufferObject*, buffer);
+	CT_MODCALL_OBJECT_TYPE_CHECK(buffer, 1, CT_MODULE_NAME(buffer));
+
 
     CtBufferObject* copied = ct_lib_buffer_copy(buffer);
     if (copied != NULL) {
@@ -162,6 +187,8 @@ static void
 ct_module_buffer_fill(CtModuleMethodArguments args, CtModuleMethodResult* result) {
 
     CT_MODCALL_OBJECT_ARG(0, CtBufferObject*, buffer);
+	CT_MODCALL_OBJECT_TYPE_CHECK(buffer, 1, CT_MODULE_NAME(buffer));
+
     CT_MODCALL_PRIMIT_ARG(1, uint32_t, byte_val, as_uint);
 
     ct_lib_buffer_fill(buffer, (uint8_t)byte_val);
@@ -172,6 +199,8 @@ static void
 ct_module_buffer_clear(CtModuleMethodArguments args, CtModuleMethodResult* result) {
 
     CT_MODCALL_OBJECT_ARG(0, CtBufferObject*, buffer);
+	CT_MODCALL_OBJECT_TYPE_CHECK(buffer, 1, CT_MODULE_NAME(buffer));
+
 
     ct_lib_buffer_clear(buffer);
 }
@@ -181,6 +210,8 @@ static void
 ct_module_buffer_find_byte(CtModuleMethodArguments args, CtModuleMethodResult* result) {
 
     CT_MODCALL_OBJECT_ARG(0, CtBufferObject*, buffer);
+	CT_MODCALL_OBJECT_TYPE_CHECK(buffer, 1, CT_MODULE_NAME(buffer));
+
     CT_MODCALL_PRIMIT_ARG(1, uint32_t, start_idx, as_uint);
     CT_MODCALL_PRIMIT_ARG(2, uint32_t, byte_val, as_uint);
 
@@ -197,8 +228,11 @@ static void
 ct_module_buffer_find_buffer(CtModuleMethodArguments args, CtModuleMethodResult* result) {
 
     CT_MODCALL_OBJECT_ARG(0, CtBufferObject*, buffer);
+	CT_MODCALL_OBJECT_TYPE_CHECK(buffer, 1, CT_MODULE_NAME(buffer));
+
     CT_MODCALL_PRIMIT_ARG(1, uint32_t, start_idx, as_uint);
     CT_MODCALL_OBJECT_ARG(2, CtBufferObject*, sub_buffer);
+	CT_MODCALL_OBJECT_TYPE_CHECK(sub_buffer, 1, CT_MODULE_NAME(buffer));
 
     uint32_t found_idx = UINT32_MAX;
     if (ct_lib_buffer_find_buffer(buffer, sub_buffer, start_idx, &found_idx)) {
@@ -213,7 +247,10 @@ static void
 ct_module_buffer_equals(CtModuleMethodArguments args, CtModuleMethodResult* result) {
 
     CT_MODCALL_OBJECT_ARG(0, CtBufferObject*, buffer_a);
+	CT_MODCALL_OBJECT_TYPE_CHECK(buffer_a, 1, CT_MODULE_NAME(buffer));
+
     CT_MODCALL_OBJECT_ARG(1, CtBufferObject*, buffer_b);
+	CT_MODCALL_OBJECT_TYPE_CHECK(buffer_b, 1, CT_MODULE_NAME(buffer));
 
     bool is_equal = false;
     if (ct_lib_buffer_equals(buffer_a, buffer_b, &is_equal)) {
