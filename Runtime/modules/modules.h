@@ -2,6 +2,8 @@
 #ifndef ENGINE_MODULES_H
 #define ENGINE_MODULES_H
 
+#include "common/error.h"
+#include "core/context.h"
 #include "modules/modulespec.h"
 
 #include "modules/buffer.h"
@@ -34,16 +36,37 @@ static inline int32_t
 ct_modules_get_method(uint32_t module_id, uint32_t method_id, CtModuleMethodEntry* entry) {
 
 	if (module_id >= ct_modules_count) {
+		CT_ERROR_RUNTIME(
+			ct_thread_error,
+			"Modules",
+			"ModuleNotFound",
+			"Unknown Module %u called.", 
+			module_id
+		);
 		return 0;
 	}
 
 	const CtModuleMethodEntry* module_map = ct_modules_dispatch_map[module_id];
 
 	if (module_map == NULL) {
+		CT_ERROR_RUNTIME(
+			ct_thread_error,
+			"Modules",
+			"ModuleNotFound",
+			"Unknown Module %u called.", 
+			module_id
+		);
 		return 0;
 	};
 
 	if (method_id >= ct_modules_method_count[module_id]) {
+		CT_ERROR_RUNTIME(
+			ct_thread_error,
+			"Modules",
+			"MethodNotFoung",
+			"Unknown Method %u called for Module %u.", 
+			method_id, module_id
+		);
 		return 0;
 	};
 
