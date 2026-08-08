@@ -39,8 +39,9 @@ ct_ctx_is_running(CtContext* ctx) {
 	if (ct_thread_error.raised) {
 		ctx->running = false;
 		ctx->exit_code = 1;
+		return false;
 	};
-	return !ct_thread_error.raised;
+	return true;
 }
 
 // Store an atom at a specified slot in the CURRENT call frame.
