@@ -95,7 +95,7 @@ _ct_inc_atom(CtContext* ctx, uint8_t slot) {
 
 
 static inline void
-ct_decAtom(CtContext* ctx, uint8_t slot) {	
+_ct_dec_atom(CtContext* ctx, uint8_t slot) {	
 	if (ctx->current_frame->file.types[slot] == CT_ATOM_OBJECT) {
 		ct_objects_dec_ref(ctx->objects, ctx->current_frame->file.atoms[slot].as_object);
 		ctx->current_frame->object_field_count--;
@@ -382,7 +382,7 @@ HANDLER_INCI:
 
 HANDLER_DECI: 
 	r1 = instrs[ctx->ip++];
-	ct_decAtom(ctx, r1);
+	_ct_dec_atom(ctx, r1);
 	NEXT();
 
 HANDLER_ABSI: 
@@ -416,7 +416,7 @@ HANDLER_INCU:
 
 HANDLER_DECU: 
 	r1 = instrs[ctx->ip++];
-	ct_decAtom(ctx, r1);
+	_ct_dec_atom(ctx, r1);
 	NEXT();
 
 HANDLER_ADDF: 

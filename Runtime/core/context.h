@@ -29,8 +29,8 @@ typedef struct {
 // a call frame
 typedef struct {
 	uint32_t            procedure_id;
-	uint64_t            return_ip;
-	uint32_t            object_field_count;
+	uint32_t            return_ip;
+	uint8_t             object_field_count;
 	uint8_t             args_count;
 	uint8_t             return_value_slot;
 	CtAtomFile          file;
@@ -39,7 +39,6 @@ typedef struct {
 
 // call stack, statically sized
 typedef struct {
-	CtAtomFile   file;
 	CtCallFrame  frames[CT_CONF_CALLSTACK_SIZE];
 	uint32_t     size;
 	uint32_t     capacity;
