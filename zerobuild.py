@@ -1,9 +1,10 @@
 from zero import *
 
 build = Build()
+
 build.compiler = "gcc"
 build.directory = ".build"
-build.arguments = "-Wall",  "-Wextra",  "-g"
+build.arguments = Flags.Wall, Flags.Wextra, Flags.g, Flags.O3
 
 
 # Cute Instructions
@@ -19,7 +20,12 @@ CuteInstr.headers.public = Path("Instr") / "include"
 
 CuteRuntime = StaticLibrary()
 CuteRuntime.compiler = "gcc"
+
 src = Path("Runtime")
+
+CuteRuntime.link(CuteInstr)
+CuteRuntime.headers.public = src / "include"
+CuteRuntime.headers.private = src
 
 CuteRuntime.source = Source(
 	src / "core" / "core.c",
@@ -32,18 +38,12 @@ CuteRuntime.source = Source(
 	src / "lib" / "buffer.c",
 )
 
-CuteRuntime.link(CuteInstr)
-
-CuteRuntime.headers.public = src / "include"
-CuteRuntime.headers.private = src
-
 
 # cute binary
 
 cute = Executable()
-cute.source = Source("main/runtime.c")
 cute.link(CuteRuntime)
-cute.link(CuteInstr)
+cute.source = Source("main/runtime.c")
 
 
 # Cute Assembler
@@ -51,24 +51,24 @@ cute.link(CuteInstr)
 CuteAsm = StaticLibrary()
 CuteAsm.compiler = "g++"
 
-cute_asm_src = Path("Assembler")
+src = Path("Assembler")
+
+CuteAsm.headers.private = src
+CuteAsm.headers.public = src / "include"
+CuteAsm.link(CuteInstr)
 
 CuteAsm.source = Source(
-	cute_asm_src / "tokenizer" / "tokenizer.cpp",
-	cute_asm_src / "tokenizer" / "stream.cpp",
-	cute_asm_src / "resolver" / "resolver.cpp",
-	cute_asm_src / "codegen" / "codegen.cpp",
-	cute_asm_src / "assembler" / "assembler.cpp"
+	src / "tokenizer" / "tokenizer.cpp",
+	src / "tokenizer" / "stream.cpp",
+	src / "resolver" / "resolver.cpp",
+	src / "codegen" / "codegen.cpp",
+	src / "assembler" / "assembler.cpp"
 )
-CuteAsm.headers.private = cute_asm_src
-CuteAsm.headers.public = cute_asm_src / "include"
-CuteAsm.link(CuteInstr)
 
 
 # cuteasm binary
 
 cuteasm = Executable()
-cuteasm.source = Source("main/assembler.cpp")
-cuteasm.link(CuteAsm)
-cuteasm.link(CuteInstr)
 cuteasm.compiler = CuteAsm.compiler
+cuteasm.link(CuteAsm)
+cuteasm.source = Source("main/assembler.cpp")
